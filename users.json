@@ -1,0 +1,23 @@
+{
+  "version": "2.0",
+  "updated": "2025-02-21",
+  "users": [
+    {
+      "id": "u001",
+      "username": "tom",
+      "password": "admin",
+      "display_name": "Tom",
+      "role": "admin",
+      "avatar": "👤",
+      "conversations": [],
+      "commands": {},
+      "memory": [
+        "Tom est le créateur et propriétaire du système IXA",
+        "IXA est un assistant IA personnel de haute technologie inspiré de JARVIS",
+        "Tom préfère des réponses structurées, directes et efficaces",
+        "Toujours répondre en français sauf demande contraire",
+        "Tom est développeur et apprécie l'innovation technologique"
+      ]
+    }
+  ]
+}
