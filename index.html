@@ -436,6 +436,11 @@ textarea::placeholder{color:var(--mu)}
     <div class="lsub">Système d'Intelligence Avancée de Tom</div>
     <div class="lsep"></div>
     <div class="lstat" id="lstat"><div class="spin"></div><span id="lstat-t">Chargement…</span></div>
+    <div id="li-api-block" style="display:none;flex-direction:column;gap:6px">
+      <div style="font-size:.72rem;color:var(--mu)">🔑 Clé API Groq (<a href="https://console.groq.com" target="_blank" style="color:var(--a)">console.groq.com</a>)</div>
+      <input class="linp" id="li-api" type="password" placeholder="gsk_…" autocomplete="off" oninput="onApiKeyInput(this)">
+      <div id="li-api-ok" style="font-size:.7rem;color:var(--ok);display:none">✅ Clé sauvegardée</div>
+    </div>
     <input class="linp" id="li-u" type="text" placeholder="Identifiant" autocomplete="username" style="display:none">
     <input class="linp" id="li-p" type="password" placeholder="Mot de passe" autocomplete="current-password" style="display:none">
     <button class="lbtn" id="li-btn" onclick="doLogin()" style="display:none">Connexion</button>
@@ -482,6 +487,10 @@ textarea::placeholder{color:var(--mu)}
       <div class="pd-item" onclick="openMemory();closeProfileDrop()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a9 9 0 1 0 0 18A9 9 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>
         Mémoire IXA
+      </div>
+      <div class="pd-item" onclick="openApiKeyModal();closeProfileDrop()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        Clé API Groq
       </div>
       <div class="pd-item" id="pd-admin-btn" onclick="openUserMgmt();closeProfileDrop()" style="display:none">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -761,27 +770,64 @@ window.__docs = {};
 ══════════════════════════════════════════════════════ */
 async function boot() {
   setLStat('Chargement de la configuration…');
+
+  // 1. Try to load config.json (works when served via HTTP/HTTPS)
   try {
     const r = await fetch('config.json');
     if (r.ok) {
       const cfg = await r.json();
-      S.groqKey = (cfg.groq_api_key||'').trim();
-      S.ghToken = (cfg.github_token||'').trim();
+      const rawKey = (cfg.groq_api_key||'').trim();
+      // Only use if it's a real key (not placeholder)
+      if (rawKey && !rawKey.includes('ENTREZ') && !rawKey.includes('YOUR') && rawKey.startsWith('gsk_')) {
+        S.groqKey = rawKey;
+        localStorage.setItem('ixa_groq_key', rawKey);
+      }
+      const rawGh = (cfg.github_token||'').trim();
+      if (rawGh && !rawGh.includes('ENTREZ') && !rawGh.includes('YOUR')) {
+        S.ghToken = rawGh;
+      }
       S.serperKey = (cfg.serper_key||'').trim();
+      if (S.serperKey.includes('OPTIONNEL') || S.serperKey.includes('CLE')) S.serperKey = '';
       const repo = (cfg.github_repo||'').trim();
-      if (repo.includes('/')) { const p=repo.split('/'); S.ghUser=p[0]; S.ghRepo=p[1]; }
+      if (repo.includes('/') && !repo.includes('votre')) {
+        const p=repo.split('/'); S.ghUser=p[0]; S.ghRepo=p[1];
+      }
       S.ghBranch = cfg.github_branch||'main';
     }
-  } catch(e){}
+  } catch(e) {
+    // file:// protocol or config.json missing — not an error, use localStorage fallback
+  }
 
+  // 2. If no key from config.json, try localStorage (previously entered key)
+  if (!S.groqKey) {
+    const saved = localStorage.getItem('ixa_groq_key');
+    if (saved && saved.startsWith('gsk_')) {
+      S.groqKey = saved;
+    }
+  }
+
+  // 3. Load users
   if (S.ghToken && S.ghUser && S.ghRepo) {
     setLStat('Connexion à la base de données…');
     try { await fetchUsers(); } catch(e) { S.allUsers = getLocalUsers(); }
   } else {
     S.allUsers = getLocalUsers();
   }
+
   setLStat('',true);
   showLoginForm();
+}
+
+// Called when user types their API key manually
+function onApiKeyInput(el) {
+  const val = el.value.trim();
+  if (val.startsWith('gsk_') && val.length > 20) {
+    S.groqKey = val;
+    localStorage.setItem('ixa_groq_key', val);
+    const ok = document.getElementById('li-api-ok');
+    if (ok) { ok.style.display='block'; setTimeout(()=>ok.style.display='none', 2500); }
+    updateApiSt();
+  }
 }
 
 function getLocalUsers() {
@@ -803,6 +849,16 @@ function setLStat(txt, done=false) {
 }
 function showLoginForm() {
   ['li-u','li-p','li-btn'].forEach(id=>document.getElementById(id).style.display='');
+  // Show API key input if key is missing
+  const apiBlock = document.getElementById('li-api-block');
+  if (apiBlock) {
+    apiBlock.style.display = 'flex';
+    if (S.groqKey) {
+      // Show masked key as confirmation
+      const apiInp = document.getElementById('li-api');
+      if (apiInp && !apiInp.value) apiInp.placeholder = '✅ Clé chargée depuis config.json';
+    }
+  }
   document.getElementById('li-u').focus();
   document.getElementById('li-p').onkeydown=e=>{if(e.key==='Enter')doLogin();};
   document.getElementById('li-u').onkeydown=e=>{if(e.key==='Enter')document.getElementById('li-p').focus();};
@@ -1805,7 +1861,28 @@ function exportChat() {
 /* ══════════════════════════════════════════════════════
    MEMORY MODAL
 ══════════════════════════════════════════════════════ */
-function openMemory() {
+function openApiKeyModal() {
+  const masked = S.groqKey ? S.groqKey.slice(0,8)+'…'+S.groqKey.slice(-4) : '';
+  showModal('🔑 Clé API Groq',
+    masked ? `Clé actuelle : <code style="font-family:monospace;color:var(--a)">${masked}</code>` : 'Aucune clé configurée — obtenez-la sur <a href="https://console.groq.com" target="_blank" style="color:var(--a)">console.groq.com</a>',
+    `<input class="mi" id="apikey-inp" type="password" placeholder="gsk_…" autocomplete="off">
+     <div style="font-size:.72rem;color:var(--mu)">La clé est sauvegardée dans votre navigateur (localStorage).</div>`,
+    [{l:'Annuler',c:'can',f:'closeModal()'},{l:'💾 Sauvegarder',c:'cfm',f:'saveApiKey()'}]
+  );
+  setTimeout(()=>document.getElementById('apikey-inp')?.focus(),80);
+}
+
+function saveApiKey() {
+  const val = (document.getElementById('apikey-inp')?.value||'').trim();
+  if (!val) { toast('❌ Entrez une clé','err'); return; }
+  if (!val.startsWith('gsk_')) { toast('❌ Clé invalide (doit commencer par gsk_)','err'); return; }
+  S.groqKey = val;
+  localStorage.setItem('ixa_groq_key', val);
+  updateApiSt();
+  closeModal();
+  toast('✅ Clé API sauvegardée !','ok');
+}
+
   showModal('🧠 Mémoire IXA','Informations mémorisées sur vous',
     `<div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto" id="mem-list">
       ${S.memory.map((m,i)=>`<div style="display:flex;align-items:center;gap:7px;background:var(--c2);border:1px solid var(--bd2);border-radius:8px;padding:8px 10px;font-size:.8rem">
