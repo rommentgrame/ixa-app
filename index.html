@@ -26,350 +26,73 @@
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
         body { 
-            background: var(--bg); 
-            color: var(--text); 
-            display: flex; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden; 
+            background: var(--bg); color: var(--text); 
+            display: flex; height: 100vh; width: 100vw; overflow: hidden; 
         }
 
-        /* --- SIDEBAR --- */
         #sidebar {
-            width: 300px;
-            background: var(--sidebar);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            z-index: 10;
+            width: 300px; background: var(--sidebar); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 20px; z-index: 10;
         }
 
         .brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent);
-            letter-spacing: -1px;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 1.5rem; font-weight: 700; color: var(--accent);
+            display: flex; align-items: center; gap: 10px; margin-bottom: 30px;
         }
 
         .btn-new-chat {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: var(--transition);
-            margin-bottom: 25px;
+            background: var(--accent); color: #000; border: none; padding: 14px;
+            border-radius: 12px; font-weight: 600; cursor: pointer; transition: var(--transition);
+            margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
-        .btn-new-chat:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px var(--accent-soft);
-        }
-
-        #history-list {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        #history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 
         .chat-item {
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid transparent;
+            padding: 12px; border-radius: 10px; font-size: 0.9rem; color: var(--text-muted);
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid transparent; transition: var(--transition);
         }
 
-        .chat-item:hover {
-            background: var(--card);
-            color: var(--text);
-        }
+        .chat-item.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 
-        .chat-item.active {
-            background: var(--accent-soft);
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .delete-btn {
-            opacity: 0;
-            color: var(--error);
-            font-size: 1.1rem;
-            transition: 0.2s;
-        }
-
-        .chat-item:hover .delete-btn { opacity: 1; }
-
-        /* --- MAIN CONTENT --- */
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            background: radial-gradient(circle at top right, #1a1a25, #0b0b0f);
-        }
+        main { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle at top right, #1a1a25, #0b0b0f); }
 
         header {
-            height: 70px;
-            padding: 0 40px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(11, 11, 15, 0.8);
-            backdrop-filter: blur(10px);
+            height: 70px; padding: 0 40px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(11, 11, 15, 0.8); backdrop-filter: blur(10px);
         }
 
         .nav-tabs { display: flex; gap: 30px; }
-        .nav-tabs span {
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            position: relative;
-            padding: 10px 0;
-            transition: 0.3s;
-        }
+        .nav-tabs span { cursor: pointer; color: var(--text-muted); padding: 10px 0; transition: 0.3s; }
+        .nav-tabs span.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 
-        .nav-tabs span.active { color: var(--accent); }
-        .nav-tabs span.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--accent);
-        }
+        #chat-container { flex: 1; overflow-y: auto; padding: 40px 15%; display: flex; flex-direction: column; gap: 30px; }
 
-        #chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 40px 15%;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
+        .message { max-width: 85%; line-height: 1.7; animation: slideIn 0.4s ease-out; }
+        .message.user { align-self: flex-end; background: var(--user-bubble); padding: 15px 22px; border-radius: 20px 20px 4px 20px; border: 1px solid var(--border); }
+        .message b { display: block; font-size: 0.75rem; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
 
-        .message {
-            max-width: 85%;
-            line-height: 1.7;
-            font-size: 1rem;
-            position: relative;
-            animation: slideIn 0.4s ease-out;
-        }
+        /* Mode Vocal Orb */
+        #voice-view { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .orb { width: 100px; height: 100px; background: var(--accent); border-radius: 50%; filter: blur(2px); transition: 0.5s; position: relative; }
+        .listening .orb { transform: scale(1.3); box-shadow: 0 0 50px var(--accent); }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background: var(--user-bubble);
-            padding: 15px 22px;
-            border-radius: 20px 20px 4px 20px;
-            border: 1px solid var(--border);
-        }
-
-        .message.assistant {
-            align-self: flex-start;
-            width: 100%;
-        }
-
-        .message b {
-            display: block;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 10px;
-            color: var(--accent);
-        }
-
-        pre {
-            background: #000;
-            padding: 15px;
-            border-radius: 10px;
-            overflow-x: auto;
-            margin: 15px 0;
-            border: 1px solid var(--border);
-            font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-        }
-
-        .file-preview-card {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--sidebar);
-            border: 1px solid var(--border);
-            padding: 12px 18px;
-            border-radius: 12px;
-            margin-top: 10px;
-            transition: 0.2s;
-        }
-
-        .file-preview-card:hover { border-color: var(--accent); }
-        .file-icon { color: var(--accent); font-size: 1.5rem; }
-
-        /* --- INPUT AREA --- */
-        #input-area {
-            padding: 20px 15% 40px 15%;
-            background: linear-gradient(transparent, var(--bg) 20%);
-        }
-
-        .input-wrapper {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 10px 15px;
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-            transition: 0.3s;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-
-        .input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-
-        textarea {
-            flex: 1;
-            background: none;
-            border: none;
-            color: var(--text);
-            padding: 12px 5px;
-            resize: none;
-            max-height: 200px;
-            min-height: 24px;
-            outline: none;
-            font-size: 1.05rem;
-            line-height: 1.5;
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 10px;
-            transition: 0.2s;
-        }
-
-        .action-btn:hover { background: var(--border); color: var(--accent); }
-        .send-btn { color: var(--accent); }
-
-        #attachment-tray {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .attachment-tag {
-            background: var(--accent-soft);
-            color: var(--accent);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid var(--accent);
-        }
-
-        /* --- VOICE MODE --- */
-        #voice-view {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-        }
-
-        .orb-container {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .orb {
-            width: 100px;
-            height: 100px;
-            background: var(--accent);
-            border-radius: 50%;
-            filter: blur(2px);
-            z-index: 2;
-            transition: 0.5s;
-        }
-
-        .orb-wave {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            border: 2px solid var(--accent);
-            border-radius: 50%;
-            opacity: 0;
-        }
-
-        .listening .orb-wave {
-            animation: ripple 2s infinite;
-        }
-
-        .listening .orb {
-            transform: scale(1.2);
-            box-shadow: 0 0 30px var(--accent);
-        }
-
-        @keyframes ripple {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+        #input-area { padding: 20px 15% 40px 15%; }
+        .input-wrapper { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 10px 15px; display: flex; align-items: flex-end; gap: 12px; }
+        textarea { flex: 1; background: none; border: none; color: var(--text); padding: 10px; resize: none; outline: none; font-size: 1rem; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <aside id="sidebar">
-    <div class="brand">
-        <div class="status-dot"></div>
-        IXA SYSTEM
-    </div>
-    
-    <button class="btn-new-chat" onclick="createNewChat()">
-        <span>+</span> Nouveau Chat
-    </button>
-
+    <div class="brand">IXA SYSTEM</div>
+    <button class="btn-new-chat" onclick="createNewChat()">+ Nouveau Chat</button>
     <div id="history-list"></div>
-
-    <div style="margin-top: auto; padding-top: 20px;">
-        <div id="api-status-label" style="font-size: 0.75rem; color: var(--text-muted);">
-            Vérification API...
-        </div>
-    </div>
+    <div id="api-status-label" style="font-size: 0.7rem; margin-top: 20px;">Vérification...</div>
 </aside>
 
 <main>
@@ -378,36 +101,24 @@
             <span id="tab-chat" class="active" onclick="switchMode('chat')">Assistant</span>
             <span id="tab-voice" onclick="switchMode('voice')">Mode Vocal</span>
         </div>
-        <div id="model-badge" style="background: var(--card); padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; border: 1px solid var(--border);">
-            Llama 3.1 8B (Instant)
-        </div>
     </header>
 
     <div id="chat-container"></div>
 
     <div id="voice-view">
-        <div class="orb-container" id="orb-box">
-            <div class="orb"></div>
-            <div class="orb-wave"></div>
-            <div class="orb-wave" style="animation-delay: 0.5s"></div>
-        </div>
-        <h2 id="v-status" style="margin-top: 40px; font-weight: 300;">Prêt à vous écouter</h2>
-        <button id="v-btn" class="btn-new-chat" style="margin-top: 30px; padding: 15px 50px;" onclick="toggleVoice()">
-            🎙️ PARLER
-        </button>
+        <div id="orb-container"><div class="orb" id="orb"></div></div>
+        <h2 id="v-status" style="margin-top: 40px;">Cliquez pour parler</h2>
+        <button class="btn-new-chat" style="margin-top: 20px; padding: 15px 40px;" onclick="toggleVoice()">🎙️ PARLER</button>
     </div>
 
     <div id="input-area">
         <div id="attachment-tray"></div>
         <div class="input-wrapper">
             <input type="file" id="file-input" hidden multiple onchange="handleFileUpload(this)">
-            <button class="action-btn" onclick="document.getElementById('file-input').click()">📎</button>
-            <textarea id="main-input" placeholder="Envoyez un message ou analysez un fichier..." rows="1" oninput="autoResize(this)"></textarea>
-            <button class="action-btn send-btn" onclick="handleSend()">▲</button>
+            <button onclick="document.getElementById('file-input').click()" style="background:none; border:none; cursor:pointer; font-size: 1.2rem;">📎</button>
+            <textarea id="main-input" placeholder="Message..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+            <button onclick="handleSend()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size: 1.2rem;">▲</button>
         </div>
-        <p style="text-align: center; font-size: 0.65rem; color: var(--text-muted); margin-top: 15px;">
-            IXA — IA Analytique Privée. Développé pour la performance.
-        </p>
     </div>
 </main>
 
@@ -418,234 +129,151 @@
         history: JSON.parse(localStorage.getItem('ixa_history')) || [],
         currentChatId: null,
         attachments: [],
-        isListening: false,
         recognition: null,
-        synth: window.speechSynthesis,
-        currentMode: 'chat'
+        isListening: false,
+        synth: window.speechSynthesis
     };
 
     async function boot() {
         if (!IXA.key) await tryLoadConfig();
         updateApiStatus();
         renderHistory();
-        
-        if (IXA.history.length > 0) loadChat(IXA.history[0].id);
-        else createNewChat();
+        IXA.history.length > 0 ? loadChat(IXA.history[0].id) : createNewChat();
 
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (Speech) {
             IXA.recognition = new Speech();
             IXA.recognition.lang = 'fr-FR';
-            IXA.recognition.continuous = false;
-            
-            IXA.recognition.onresult = async (event) => {
-                const text = event.results[0][0].transcript;
-                document.getElementById('v-status').textContent = "IXA analyse...";
+            IXA.recognition.onresult = async (e) => {
+                const text = e.results[0][0].transcript;
+                document.getElementById('v-status').textContent = "IXA réfléchit...";
                 const reply = await handleSend(text);
                 if (reply) speak(reply);
             };
-
             IXA.recognition.onend = () => {
                 IXA.isListening = false;
-                document.getElementById('orb-box').classList.remove('listening');
-                if(IXA.currentMode === 'voice') document.getElementById('v-status').textContent = "Cliquez pour parler";
+                document.getElementById('orb').parentElement.classList.remove('listening');
+                document.getElementById('v-status').textContent = "Cliquez pour parler";
             };
         }
-
-        document.getElementById('main-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-            }
-        });
     }
 
     async function tryLoadConfig() {
-        const paths = ['config.json', 'config (1).json'];
-        for (let path of paths) {
-            try {
-                const res = await fetch(path);
-                const data = await res.json();
-                if (data.groq_api_key) {
-                    IXA.key = data.groq_api_key.trim();
-                    localStorage.setItem('ixa_key', IXA.key);
-                    break;
-                }
-            } catch (e) {}
-        }
+        try {
+            const res = await fetch('config.json');
+            const data = await res.json();
+            if (data.groq_api_key) {
+                IXA.key = data.groq_api_key;
+                localStorage.setItem('ixa_key', IXA.key);
+            }
+        } catch (e) {}
     }
 
     function updateApiStatus() {
-        const label = document.getElementById('api-status-label');
-        label.innerHTML = IXA.key ? `<span style="color:var(--success)">●</span> API CONNECTÉE` : `<span style="color:var(--error)">●</span> ERREUR CONFIG.JSON`;
+        document.getElementById('api-status-label').innerHTML = IXA.key ? "● API OK" : "● ERREUR CONFIG";
     }
 
     function createNewChat() {
-        const newId = Date.now();
-        IXA.history.unshift({ id: newId, title: "Nouvelle discussion", messages: [], timestamp: new Date().toISOString() });
-        saveAll();
-        loadChat(newId);
+        const id = Date.now();
+        IXA.history.unshift({ id, title: "Nouveau Chat", messages: [] });
+        saveAll(); loadChat(id);
     }
 
     function loadChat(id) {
         IXA.currentChatId = id;
         const chat = IXA.history.find(c => c.id === id);
-        const container = document.getElementById('chat-container');
-        container.innerHTML = "";
-        chat.messages.forEach(msg => renderMessage(msg.role, msg.displayContent || msg.content));
-        renderHistory();
-        container.scrollTop = container.scrollHeight;
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('history-list');
-        list.innerHTML = IXA.history.map(chat => `
-            <div class="chat-item ${chat.id === IXA.currentChatId ? 'active' : ''}" onclick="loadChat(${chat.id})">
-                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px">${chat.title}</span>
-                <span class="delete-btn" onclick="deleteChat(event, ${chat.id})">✕</span>
-            </div>
-        `).join('');
-    }
-
-    function deleteChat(e, id) {
-        e.stopPropagation();
-        IXA.history = IXA.history.filter(c => c.id !== id);
-        if (IXA.currentChatId === id) IXA.history.length > 0 ? loadChat(IXA.history[0].id) : createNewChat();
-        saveAll();
+        const cont = document.getElementById('chat-container');
+        cont.innerHTML = "";
+        chat.messages.forEach(m => renderMessage(m.role, m.displayContent || m.content));
         renderHistory();
     }
 
     function handleFileUpload(input) {
-        for (let file of input.files) {
+        for (let f of input.files) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                IXA.attachments.push({ name: file.name, content: e.target.result });
-                updateAttachmentTray();
+                IXA.attachments.push({ name: f.name, content: e.target.result });
+                document.getElementById('attachment-tray').innerHTML += `<div style="color:var(--accent); font-size:0.8rem;">📄 ${f.name}</div>`;
             };
-            reader.readAsText(file);
+            reader.readAsText(f);
         }
-    }
-
-    function updateAttachmentTray() {
-        const tray = document.getElementById('attachment-tray');
-        tray.innerHTML = IXA.attachments.map((file, idx) => `
-            <div class="attachment-tag">📄 ${file.name} <span style="cursor:pointer" onclick="removeAttachment(${idx})">✕</span></div>
-        `).join('');
-    }
-
-    function removeAttachment(idx) {
-        IXA.attachments.splice(idx, 1);
-        updateAttachmentTray();
     }
 
     async function handleSend(voiceText = null) {
-        const inputEl = document.getElementById('main-input');
-        const text = voiceText || inputEl.value.trim();
+        const input = document.getElementById('main-input');
+        const text = voiceText || input.value.trim();
         if (!text && IXA.attachments.length === 0) return;
 
-        let visualContent = text;
-        let promptWithContext = text;
-
+        let prompt = text;
         if (IXA.attachments.length > 0) {
-            const filesHtml = IXA.attachments.map(f => `
-                <div class="file-preview-card"><span class="file-icon">📄</span><span class="file-name">${f.name}</span></div>
-            `).join('');
-            visualContent = (text ? `<p>${text}</p>` : "") + filesHtml;
-
-            promptWithContext = "CONTEXTE DOCUMENTS :\n";
-            IXA.attachments.forEach(f => promptWithContext += `[Fichier: ${f.name}]\n${f.content}\n\n`);
-            promptWithContext += `QUESTION : ${text || "Analyse ces fichiers."}`;
+            prompt = "DOCUMENTS:\n" + IXA.attachments.map(a => `[${a.name}]\n${a.content}`).join('\n') + "\nQUESTION: " + text;
         }
 
-        renderMessage('user', visualContent);
-        inputEl.value = "";
-        autoResize(inputEl);
-
-        const chat = IXA.history.find(c => c.id === IXA.currentChatId);
-        if (chat.messages.length === 0) chat.title = text.substring(0, 30) || "Analyse Doc";
+        renderMessage('user', text || "Analyse de documents");
+        input.value = "";
         
-        chat.messages.push({ role: 'user', content: promptWithContext, displayContent: visualContent });
+        const chat = IXA.history.find(c => c.id === IXA.currentChatId);
+        chat.messages.push({ role: 'user', content: prompt, displayContent: text });
 
         try {
-            const response = await callGroq(chat.messages);
-            renderMessage('assistant', response);
-            chat.messages.push({ role: 'assistant', content: response });
+            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${IXA.key}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ model: IXA.model, messages: chat.messages })
+            });
+            const data = await res.json();
+            const reply = data.choices[0].message.content;
+            renderMessage('assistant', reply);
+            chat.messages.push({ role: 'assistant', content: reply });
             saveAll();
             IXA.attachments = [];
-            updateAttachmentTray();
-            return response;
-        } catch (err) {
-            renderMessage('assistant', `Erreur : ${err.message}`);
+            document.getElementById('attachment-tray').innerHTML = "";
+            return reply;
+        } catch (e) {
+            renderMessage('assistant', "Erreur API.");
             return null;
         }
     }
 
-    async function callGroq(messages) {
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${IXA.key}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: IXA.model,
-                messages: [{ role: "system", content: "Tu es IXA, une IA sobre et analytique. Analyse les documents fournis avec précision." }, 
-                ...messages.map(m => ({ role: m.role, content: m.content }))],
-                temperature: 0.6
-            })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error?.message || "Erreur API");
-        return data.choices[0].message.content;
-    }
-
     function renderMessage(role, content) {
-        const container = document.getElementById('chat-container');
+        const cont = document.getElementById('chat-container');
         const div = document.createElement('div');
         div.className = `message ${role}`;
-        let formatted = content.replace(/\n/g, '<br>').replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-        div.innerHTML = `<b>${role === 'user' ? 'Vous' : 'IXA'}</b><div>${formatted}</div>`;
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
+        div.innerHTML = `<b>${role === 'user' ? 'Vous' : 'IXA'}</b><div>${content}</div>`;
+        cont.appendChild(div);
+        cont.scrollTop = cont.scrollHeight;
     }
 
-    function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
-
     function switchMode(mode) {
-        IXA.currentMode = mode;
         document.getElementById('chat-container').style.display = mode === 'chat' ? 'flex' : 'none';
         document.getElementById('input-area').style.display = mode === 'chat' ? 'block' : 'none';
         document.getElementById('voice-view').style.display = mode === 'chat' ? 'none' : 'flex';
-        document.querySelectorAll('.nav-tabs span').forEach(s => s.classList.remove('active'));
-        document.getElementById('tab-' + mode).classList.add('active');
-        if (IXA.synth.speaking) IXA.synth.cancel();
+        document.getElementById('tab-chat').classList.toggle('active', mode === 'chat');
+        document.getElementById('tab-voice').classList.toggle('active', mode === 'voice');
+        if (mode === 'chat') IXA.synth.cancel();
     }
 
     function toggleVoice() {
         if (!IXA.recognition) return alert("Vocal non supporté.");
-        if (IXA.isListening) {
-            IXA.recognition.stop();
-        } else {
-            IXA.isListening = true;
-            IXA.synth.cancel();
-            document.getElementById('orb-box').classList.add('listening');
-            document.getElementById('v-status').textContent = "Je vous écoute...";
-            IXA.recognition.start();
-        }
+        IXA.synth.cancel();
+        IXA.isListening = true;
+        document.getElementById('orb').parentElement.classList.add('listening');
+        document.getElementById('v-status').textContent = "Je vous écoute...";
+        IXA.recognition.start();
     }
 
     function speak(text) {
-        if (IXA.currentMode !== 'voice') return;
-        // Nettoyage du texte pour la voix (enlever markdown)
-        const cleanText = text.replace(/```[\s\S]*?```/g, "Code source omis.").replace(/[*#_]/g, "");
-        const utter = new SpeechSynthesisUtterance(cleanText);
-        utter.lang = 'fr-FR';
-        utter.rate = 1.1;
-        IXA.synth.speak(utter);
-        
-        utter.onend = () => {
-            if(IXA.currentMode === 'voice') {
-                // Relance l'écoute automatiquement après avoir parlé ? Facultatif.
-                // toggleVoice(); 
-            }
-        };
+        if (document.getElementById('tab-voice').classList.contains('active')) {
+            const utter = new SpeechSynthesisUtterance(text.replace(/[*#]/g, ''));
+            utter.lang = 'fr-FR';
+            IXA.synth.speak(utter);
+        }
+    }
+
+    function renderHistory() {
+        document.getElementById('history-list').innerHTML = IXA.history.map(c => 
+            `<div class="chat-item ${c.id === IXA.currentChatId ? 'active' : ''}" onclick="loadChat(${c.id})">${c.title}</div>`
+        ).join('');
     }
 
     function saveAll() { localStorage.setItem('ixa_history', JSON.stringify(IXA.history)); }
