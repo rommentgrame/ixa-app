@@ -3,182 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IXA v3 — Système Intégré</title>
+    <title>IXA v3 — Intelligence Avancée</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #09090b; --sidebar: #0f0f12; --card: #18181b;
-            --accent: #a8ff3e; --text: #ececec; --text-muted: #71717a;
-            --border: #27272a; --user-msg: #27272a;
+            --bg: #0b0b0d; --sidebar: #111114; --card: #1a1a1e;
+            --accent: #a8ff3e; --text: #ececec; --text-muted: #8e8e93;
+            --border: #2c2c31; --user-msg: #26262b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* SIDEBAR : Conversations à gauche */
-        #sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
-        .new-btn { background: var(--accent); color: black; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.2s; }
-        #history { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .hist-item { padding: 10px; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .hist-item:hover { background: var(--card); color: var(--text); }
-        
-        /* Bouton Config en bas à gauche */
-        #cfg-trigger { margin-top: auto; padding: 10px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; text-align: left; border-top: 1px solid var(--border); padding-top: 15px; }
+        /* SIDEBAR (Gestion historique) */
+        #sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 15px; }
+        .new-chat { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.2s; }
+        .new-chat:hover { opacity: 0.9; }
+        #chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .chat-item { padding: 10px; border-radius: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-item:hover, .chat-item.active { background: var(--card); color: var(--text); }
+        .status-info { font-size: 0.75rem; color: var(--text-muted); padding-top: 10px; border-top: 1px solid var(--border); }
 
-        /* MAIN */
-        main { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle at 50% 0%, #1c1c21 0%, #09090b 70%); }
-        header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .nav-tabs { display: flex; gap: 25px; }
-        .nav-tabs span { cursor: pointer; font-weight: 500; font-size: 0.9rem; color: var(--text-muted); position: relative; padding-bottom: 5px; }
-        .nav-tabs span.active { color: var(--accent); }
-        .nav-tabs span.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--accent); }
+        /* MAIN CONTENT */
+        main { flex: 1; display: flex; flex-direction: column; position: relative; }
+        header { padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .tab-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; font-weight: 500; margin-right: 20px; padding-bottom: 5px; }
+        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 
-        /* CHAT FLOW */
-        #chat-flow { flex: 1; overflow-y: auto; padding: 30px 15%; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
+        /* CHAT AREA */
+        #chat-window { flex: 1; overflow-y: auto; padding: 30px 15%; display: flex; flex-direction: column; gap: 25px; scroll-behavior: smooth; }
         .msg { max-width: 85%; line-height: 1.6; font-size: 0.95rem; }
         .msg.user { align-self: flex-end; background: var(--user-msg); padding: 12px 18px; border-radius: 18px 18px 2px 18px; border: 1px solid var(--border); }
         .msg.assistant { align-self: flex-start; }
-        .msg b { color: var(--accent); font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .msg b { color: var(--accent); font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 8px; letter-spacing: 0.5px; }
 
-        /* INPUT AREA */
-        #bottom-bar { padding: 20px 15%; }
-        #file-tray { display: flex; gap: 10px; margin-bottom: 10px; }
-        .file-pill { background: var(--card); border: 1px solid var(--accent); color: var(--accent); padding: 4px 12px; border-radius: 15px; font-size: 0.75rem; }
+        /* FILE PREVIEW (Claude Style) */
+        .file-attachment { display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; margin-top: 10px; font-size: 0.85rem; }
+        .file-attachment svg { width: 16px; fill: var(--accent); }
 
-        .input-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-        .input-container input { flex: 1; background: none; border: none; color: white; outline: none; font-size: 1rem; }
-        .btn-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
+        /* INPUT */
+        #input-container { padding: 20px 15%; }
+        #tray { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .pill { background: var(--card); border: 1px solid var(--border); padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
+        .pill span { cursor: pointer; color: var(--accent); font-weight: bold; }
+        
+        .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .box input { flex: 1; background: none; border: none; color: #fff; outline: none; font-size: 1rem; }
+        .btn-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+        .btn-icon:hover { color: var(--accent); }
 
         /* VOICE */
-        #voice-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-        .orb { width: 100px; height: 100px; background: var(--accent); border-radius: 50%; transition: 0.3s; box-shadow: 0 0 30px rgba(168, 255, 62, 0.3); }
-        .orb.active { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        #voice-view { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .orb { width: 100px; height: 100px; background: var(--accent); border-radius: 50%; filter: blur(2px); transition: 0.4s; }
+        .orb.active { animation: pulse 1.5s infinite; box-shadow: 0 0 50px var(--accent); }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
     </style>
 </head>
 <body>
 
 <aside id="sidebar">
-    <button class="new-btn" onclick="location.reload()">+ Nouveau Chat</button>
-    <div id="history">
-        <div class="hist-item">Conversation IXA...</div>
-    </div>
-    <div id="cfg-trigger">⚙ IXA v3.0 Stable</div>
+    <button class="new-chat" onclick="createNewChat()">+ Nouveau Chat</button>
+    <div id="chat-list"></div>
+    <div class="status-info" id="api-status">API : Déconnecté</div>
 </aside>
 
 <main>
     <header>
         <div class="nav-tabs">
-            <span class="active" id="t-chat" onclick="setMode('chat')">Assistant</span>
-            <span id="t-voice" onclick="setMode('voice')">Vocal</span>
+            <button class="tab-btn active" id="tab-chat" onclick="setMode('chat')">Assistant</button>
+            <button class="tab-btn" id="tab-voice" onclick="setMode('voice')">Vocal</button>
         </div>
-        <div style="font-size: 0.8rem; color: var(--accent);">STATUS : CONNECTÉ</div>
+        <div style="font-weight: 600; letter-spacing: 1px;">IXA v3.0</div>
     </header>
 
-    <div id="chat-flow"></div>
+    <div id="chat-window"></div>
 
-    <div id="voice-overlay">
+    <div id="voice-view">
         <div class="orb" id="orb"></div>
-        <h2 id="v-status" style="margin-top: 30px;">Prêt à vous écouter</h2>
-        <button class="new-btn" style="margin-top: 20px; padding: 10px 40px;" onclick="startVoice()">Parler</button>
+        <h2 id="v-txt" style="margin-top: 30px; font-weight: 400;">Prêt à vous écouter</h2>
+        <button class="new-chat" style="margin-top: 20px; padding: 12px 40px" onclick="startVoice()">Parler</button>
     </div>
 
-    <div id="bottom-bar">
-        <div id="file-tray"></div>
-        <div class="input-container">
-            <input type="file" id="f-hidden" hidden multiple onchange="handleFiles(this)">
+    <div id="input-container">
+        <div id="tray"></div>
+        <div class="box">
+            <input type="file" id="f-hidden" hidden multiple onchange="attachFiles(this)">
             <button class="btn-icon" onclick="document.getElementById('f-hidden').click()">📎</button>
-            <input type="text" id="user-input" placeholder="Message ou analyse..." onkeydown="if(event.key==='Enter') execute()">
-            <button class="btn-icon" style="color: var(--accent);" onclick="execute()">▲</button>
+            <input type="text" id="user-input" placeholder="Posez une question ou analysez un fichier..." onkeydown="if(event.key==='Enter') run()">
+            <button class="btn-icon" style="color: var(--accent)" onclick="run()">▲</button>
         </div>
     </div>
 </main>
 
 <script>
-    let _KEY = "";
+    let _KEY = localStorage.getItem('ixa_key') || "";
     let _MODEL = "llama-3.3-70b-versatile";
     let _FILES = [];
+    let _HISTORY = JSON.parse(localStorage.getItem('ixa_history')) || [];
+    let _CURRENT_CHAT_ID = null;
 
-    // CHARGEMENT AUTOMATIQUE DE LA CONFIG
+    // --- INITIALISATION ---
     async function init() {
-        const files = ['config.json', 'config (1).json'];
-        for (let f of files) {
-            try {
-                const r = await fetch(f);
-                if (r.ok) {
+        if (!_KEY) {
+            const names = ['config.json', 'config (1).json'];
+            for (let name of names) {
+                try {
+                    const r = await fetch(name);
                     const data = await r.json();
                     _KEY = data.groq_api_key;
-                    _MODEL = data.groq_model || _MODEL;
-                    console.log("IXA : Clé chargée.");
+                    localStorage.setItem('ixa_key', _KEY);
                     break;
-                }
-            } catch (e) {}
+                } catch(e) {}
+            }
         }
-        appendMsg('assistant', "Système IXA v3 prêt. Clé API chargée depuis config.json.");
+        document.getElementById('api-status').textContent = _KEY ? "API : Prête" : "API : Manquante";
+        renderHistory();
+        if (_HISTORY.length > 0) loadChat(_HISTORY[0].id); else createNewChat();
     }
 
-    function handleFiles(input) {
+    // --- GESTION HISTORIQUE ---
+    function createNewChat() {
+        _CURRENT_CHAT_ID = Date.now();
+        const newChat = { id: _CURRENT_CHAT_ID, title: "Nouvelle discussion", messages: [] };
+        _HISTORY.unshift(newChat);
+        saveAndRender();
+        loadChat(_CURRENT_CHAT_ID);
+    }
+
+    function loadChat(id) {
+        _CURRENT_CHAT_ID = id;
+        const chat = _HISTORY.find(c => c.id === id);
+        const win = document.getElementById('chat-window');
+        win.innerHTML = "";
+        chat.messages.forEach(m => displayMsg(m.role, m.content, false));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('chat-list');
+        list.innerHTML = _HISTORY.map(c => `
+            <div class="chat-item ${c.id === _CURRENT_CHAT_ID ? 'active' : ''}" onclick="loadChat(${c.id})">
+                ${c.title}
+            </div>
+        `).join('');
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('ixa_history', JSON.stringify(_HISTORY));
+        renderHistory();
+    }
+
+    // --- GESTION FICHIERS ---
+    function attachFiles(input) {
         for (let f of input.files) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                _FILES.push({name: f.name, content: e.target.result});
-                document.getElementById('file-tray').innerHTML += `<div class="file-pill">${f.name}</div>`;
+                _FILES.push({ name: f.name, content: e.target.result });
+                renderTray();
             };
             reader.readAsText(f);
         }
     }
 
-    async function execute(textOverride = null) {
+    function renderTray() {
+        document.getElementById('tray').innerHTML = _FILES.map((f, i) => `
+            <div class="pill">📄 ${f.name} <span onclick="removeFile(${i})">✕</span></div>
+        `).join('');
+    }
+    function removeFile(i) { _FILES.splice(i, 1); renderTray(); }
+
+    // --- LOGIQUE CHAT ---
+    async function run(override = null) {
         const input = document.getElementById('user-input');
-        const text = textOverride || input.value.trim();
-        if(!text && _FILES.length === 0) return;
+        const text = override || input.value.trim();
+        if (!text && _FILES.length === 0) return;
 
-        appendMsg('user', text || "Analyse de documents...");
-        input.value = "";
+        let displayContent = text;
+        let apiContent = text;
 
-        let prompt = text;
-        if(_FILES.length > 0) {
-            prompt += "\n\nCONTENU DES DOCUMENTS :\n" + _FILES.map(f => `[${f.name}]: ${f.content}`).join("\n");
+        // Si fichiers, on crée le bloc visuel style Claude
+        if (_FILES.length > 0) {
+            const fileBlocks = _FILES.map(f => `
+                <div class="file-attachment">
+                    <svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>
+                    ${f.name}
+                </div>
+            `).join('');
+            displayContent = (text ? text + "<br>" : "") + fileBlocks;
+            apiContent = `[Documents joints: ${_FILES.map(f => f.name).join(', ')}]\n` + 
+                         _FILES.map(f => `CONTENU ${f.name}:\n${f.content}`).join("\n") + 
+                         `--- QUESTION UTILISATEUR ---\n${text}`;
         }
+
+        displayMsg('user', displayContent);
+        input.value = "";
+        
+        // Mise à jour titre si premier message
+        const currentChat = _HISTORY.find(c => c.id === _CURRENT_CHAT_ID);
+        if (currentChat.messages.length <= 1) currentChat.title = text.substring(0, 25);
 
         try {
             const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + _KEY, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${_KEY}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: _MODEL,
-                    messages: [{role: "system", content: "Tu es IXA. Réponds en français de manière concise."}, {role: "user", content: prompt}]
+                    messages: [
+                        {role: "system", content: "Tu es IXA, une IA analytique supérieure. Réponds avec la clarté et la profondeur de Claude. Si des documents sont fournis, utilise-les pour étayer tes réponses."},
+                        ...currentChat.messages.map(m => ({role: m.role, content: m.rawContent || m.content})),
+                        {role: "user", content: apiContent}
+                    ]
                 })
             });
             const data = await res.json();
             const reply = data.choices[0].message.content;
-            appendMsg('assistant', reply);
-            _FILES = []; document.getElementById('file-tray').innerHTML = "";
+            
+            displayMsg('assistant', reply, true, apiContent);
+            _FILES = []; renderTray();
+            saveAndRender();
             return reply;
-        } catch (e) {
-            appendMsg('assistant', "Erreur API : Vérifiez votre fichier config.json.");
+        } catch(e) {
+            displayMsg('assistant', "Erreur de connexion. Vérifiez config.json.");
         }
     }
 
-    function appendMsg(role, content) {
-        const flow = document.getElementById('chat-flow');
-        const d = document.createElement('div');
-        d.className = `msg ${role}`;
-        d.innerHTML = `<b>${role==='user'?'Vous':'IXA'}</b><div>${content}</div>`;
-        flow.appendChild(d);
-        flow.scrollTop = flow.scrollHeight;
+    function displayMsg(role, content, save = true, raw = null) {
+        const win = document.getElementById('chat-window');
+        const div = document.createElement('div');
+        div.className = `msg ${role}`;
+        div.innerHTML = `<b>${role === 'user' ? 'Vous' : 'IXA'}</b><div>${content}</div>`;
+        win.appendChild(div);
+        win.scrollTop = win.scrollHeight;
+
+        if (save) {
+            const chat = _HISTORY.find(c => c.id === _CURRENT_CHAT_ID);
+            chat.messages.push({ role, content, rawContent: raw });
+            saveAndRender();
+        }
     }
 
-    // VOCAL
+    // --- VOCAL ---
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'fr-FR';
 
     function startVoice() {
         document.getElementById('orb').classList.add('active');
-        document.getElementById('v-status').textContent = "Écoute...";
+        document.getElementById('v-txt').textContent = "Écoute...";
         recognition.start();
         recognition.onresult = async (e) => {
-            const rep = await execute(e.results[0][0].transcript);
-            if(rep) speak(rep);
+            const speech = e.results[0][0].transcript;
+            const reply = await run(speech);
+            if(reply) speak(reply);
         };
         recognition.onend = () => document.getElementById('orb').classList.remove('active');
     }
@@ -186,17 +260,17 @@
     function speak(t) {
         const u = new SpeechSynthesisUtterance(t);
         u.lang = 'fr-FR';
-        u.onstart = () => document.getElementById('v-status').textContent = "IXA parle...";
-        u.onend = () => document.getElementById('v-status').textContent = "Prêt à écouter";
+        u.onstart = () => document.getElementById('v-txt').textContent = "IXA parle...";
+        u.onend = () => document.getElementById('v-txt').textContent = "Prêt à écouter";
         window.speechSynthesis.speak(u);
     }
 
     function setMode(m) {
-        document.getElementById('chat-flow').style.display = m==='chat'?'flex':'none';
-        document.getElementById('bottom-bar').style.display = m==='chat'?'block':'none';
-        document.getElementById('voice-overlay').style.display = m==='voice'?'flex':'none';
-        document.querySelectorAll('.nav-tabs span').forEach(s => s.classList.remove('active'));
-        document.getElementById('t-'+m).classList.add('active');
+        document.getElementById('chat-window').style.display = m==='chat'?'flex':'none';
+        document.getElementById('input-container').style.display = m==='chat'?'block':'none';
+        document.getElementById('voice-view').style.display = m==='voice'?'flex':'none';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-'+m).classList.add('active');
     }
 
     init();
