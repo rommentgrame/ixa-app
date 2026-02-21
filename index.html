@@ -3,255 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IXA v3 — Intelligence Personnelle</title>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <title>IXA v3 — Ultimate AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg:#0c0c0f; --c1:#111115; --c2:#18181e; --c3:#1f1f27;
-            --ln:#23232c; --g:#a8ff3e; --b:#3eb8ff; --tx:#eeeef4; --t2:#6e6e82;
+            --bg: #09090b; --sidebar: #121215; --card: #1c1c21;
+            --accent: #a8ff3e; --text: #fafafa; --text-muted: #a1a1aa;
+            --border: #27272a; --user-msg: #27272a;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--bg); color:var(--tx); font-family:'Geist', sans-serif; display:flex; height:100vh; overflow:hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        /* Barre Latérale : Conversations */
-        aside#sidebar { width: 260px; background: var(--c1); border-right: 1px solid var(--ln); display: flex; flex-direction: column; padding: 15px; }
-        .new-chat { border: 1px dashed var(--t2); padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; margin-bottom: 20px; transition: 0.2s; }
-        .new-chat:hover { border-color: var(--g); color: var(--g); }
-        #history { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .hist-item { padding: 10px; border-radius: 6px; background: var(--c2); cursor: pointer; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent; }
-        .hist-item:hover { border-color: var(--ln); }
-        .btn-cfg { margin-top: auto; padding: 10px; background: none; border: 1px solid var(--ln); color: var(--t2); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        /* SIDEBAR */
+        #sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; transition: all 0.3s ease; }
+        .new-chat-btn { background: var(--accent); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 25px; transition: 0.2s; }
+        .new-chat-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        #history-list { flex: 1; overflow-y: auto; }
+        .history-item { padding: 10px; border-radius: 6px; cursor: pointer; color: var(--text-muted); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+        .history-item:hover { background: var(--card); color: var(--text); }
+        .cfg-btn { background: none; border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; justify-content: center; }
 
-        /* Zone Principale */
-        main { flex: 1; display: flex; flex-direction: column; position: relative; }
-        nav#tabs { display: flex; background: var(--c1); border-bottom: 1px solid var(--ln); }
-        nav#tabs button { flex: 1; padding: 15px; background: none; border: none; color: var(--t2); cursor: pointer; font-weight: 500; }
-        nav#tabs button.active { color: var(--g); border-bottom: 2px solid var(--g); }
+        /* MAIN CONTENT */
+        main { flex: 1; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at top right, #1a1a1e, #09090b); }
+        header { padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .tab-group { display: flex; gap: 20px; }
+        .tab { background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 500; font-size: 0.95rem; padding-bottom: 5px; }
+        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 
-        .view { display: none; flex: 1; flex-direction: column; padding: 20px; overflow: hidden; }
-        .view.active { display: flex; }
+        /* CHAT AREA */
+        #chat-container { flex: 1; overflow-y: auto; padding: 40px 15%; display: flex; flex-direction: column; gap: 25px; }
+        .message { max-width: 85%; line-height: 1.6; font-size: 0.95rem; }
+        .message.user { align-self: flex-end; background: var(--user-msg); padding: 15px 20px; border-radius: 18px 18px 2px 18px; border: 1px solid var(--border); }
+        .message.assistant { align-self: flex-start; }
+        .msg-header { font-weight: 600; font-size: 0.8rem; margin-bottom: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Chat & Messages */
-        #chat-flow { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; }
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 12px; line-height: 1.5; }
-        .user { align-self: flex-end; background: var(--b); color: #000; }
-        .assistant { align-self: flex-start; background: var(--c3); border: 1px solid var(--ln); }
-        .img-result { width: 100%; border-radius: 8px; margin-top: 10px; }
+        /* INPUT AREA & ATTACHMENTS */
+        #input-wrapper { padding: 20px 15%; background: linear-gradient(transparent, var(--bg)); }
+        #attachment-area { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .file-chip { background: var(--card); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
+        .file-chip span { color: var(--accent); cursor: pointer; }
 
-        /* Input Bar */
-        .input-area { display: flex; gap: 10px; background: var(--c2); padding: 12px; border-radius: 12px; border: 1px solid var(--ln); align-items: center; }
-        .input-area input { flex: 1; background: none; border: none; color: white; outline: none; font-size: 14px; }
-        .icon-btn { background: none; border: none; color: var(--t2); cursor: pointer; font-size: 1.2em; }
-        .icon-btn:hover { color: var(--g); }
+        .input-box { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .input-box input { flex: 1; background: none; border: none; color: white; outline: none; font-size: 1rem; }
+        .action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+        .action-btn:hover { color: var(--accent); }
 
-        /* Voix */
-        #view-voice { align-items: center; justify-content: center; text-align: center; }
-        .orb { width: 120px; height: 120px; background: var(--g); border-radius: 50%; filter: blur(15px); opacity: 0.4; margin-bottom: 20px; transition: 0.3s; }
-        .orb.active { animation: pulse 1.5s infinite; opacity: 0.8; filter: blur(20px); }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        /* MODAL CONFIG */
+        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal { background: var(--sidebar); border: 1px solid var(--border); width: 450px; padding: 30px; border-radius: 20px; }
+        .modal h2 { margin-bottom: 20px; color: var(--accent); }
+        .modal label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.8rem; }
+        .modal input, .modal select { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); color: white; border-radius: 8px; margin-bottom: 20px; }
 
-        /* Modal Configuration */
-        #modal-cfg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: var(--c2); padding: 30px; border-radius: 15px; width: 400px; border: 1px solid var(--ln); }
-        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin: 10px 0 20px; background: var(--c3); border: 1px solid var(--ln); color: white; border-radius: 5px; }
+        /* VOICE ORB */
+        #voice-view { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .orb { width: 150px; height: 150px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 50px rgba(168, 255, 62, 0.3); transition: 0.3s; }
+        .orb.listening { animation: breathe 1.5s infinite ease-in-out; background: #fff; }
+        @keyframes breathe { 0% { transform: scale(1); box-shadow: 0 0 20px rgba(255,255,255,0.2); } 50% { transform: scale(1.1); box-shadow: 0 0 60px rgba(255,255,255,0.5); } 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,255,255,0.2); } }
     </style>
 </head>
 <body>
 
-    <aside id="sidebar">
-        <div class="new-chat" onclick="createNewChat()">+ Nouvelle Conversation</div>
-        <div id="history">
-            </div>
-        <button class="btn-cfg" onclick="toggleCfg(true)">⚙ Configuration</button>
-    </aside>
+<aside id="sidebar">
+    <button class="new-chat-btn" onclick="resetChat()">+ Nouveau Chat</button>
+    <div id="history-list"></div>
+    <button class="cfg-btn" onclick="openConfig()">⚙ Configuration</button>
+</aside>
 
-    <main>
-        <nav id="tabs">
-            <button onclick="switchTab('chat')" id="tab-chat" class="active">DISCUSSION</button>
-            <button onclick="switchTab('voice')" id="tab-voice">MODE VOCAL</button>
-        </nav>
-
-        <div id="view-chat" class="view active">
-            <div id="chat-flow"></div>
-            <div class="input-area">
-                <input type="file" id="file-up" hidden onchange="handleFile(this)">
-                <button class="icon-btn" onclick="document.getElementById('file-up').click()">📎</button>
-                <input type="text" id="user-in" placeholder="Écrivez ou demandez une image (ex: 'Dessine...')" onkeydown="if(event.key==='Enter') send()">
-                <button class="icon-btn" onclick="send()">▲</button>
-            </div>
+<main>
+    <header>
+        <div class="tab-group">
+            <button class="tab active" id="tab-chat" onclick="setTab('chat')">Assistant</button>
+            <button class="tab" id="tab-voice" onclick="setTab('voice')">Mode Vocal</button>
         </div>
+        <div style="font-weight: 600; color: var(--accent);">IXA v3</div>
+    </header>
 
-        <div id="view-voice" class="view">
-            <div class="orb" id="voice-orb"></div>
-            <h2 id="v-status">Prêt à vous écouter</h2>
-            <p style="color:var(--t2); margin-top:10px;">Cliquez pour démarrer la conversation fluide</p>
-            <button class="btn-cfg" style="margin-top:30px; padding: 15px 30px; background:var(--g); color:black;" onclick="startVoice()">🎙 Démarrer le Micro</button>
-        </div>
-    </main>
-
-    <div id="modal-cfg">
-        <div class="modal-content">
-            <h2 style="color:var(--g); margin-bottom:20px;">Paramètres</h2>
-            <label>Clé API Groq</label>
-            <input type="password" id="cfg_api">
-            <label>Modèle</label>
-            <select id="cfg_model">
-                <option>llama-3.3-70b-versatile</option>
-                <option>llama-3.1-8b-instant</option>
-            </select>
-            <button class="btn-cfg" style="background:var(--g); color:black; width:100%;" onclick="saveCfg()">Sauvegarder & Fermer</button>
-        </div>
+    <div id="chat-container"></div>
+    
+    <div id="voice-view">
+        <div class="orb" id="voice-orb"></div>
+        <h2 id="voice-text" style="margin-top: 30px;">Cliquez pour parler</h2>
+        <button class="new-chat-btn" style="margin-top: 20px;" onclick="toggleVoice()">Démarrer</button>
     </div>
 
+    <div id="input-wrapper">
+        <div id="attachment-area"></div>
+        <div class="input-box">
+            <input type="file" id="file-input" hidden multiple onchange="handleFiles(this)">
+            <button class="action-btn" onclick="document.getElementById('file-input').click()">📎</button>
+            <input type="text" id="main-input" placeholder="Message à IXA..." onkeydown="if(event.key==='Enter') processInput()">
+            <button class="action-btn" style="color: var(--accent)" onclick="processInput()">▲</button>
+        </div>
+    </div>
+</main>
+
+<div id="modal-overlay">
+    <div class="modal">
+        <h2>Paramètres IXA</h2>
+        <label>CLÉ API GROQ</label>
+        <input type="password" id="cfg-api">
+        <label>MODÈLE PRÉFÉRÉ</label>
+        <select id="cfg-model">
+            <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Puissant)</option>
+            <option value="llama-3.1-8b-instant">Llama 3.1 8B (Rapide)</option>
+        </select>
+        <button class="new-chat-btn" style="width: 100%" onclick="saveConfig()">Appliquer</button>
+    </div>
+</div>
+
 <script>
-    let config = { groq_api_key: "", groq_model: "llama-3.3-70b-versatile" };
-    let currentChat = [];
-    const synth = window.speechSynthesis;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const rec = SpeechRecognition ? new SpeechRecognition() : null;
+    let config = { api_key: "", model: "llama-3.3-70b-versatile" };
+    let attachedFiles = [];
+    let isSpeaking = false;
 
-    if(rec) { rec.lang = 'fr-FR'; rec.continuous = false; }
-
+    // --- INITIALISATION ---
     async function init() {
         try {
-            const resp = await fetch('config.json');
-            if(resp.ok) {
-                const data = await resp.json();
-                config = {...config, ...data};
-                document.getElementById('cfg_api').value = config.groq_api_key;
-                document.getElementById('cfg_model').value = config.groq_model;
-            }
-        } catch(e) { console.warn("Fichier config.json absent."); }
-        createNewChat();
+            const r = await fetch('config (1).json');
+            const data = await r.json();
+            config.api_key = data.groq_api_key;
+            config.model = data.groq_model;
+            document.getElementById('cfg-api').value = config.api_key;
+            document.getElementById('cfg-model').value = config.model;
+        } catch(e) { console.log("Config locale non trouvée"); }
+        resetChat();
     }
 
-    // Navigation
-    function switchTab(t) {
-        document.querySelectorAll('.view, #tabs button').forEach(el => el.classList.remove('active'));
-        document.getElementById('view-'+t).classList.add('active');
-        document.getElementById('tab-'+t).classList.add('active');
-    }
-
-    function toggleCfg(show) {
-        document.getElementById('modal-cfg').style.display = show ? 'flex' : 'none';
-    }
-
-    // Gestion Chat
-    function createNewChat() {
-        currentChat = [];
-        document.getElementById('chat-flow').innerHTML = '';
-        const id = Date.now();
-        const item = document.createElement('div');
-        item.className = 'hist-item';
-        item.textContent = "Chat " + new Date().toLocaleTimeString();
-        document.getElementById('history').prepend(item);
-        appendMsg('assistant', "Bonjour, je suis IXA. Comment puis-je vous aider ?");
-    }
-
-    function appendMsg(role, content, isImg = false) {
-        const flow = document.getElementById('chat-flow');
-        const d = document.createElement('div');
-        d.className = `msg ${role}`;
-        if(isImg) {
-            d.innerHTML = `<img src="${content}" class="img-result">`;
+    // --- GESTION INTERFACE ---
+    function setTab(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-'+type).classList.add('active');
+        if(type === 'voice') {
+            document.getElementById('chat-container').style.display = 'none';
+            document.getElementById('input-wrapper').style.display = 'none';
+            document.getElementById('voice-view').style.display = 'flex';
         } else {
-            d.textContent = content;
+            document.getElementById('chat-container').style.display = 'flex';
+            document.getElementById('input-wrapper').style.display = 'block';
+            document.getElementById('voice-view').style.display = 'none';
         }
-        flow.appendChild(d);
-        flow.scrollTop = flow.scrollHeight;
     }
 
-    // Logique IA & Image
-    async function send(override = null) {
-        const input = document.getElementById('user-in');
-        const val = override || input.value.trim();
-        if(!val) return;
+    function openConfig() { document.getElementById('modal-overlay').style.display = 'flex'; }
+    function saveConfig() {
+        config.api_key = document.getElementById('cfg-api').value;
+        config.model = document.getElementById('cfg-model').value;
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
 
-        appendMsg('user', val);
-        input.value = '';
+    // --- GESTION FICHIERS ---
+    function handleFiles(input) {
+        for(let f of input.files) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const fileObj = { name: f.name, content: e.target.result };
+                attachedFiles.push(fileObj);
+                renderChips();
+            };
+            reader.readAsText(f);
+        }
+    }
+
+    function renderChips() {
+        const area = document.getElementById('attachment-area');
+        area.innerHTML = attachedFiles.map((f, i) => `
+            <div class="file-chip">📄 ${f.name} <span onclick="removeFile(${i})">✕</span></div>
+        `).join('');
+    }
+
+    function removeFile(i) { attachedFiles.splice(i, 1); renderChips(); }
+
+    // --- LOGIQUE CHAT ---
+    async function processInput(overrideText = null) {
+        const input = document.getElementById('main-input');
+        const text = overrideText || input.value.trim();
+        if(!text && attachedFiles.length === 0) return;
+
+        appendMessage('user', text);
+        input.value = "";
+
+        // Préparation du prompt avec fichiers
+        let fullPrompt = text;
+        if(attachedFiles.length > 0) {
+            fullPrompt += "\n\nDocuments joints :\n" + attachedFiles.map(f => `[${f.name}]: ${f.content}`).join("\n");
+        }
 
         // Détection Image
-        const triggerImg = ["dessine", "génère une image", "image de", "crée un visuel"];
-        if(triggerImg.some(t => val.toLowerCase().includes(t))) {
-            const prompt = encodeURIComponent(val);
-            const url = `https://pollinations.ai/p/${prompt}?width=1024&height=1024&nologo=true&seed=${Math.random()}`;
-            appendMsg('assistant', url, true);
+        if(text.toLowerCase().includes("dessine") || text.toLowerCase().includes("génère une image")) {
+            const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(text)}?width=1024&height=1024&nologo=true&seed=${Math.random()}`;
+            appendMessage('assistant', `<img src="${imgUrl}" style="width:100%; border-radius:10px; margin-top:10px;">`);
+            attachedFiles = []; renderChips();
             return;
         }
 
-        // Appel Groq
         try {
-            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${config.groq_api_key}`,
-                    'Content-Type': 'application/json' 
-                },
+                headers: { 'Authorization': `Bearer ${config.api_key}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: config.groq_model,
-                    messages: [{role: "system", content: "Tu es IXA, IA directe et efficace. Réponds en français."}, {role: "user", content: val}]
+                    model: config.model,
+                    messages: [{role: "system", content: "Tu es IXA, une IA supérieure. Réponds en français de façon concise."}, {role: "user", content: fullPrompt}]
                 })
             });
-            const data = await res.json();
+            const data = await resp.json();
             const reply = data.choices[0].message.content;
-            appendMsg('assistant', reply);
+            appendMessage('assistant', reply);
+            attachedFiles = []; renderChips();
             return reply;
         } catch(e) {
-            appendMsg('assistant', "Erreur : Vérifiez votre clé API dans les paramètres.");
+            appendMessage('assistant', "Erreur de connexion. Vérifiez votre clé API.");
         }
     }
 
-    // Analyse Document
-    async function handleFile(input) {
-        const file = input.files[0];
-        if(!file) return;
-        appendMsg('assistant', `Lecture du document : ${file.name}...`);
+    function appendMessage(role, content) {
+        const container = document.getElementById('chat-container');
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+        div.innerHTML = `<div class="msg-header">${role === 'user' ? 'Vous' : 'IXA'}</div><div>${content}</div>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function resetChat() {
+        document.getElementById('chat-container').innerHTML = '';
+        appendMessage('assistant', 'Système IXA v3 initialisé. Prêt pour vos requêtes.');
+    }
+
+    // --- LOGIQUE VOCALE (STT & TTS) ---
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'fr-FR';
+
+    async function toggleVoice() {
+        const orb = document.getElementById('voice-orb');
+        const status = document.getElementById('voice-text');
         
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const text = e.target.result;
-            send(`Analyse ce contenu de fichier (${file.name}) et résume-le : \n\n ${text.substring(0, 4000)}`);
-        };
-        reader.readAsText(file);
-    }
+        status.textContent = "Je vous écoute...";
+        orb.classList.add('listening');
+        recognition.start();
 
-    // Voix
-    function startVoice() {
-        if(!rec) return alert("Microphone non supporté");
-        document.getElementById('voice-orb').classList.add('active');
-        document.getElementById('v-status').textContent = "Je vous écoute...";
-        rec.start();
-    }
-
-    if(rec) {
-        rec.onresult = async (e) => {
-            const speech = e.results[0][0].transcript;
-            document.getElementById('v-status').textContent = "Analyse...";
-            const reply = await send(speech);
-            if(reply) speak(reply);
+        recognition.onresult = async (event) => {
+            const speechText = event.results[0][0].transcript;
+            status.textContent = "Analyse : " + speechText;
+            const reply = await processInput(speechText);
+            speak(reply);
         };
-        rec.onend = () => document.getElementById('voice-orb').classList.remove('active');
+
+        recognition.onend = () => orb.classList.remove('listening');
     }
 
     function speak(text) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'fr-FR';
-        u.onstart = () => {
-            document.getElementById('v-status').textContent = "IXA vous répond...";
-            document.getElementById('voice-orb').classList.add('active');
-        };
-        u.onend = () => {
-            document.getElementById('v-status').textContent = "Prêt à vous écouter";
-            document.getElementById('voice-orb').classList.remove('active');
-        };
-        synth.speak(u);
-    }
-
-    function saveCfg() {
-        config.groq_api_key = document.getElementById('cfg_api').value;
-        config.groq_model = document.getElementById('cfg_model').value;
-        toggleCfg(false);
+        const synth = window.speechSynthesis;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'fr-FR';
+        utter.rate = 1.1;
+        utter.onstart = () => document.getElementById('voice-text').textContent = "IXA parle...";
+        utter.onend = () => document.getElementById('voice-text').textContent = "Cliquez pour parler";
+        synth.speak(utter);
     }
 
     init();
