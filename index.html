@@ -1,1 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IXA — Intelligence Personnelle</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- XLSX (Excel) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s)">
+</script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';document.head.appendChild(s)">
+</script>
+<style>
+/* dark theme snippet from user */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0c0f;--c1:#111115;--c2:#18181e;--c3:#1f1f27;
+  --ln:#23232c;--ln2:#2d2d38;
+  --g:#a8ff3e;--b:#3eb8ff;--r:#ff4d6d;--p:#9d6bff;--o:#ffb23e;
+  --tx:#eeeef4;--t2:#6e6e82;--t3:#28282f;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:'Geist',sans-serif;font-size:14px;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(35,35,44,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(35,35,44,.5) 1px,transparent 1px);
+  background-size:44px 44px}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 45% at 50% 0%,rgba(168,255,62,.05) 0%,transparent 65%)}
+/* sidebar and other ignored for now */
+#container { display:flex; height:100vh; }
+#main { flex:2; display:flex; flex-direction:column; padding:20px; }
+#chat { flex:1; background:var(--c3); border-radius:8px; padding:15px; overflow-y:auto; display:flex; flex-direction:column; }
+.message { margin:8px 0; max-width:80%; word-wrap:break-word; padding:10px 14px; border-radius:20px; }
+.user { background:var(--b); align-self:flex-end; color:#000; }
+.assistant { background:var(--g); align-self:flex-start; color:#000; }
+#controls { margin-top:10px; display:flex; gap:10px; }
+#input { flex:1; padding:10px; border:1px solid var(--ln); border-radius:20px; background:var(--c2); color:var(--tx); }
+#send { padding:10px 20px; border:none; background:var(--g); color:#000; border-radius:20px; cursor:pointer; }
+#send:hover { background:var(--o); }
+aside#settings { flex:1; background:var(--c2); padding:20px; border-left:1px solid var(--ln); overflow-y:auto; }
+aside#settings h2 { margin-top:0; color:var(--g); }
+input, select { background:var(--c3); color:var(--tx); border:1px solid var(--ln); border-radius:4px; padding:4px; }
+button { font-family:'Geist',sans-serif; }
+</style>
+</head>
+<body>
+<div id="container">
+ <div id="main">
+  <h1>IXA v3</h1>
+  <div id="chat"></div>
+  <div id="controls">
+    <input id="input" placeholder="Votre message..." autocomplete="off" />
+    <button id="send">Envoyer</button>
+  </div>
+ </div>
+ <aside id="settings">
+    <h2>⚙ Configuration</h2>
+    <label>Clé API Groq:<br><input type="text" id="cfg_api" style="width:100%" /></label><br><br>
+    <label>Modèle:&nbsp;
+        <select id="cfg_model">
+            <option>llama-3.3-70b-versatile</option>
+            <option>llama-3.3-70b-chat</option>
+            <option>llama-2-7b</option>
+            <option>llama-2-13b</option>
+            <option>llama-2-70b</option>
+        </select>
+    </label><br><br>
+    <label>Dépôt GitHub (user/repo):<br><input type="text" id="cfg_repo" style="width:100%" /></label><br><br>
+    <label>Chemin du fichier config:<br><input type="text" id="cfg_path" style="width:100%" placeholder="config.json" /></label><br><br>
+    <label>Token GitHub (pour sauvegarder):<br><input type="password" id="cfg_ghtoken" style="width:100%" /></label><br><br>
+    <button id="savecfg">Enregistrer</button>
+    <p style="font-size:0.9em;color:var(--t2);">Si vous avez un dépôt, les paramètres peuvent être stockés et lus via GitHub ; c'est votre base de données.</p>
+ </aside>
+</div>
+<script>
+        let config = {
+            groq_api_key: "",
+            groq_model: "llama-3.3-70b-versatile",
+            github_repo: "",
+            github_path: "config.json",
+            github_token: ""
+        };
 
+        // charge config locale puis, si renseigné, remote GitHub
+        async function loadConfig() {
+            try {
+                const resp = await fetch('config.json');
+                if (resp.ok) config = await resp.json();
+            } catch (e) {
+                console.warn('Impossible de charger config.json', e);
+            }
+            await loadRemoteConfig();
+            fillForm();
+        }
+
+        function fillForm() {
+            document.getElementById('cfg_api').value = config.groq_api_key || '';
+            document.getElementById('cfg_model').value = config.groq_model || '';
+            document.getElementById('cfg_repo').value = config.github_repo || '';
+            document.getElementById('cfg_path').value = config.github_path || 'config.json';
+            document.getElementById('cfg_ghtoken').value = config.github_token || '';
+        }
+
+        function append(role, text) {
+            const div = document.createElement('div');
+            div.className = 'message ' + role;
+            div.textContent = text;
+            document.getElementById('chat').appendChild(div);
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const message = input.value.trim();
+            if (!message) return;
+            append('user', message);
+            input.value = '';
+
+            try {
+                const body = {
+                    model: config.groq_model || 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: 'Tu es IXA, une intelligence artificielle personnelle. Réponds toujours en français, de façon directe, utile et précise.' },
+                        { role: 'user', content: message }
+                    ],
+                    max_tokens: 4000,
+                    temperature: 0.8
+                };
+                const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + config.groq_api_key
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await resp.json();
+                if (data.error) {
+                    let msg = data.error;
+                    if (msg.includes('model') && msg.includes('does not exist')) {
+                        msg += ' — vérifie ton modèle dans la configuration.';
+                    }
+                    throw new Error(msg);
+                }
+                const reply = data.choices[0].message.content;
+                append('assistant', reply);
+            } catch (err) {
+                append('assistant', 'Erreur : ' + err.message);
+            }
+        }
+
+        // GitHub helpers ------------------------------------
+        async function loadRemoteConfig() {
+            if (!config.github_repo) return;
+            let path = config.github_path || 'config.json';
+            try {
+                let url = `https://api.github.com/repos/${config.github_repo}/contents/${path}`;
+                let headers = {};
+                if (config.github_token) headers.Authorization = 'token ' + config.github_token;
+                let resp = await fetch(url, { headers });
+                if (!resp.ok) return;
+                let data = await resp.json();
+                if (data.content) {
+                    let txt = atob(data.content.replace(/\n/g, ''));
+                    let remote = JSON.parse(txt);
+                    Object.assign(config, remote);
+                }
+            } catch (e) {
+                console.warn('lecture config GitHub échouée', e);
+            }
+        }
+
+        async function storeSettings() {
+            // mettre à jour config localement
+            config.groq_api_key = document.getElementById('cfg_api').value.trim();
+            config.groq_model   = document.getElementById('cfg_model').value;
+            config.github_repo  = document.getElementById('cfg_repo').value.trim();
+            config.github_path  = document.getElementById('cfg_path').value.trim() || 'config.json';
+            config.github_token = document.getElementById('cfg_ghtoken').value.trim();
+
+            if (config.github_repo && config.github_token) {
+                try {
+                    let path = config.github_path || 'config.json';
+                    let url = `https://api.github.com/repos/${config.github_repo}/contents/${path}`;
+                    let headers = {
+                        'Content-Type': 'application/json',
+                        Authorization: 'token ' + config.github_token
+                    };
+                    // récupérer sha existant
+                    let sha = '';
+                    let check = await fetch(url, { headers });
+                    if (check.ok) {
+                        let js = await check.json();
+                        sha = js.sha || '';
+                    }
+                    let body = {
+                        message: 'mise à jour config IXA',
+                        content: btoa(JSON.stringify(config, null, 2))
+                    };
+                    if (sha) body.sha = sha;
+                    let put = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+                    if (!put.ok) throw new Error('HTTP ' + put.status);
+                    alert('Configuration enregistrée sur GitHub.');
+                } catch (e) {
+                    alert('Impossible d\'enregistrer sur GitHub: ' + e.message);
+                }
+            } else {
+                alert('Paramètres mis à jour localement. Saisissez un dépôt + token pour sauvegarder.');
+            }
+        }
+
+        document.getElementById('send').addEventListener('click', sendMessage);
+        document.getElementById('input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+        document.getElementById('savecfg').addEventListener('click', storeSettings);
+
+        loadConfig();
+</script>
+</body>
+</html>
