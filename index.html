@@ -66,13 +66,49 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx)
 .xb{background:none;border:none;color:var(--mu);cursor:pointer;padding:5px;border-radius:7px;font-size:.9rem;transition:.2s}
 .xb:hover{color:var(--tx);background:var(--c1)}
 .upill{background:var(--c1);border:1px solid var(--bd2);border-radius:10px;padding:8px 10px;
-  display:flex;align-items:center;gap:8px}
-.uav{width:28px;height:28px;border-radius:50%;background:linear-gradient(120deg,var(--a),var(--a2));
-  display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0}
+  display:flex;align-items:center;gap:8px;cursor:pointer;transition:.2s;position:relative}
+.upill:hover{border-color:var(--a)}
+.uav{width:30px;height:30px;border-radius:50%;background:linear-gradient(120deg,var(--a),var(--a2));
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0;
+  overflow:hidden;object-fit:cover}
+.uav img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .uname{flex:1;font-weight:600;font-size:.8rem}
 .urole{font-size:.64rem;color:var(--mu)}
 .logoutb{background:none;border:none;color:var(--mu);cursor:pointer;font-size:.72rem;transition:.2s;padding:3px}
 .logoutb:hover{color:var(--err)}
+
+/* PROFILE DROPDOWN */
+.prof-drop{position:absolute;bottom:calc(100% + 6px);left:0;right:0;
+  background:var(--sb);border:1px solid var(--bd2);border-radius:13px;
+  padding:14px;z-index:300;display:none;flex-direction:column;gap:10px;
+  box-shadow:0 -8px 32px rgba(0,0,0,.5);animation:dropIn .18s ease}
+.prof-drop.open{display:flex}
+@keyframes dropIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.pd-header{display:flex;align-items:center;gap:10px}
+.pd-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(120deg,var(--a),var(--a2));
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;
+  overflow:hidden;cursor:pointer;transition:.2s;border:2px solid transparent;position:relative}
+.pd-av:hover{border-color:var(--a)}
+.pd-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.pd-av-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;font-size:.75rem}
+.pd-av:hover .pd-av-overlay{opacity:1}
+.pd-info{flex:1;min-width:0}
+.pd-name{font-weight:700;font-size:.9rem}
+.pd-role{font-size:.7rem;color:var(--mu)}
+.pd-badge{display:inline-flex;align-items:center;gap:3px;background:var(--soft);color:var(--a);
+  padding:2px 7px;border-radius:5px;font-size:.64rem;font-weight:600;margin-top:3px}
+.pd-sep{height:1px;background:var(--bd2)}
+.pd-item{display:flex;align-items:center;gap:8px;padding:7px 5px;border-radius:8px;
+  font-size:.79rem;color:var(--mu);cursor:pointer;transition:.2s}
+.pd-item:hover{color:var(--tx);background:var(--c1)}
+.pd-item.danger:hover{color:var(--err);background:rgba(255,107,107,.07)}
+.pd-stat{display:flex;gap:12px;padding:4px 5px}
+.pd-st{display:flex;flex-direction:column;gap:1px;flex:1}
+.pd-sv{font-size:.83rem;font-weight:700;color:var(--tx)}
+.pd-sk{font-size:.65rem;color:var(--mu)}
+#pd-av-inp{display:none}
+
 .btn-new{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;
   padding:10px 13px;border-radius:12px;font-weight:600;font-size:.83rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--t);
@@ -89,12 +125,12 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx)
 .cia{display:flex;gap:1px;opacity:0;flex-shrink:0;transition:.15s}
 .ci:hover .cia,.ci.act .cia{opacity:1}
 .cib{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;font-size:.68rem;transition:.15s;color:var(--mu)}
-.cib.r:hover{color:var(--inf)}
-.cib.d:hover{color:var(--err)}
+.cib.r:hover{color:var(--inf)}.cib.d:hover{color:var(--err)}
 .ci-ri{flex:1;background:var(--c1);border:1px solid var(--a);color:var(--tx);
   padding:3px 7px;border-radius:6px;font-size:.77rem;font-family:'Space Grotesk',sans-serif;outline:none}
 #ast{font-size:.65rem;display:flex;align-items:center;gap:5px;padding:3px 4px;color:var(--mu)}
 #ast.ok{color:var(--ok)}#ast.err{color:var(--err)}
+#ast.web{color:var(--inf)}
 
 /* ── MAIN ── */
 main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);position:relative;overflow:hidden;z-index:1}
@@ -119,6 +155,8 @@ header{height:var(--hh);padding:0 18px;border-bottom:1px solid var(--bd);
 .hb:hover{border-color:var(--err);color:var(--err)}
 .hb.p{border-color:rgba(108,92,231,.35);color:var(--a)}
 .hb.p:hover{background:var(--soft)}
+.web-badge{background:var(--inf);color:#000;border-radius:4px;font-size:.58rem;
+  padding:1px 5px;font-weight:700;margin-left:3px;vertical-align:middle}
 
 /* ── MESSAGES ── */
 #msgs{flex:1;overflow-y:auto;padding:20px max(3%,13px);display:flex;flex-direction:column;gap:15px;position:relative;z-index:1}
@@ -130,13 +168,14 @@ header{height:var(--hh);padding:0 18px;border-bottom:1px solid var(--bd);
 .wg{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:5px;max-width:400px;width:100%}
 .wc{background:var(--c1);border:1px solid var(--bd2);padding:10px 12px;border-radius:11px;font-size:.78rem;color:var(--mu);cursor:pointer;transition:.2s;text-align:left;display:flex;align-items:flex-start;gap:7px;line-height:1.4}
 .wc:hover{border-color:var(--a);color:var(--tx);background:var(--c2);transform:translateY(-1px)}
-.message{display:flex;gap:9px;align-items:flex-start;animation:mI .25s ease-out}
+.message{display:flex;gap:9px;align-items:flex-start;animation:mI .25s ease-out;position:relative}
 @keyframes mI{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 .message.user{flex-direction:row-reverse;align-self:flex-end;max-width:86%}
 .message.ass{align-self:flex-start;width:100%;max-width:800px}
-.mav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.76rem;flex-shrink:0;border:2px solid var(--bd2)}
+.mav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.76rem;flex-shrink:0;border:2px solid var(--bd2);overflow:hidden}
 .message.user .mav{background:linear-gradient(120deg,var(--a),var(--a2));border:none}
 .message.ass .mav{background:var(--c2);border-color:rgba(108,92,231,.25)}
+.mav img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .mbody{flex:1;min-width:0}
 .mrole{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px;color:var(--mu)}
 .message.user .mrole{text-align:right;color:var(--a)}
@@ -146,7 +185,8 @@ header{height:var(--hh);padding:0 18px;border-bottom:1px solid var(--bd);
 .mc h1{font-size:1.24rem}.mc h2{font-size:1.01rem;color:var(--a)}.mc h3{font-size:.88rem;color:var(--mu)}
 .mc p{margin-bottom:7px}.mc strong{color:#fff;font-weight:600}.mc em{color:var(--mu)}
 .mc ul,.mc ol{padding-left:18px;margin-bottom:7px}.mc li{margin-bottom:3px}
-.mc a{color:var(--a)}.mc blockquote{border-left:3px solid var(--a);padding-left:11px;color:var(--mu);margin:8px 0}
+.mc a{color:var(--a);text-decoration:none}.mc a:hover{text-decoration:underline}
+.mc blockquote{border-left:3px solid var(--a);padding-left:11px;color:var(--mu);margin:8px 0}
 .mc hr{border:none;border-top:1px solid var(--bd2);margin:10px 0}
 .mc code:not(pre code){background:var(--c2);border:1px solid var(--bd2);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.8em;color:var(--a2)}
 .mc table{width:100%;border-collapse:collapse;margin:9px 0;font-size:.82rem}
@@ -176,6 +216,26 @@ header{height:var(--hh);padding:0 18px;border-bottom:1px solid var(--bd);
 .td:nth-child(2){animation-delay:.22s}.td:nth-child(3){animation-delay:.44s}
 @keyframes td{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-5px);opacity:1}}
 
+/* ── MESSAGE ACTIONS (hover) ── */
+.msg-actions{display:flex;gap:3px;margin-top:5px;opacity:0;transition:opacity .18s;flex-wrap:wrap}
+.message:hover .msg-actions{opacity:1}
+.message.user .msg-actions{justify-content:flex-end}
+.mact{background:none;border:1px solid var(--bd2);color:var(--mu);padding:3px 8px;border-radius:6px;
+  font-size:.68rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.18s;
+  display:flex;align-items:center;gap:4px}
+.mact:hover{border-color:var(--a);color:var(--a);background:var(--soft)}
+.mact.ok{border-color:var(--ok);color:var(--ok)}
+
+/* Search indicator */
+.search-bar{background:var(--c1);border:1px solid var(--inf);border-radius:10px;padding:9px 13px;
+  font-size:.79rem;color:var(--inf);display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.search-results{background:var(--c2);border:1px solid var(--bd2);border-radius:9px;padding:10px 13px;
+  font-size:.76rem;margin-bottom:8px}
+.search-results .sr-title{font-weight:600;color:var(--tx);margin-bottom:4px;font-size:.8rem}
+.search-results .sr-item{color:var(--mu);padding:3px 0;border-bottom:1px solid var(--bd);line-height:1.5}
+.search-results .sr-item:last-child{border:none}
+.search-results .sr-item a{color:var(--a);font-size:.72rem}
+
 /* ── INPUT ── */
 #input-area{padding:7px max(3%,11px) 14px;position:relative;z-index:10;flex-shrink:0}
 #at{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
@@ -192,12 +252,13 @@ textarea{flex:1;background:none;border:none;color:var(--tx);padding:8px 4px;resi
 textarea::placeholder{color:var(--mu)}
 .abtn{background:none;border:none;color:var(--mu);cursor:pointer;padding:7px;border-radius:8px;transition:.2s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .abtn:hover{color:var(--a);background:var(--soft)}
+.abtn.web-on{color:var(--inf)}
 .sbtn{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
 .sbtn:hover{transform:scale(1.1);box-shadow:0 4px 16px var(--glow)}
 .sbtn:disabled{opacity:.3;transform:none;cursor:not-allowed}
 
 /* ── VOICE ── */
-#voice-view{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+#voice-view{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1;gap:0}
 .owrap{position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center}
 .orb{width:86px;height:86px;background:linear-gradient(120deg,var(--a),var(--a2));border-radius:50%;transition:.5s;z-index:2;position:relative;box-shadow:0 0 30px rgba(108,92,231,.3)}
 .oring{position:absolute;border-radius:50%;border:1.5px solid;opacity:0}
@@ -212,8 +273,15 @@ textarea::placeholder{color:var(--mu)}
 #vpb{height:100%;width:0%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .4s ease;border-radius:9px}
 .vbtn{margin-top:22px;background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;padding:12px 24px;border-radius:100px;font-weight:600;font-size:.9rem;cursor:pointer;transition:var(--t);font-family:'Space Grotesk',sans-serif;display:flex;align-items:center;gap:8px}
 .vbtn:hover{transform:scale(1.05);box-shadow:0 8px 28px var(--glow)}
+.voice-settings{margin-top:18px;background:var(--c1);border:1px solid var(--bd2);border-radius:13px;padding:14px 18px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px}
+.vs-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.79rem;color:var(--mu)}
+.vs-row label{flex-shrink:0}
+.vs-row input[type=range]{flex:1;accent-color:var(--a)}
+.vs-row select{background:var(--c2);border:1px solid var(--bd2);color:var(--tx);padding:4px 8px;border-radius:7px;font-size:.77rem;font-family:'Space Grotesk',sans-serif;outline:none;flex:1}
+.vcont-toggle{display:flex;align-items:center;gap:6px;font-size:.79rem;color:var(--mu);cursor:pointer}
+.vcont-toggle input{accent-color:var(--a)}
 
-/* ── DATA TAB (shortcuts only) ── */
+/* ── DATA TAB ── */
 #data-view{display:none;flex:1;overflow-y:auto;padding:18px max(3%,13px);flex-direction:column;gap:13px;position:relative;z-index:1}
 .ds{background:var(--c1);border:1px solid var(--bd2);border-radius:12px;overflow:hidden}
 .dsh{padding:12px 15px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;justify-content:space-between;background:var(--c2)}
@@ -276,6 +344,15 @@ textarea::placeholder{color:var(--mu)}
 .qopt.wrong{border-color:var(--err)!important;color:var(--err)!important;background:rgba(255,107,107,.08)!important}
 .quiz-expl{font-size:.75rem;color:var(--mu);padding:7px 10px;background:var(--c2);border-radius:7px;border-left:3px solid var(--a)}
 .quiz-score{text-align:center;font-size:.97rem;font-weight:600;padding:16px;background:linear-gradient(135deg,var(--c2),rgba(108,92,231,.06));border:1px solid rgba(108,92,231,.25);border-radius:11px}
+/* Learn chat */
+.learn-chat{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;overflow:hidden}
+.learn-chat-msgs{padding:12px;display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto}
+.lcm{padding:8px 11px;border-radius:9px;font-size:.82rem;line-height:1.6;max-width:88%}
+.lcm.u{background:var(--ub);border:1px solid var(--bd2);align-self:flex-end}
+.lcm.a{background:var(--c2);border:1px solid var(--bd2);align-self:flex-start;color:var(--mu)}
+.learn-chat-inp{display:flex;gap:7px;padding:9px 12px;border-top:1px solid var(--bd2)}
+.learn-chat-inp input{flex:1;background:none;border:none;color:var(--tx);font-size:.83rem;font-family:'Space Grotesk',sans-serif;outline:none}
+.learn-chat-inp button{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;padding:6px 13px;border-radius:8px;cursor:pointer;font-size:.78rem;font-family:'Space Grotesk',sans-serif;transition:.2s}
 
 /* ── TOAST ── */
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(12px);
@@ -306,11 +383,21 @@ textarea::placeholder{color:var(--mu)}
 .mo-s{font-size:.77rem;color:var(--mu);line-height:1.6}
 .mi{background:var(--c1);border:1px solid var(--bd2);color:var(--tx);padding:10px 12px;border-radius:10px;font-size:.83rem;font-family:'Space Grotesk',sans-serif;outline:none;transition:.2s;width:100%}
 .mi:focus{border-color:var(--a);box-shadow:0 0 0 3px var(--soft)}.mi::placeholder{color:var(--mu)}
+.mi-row{display:flex;gap:7px}
 .mbtns{display:flex;gap:7px;justify-content:flex-end}
 .mdb{padding:8px 16px;border-radius:9px;font-size:.79rem;cursor:pointer;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none}
 .mdb.can{background:var(--c1);border:1px solid var(--bd2);color:var(--mu)}.mdb.can:hover{color:var(--tx)}
 .mdb.cfm{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}.mdb.cfm:hover{box-shadow:0 4px 14px var(--glow)}
 .mdb.del{background:rgba(255,107,107,.1);border:1px solid var(--err);color:var(--err)}
+.user-row{display:flex;align-items:center;gap:10px;padding:9px;background:var(--c2);border:1px solid var(--bd2);border-radius:9px}
+.user-row-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(120deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0}
+.user-row-info{flex:1}
+.user-row-name{font-size:.82rem;font-weight:600}
+.user-row-role{font-size:.67rem;color:var(--mu)}
+.user-row-acts{display:flex;gap:4px}
+.urb{background:none;border:1px solid var(--bd2);color:var(--mu);padding:3px 7px;border-radius:6px;font-size:.68rem;cursor:pointer;transition:.2s;font-family:'Space Grotesk',sans-serif}
+.urb:hover{border-color:var(--a);color:var(--a)}
+.urb.del:hover{border-color:var(--err);color:var(--err)}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){header{padding:0 12px}#msgs,#data-view,#learn-view{padding:15px 11px}#input-area{padding:6px 9px 11px}}
@@ -365,11 +452,53 @@ textarea::placeholder{color:var(--mu)}
     <div class="brand"><div class="bdt"></div>IXA</div>
     <button class="xb" onclick="closeSB()">✕</button>
   </div>
-  <div class="upill" id="upill" style="display:none">
-    <div class="uav" id="u-av">👤</div>
-    <div style="flex:1;min-width:0"><div class="uname" id="u-nm">—</div><div class="urole" id="u-rl">—</div></div>
-    <button class="logoutb" onclick="logout()" title="Déconnexion">⏻</button>
+
+  <!-- USER PILL + PROFILE DROPDOWN -->
+  <div style="position:relative">
+    <div class="upill" id="upill" style="display:none" onclick="toggleProfileDrop(event)">
+      <div class="uav" id="u-av">👤</div>
+      <div style="flex:1;min-width:0"><div class="uname" id="u-nm">—</div><div class="urole" id="u-rl">—</div></div>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--mu);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="prof-drop" id="prof-drop">
+      <div class="pd-header">
+        <div class="pd-av" id="pd-av-btn" title="Changer la photo" onclick="document.getElementById('pd-av-inp').click()">
+          <div id="pd-av-img">👤</div>
+          <div class="pd-av-overlay">📷</div>
+        </div>
+        <input type="file" id="pd-av-inp" accept="image/*" onchange="changeAvatar(this)" style="display:none">
+        <div class="pd-info">
+          <div class="pd-name" id="pd-name">—</div>
+          <div class="pd-role" id="pd-role-txt">—</div>
+          <div class="pd-badge" id="pd-badge">👤 Utilisateur</div>
+        </div>
+      </div>
+      <div class="pd-stat">
+        <div class="pd-st"><span class="pd-sv" id="pd-nchats">0</span><span class="pd-sk">conversations</span></div>
+        <div class="pd-st"><span class="pd-sv" id="pd-nmem">0</span><span class="pd-sk">mémoires</span></div>
+        <div class="pd-st"><span class="pd-sv" id="pd-ncmds">0</span><span class="pd-sk">raccourcis</span></div>
+      </div>
+      <div class="pd-sep"></div>
+      <div class="pd-item" onclick="openMemory();closeProfileDrop()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a9 9 0 1 0 0 18A9 9 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>
+        Mémoire IXA
+      </div>
+      <div class="pd-item" id="pd-admin-btn" onclick="openUserMgmt();closeProfileDrop()" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Gestion des utilisateurs
+      </div>
+      <div class="pd-item" onclick="exportChat();closeProfileDrop()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter la conversation
+      </div>
+      <div class="pd-sep"></div>
+      <div class="pd-item danger" onclick="logout();closeProfileDrop()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </div>
+    </div>
   </div>
+
   <button class="btn-new" onclick="createChat();closeSB()">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Nouvelle conversation
@@ -417,10 +546,10 @@ textarea::placeholder{color:var(--mu)}
         <div class="wlogo">IXA</div>
         <div class="wsub">Système IA de <b>Tom</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
         <div class="wg">
-          <div class="wc" onclick="hint('Crée un rapport Word complet sur Napoléon Bonaparte')"><span>📘</span><span>Rapport Word</span></div>
-          <div class="wc" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel avec données exemples')"><span>📗</span><span>Créer un Excel</span></div>
-          <div class="wc" onclick="hint('Crée une présentation PowerPoint de 5 slides sur l\'intelligence artificielle')"><span>📑</span><span>PowerPoint</span></div>
-          <div class="wc" onclick="hint('Génère un CV professionnel complet en format PDF')"><span>📕</span><span>Créer un PDF/CV</span></div>
+          <div class="wc" onclick="hint('Quelles sont les actualités d\'aujourd\'hui en France ?')"><span>🌐</span><span>Actualités web</span></div>
+          <div class="wc" onclick="hint('Explique-moi le machine learning avec des exemples concrets')"><span>🧠</span><span>Expliquer un concept</span></div>
+          <div class="wc" onclick="hint('Aide-moi à rédiger un email professionnel pour demander une augmentation')"><span>✍️</span><span>Rédiger un message</span></div>
+          <div class="wc" onclick="hint('Analyse ce code et dis-moi comment l\'améliorer')"><span>💻</span><span>Analyser du code</span></div>
         </div>
       </div>
     </div>
@@ -429,10 +558,13 @@ textarea::placeholder{color:var(--mu)}
       <div id="cmd-s"></div>
       <div class="iw">
         <input type="file" id="fi" hidden multiple
-          accept=".txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp,.xlsx,.xls,.docx"
+          accept=".txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp,.xlsx,.xls,.docx,.doc,.pptx,.ppt,.mp3,.mp4,.zip"
           onchange="handleFiles(this)">
         <button class="abtn" title="Joindre un fichier" onclick="document.getElementById('fi').click()">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <button class="abtn" id="web-btn" title="Recherche Internet (activer/désactiver)" onclick="toggleWebSearch()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </button>
         <textarea id="mi" placeholder="Écrivez… ou /raccourci pour vos fichiers" rows="1" oninput="onInput(this)" onkeydown="onKey(event)"></textarea>
         <button class="sbtn" id="sbtn" onclick="handleSend()">
@@ -455,9 +587,26 @@ textarea::placeholder{color:var(--mu)}
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
       Activer IXA
     </button>
+    <div class="voice-settings">
+      <div class="vs-row">
+        <label>🎙️ Voix :</label>
+        <select id="v-voice-sel" onchange="updateVoiceSetting()"></select>
+      </div>
+      <div class="vs-row">
+        <label>⚡ Vitesse : <span id="v-rate-val">1.0×</span></label>
+        <input type="range" id="v-rate" min="0.6" max="1.8" step="0.1" value="1.0" oninput="updateVoiceRate(this.value)">
+      </div>
+      <div class="vs-row">
+        <label>🎵 Tonalité : <span id="v-pitch-val">1.0</span></label>
+        <input type="range" id="v-pitch" min="0.5" max="1.5" step="0.1" value="1.0" oninput="updateVoicePitch(this.value)">
+      </div>
+      <label class="vcont-toggle">
+        <input type="checkbox" id="v-cont"> 🔄 Mode continu (écoute après réponse)
+      </label>
+    </div>
   </div>
 
-  <!-- DATA VIEW (file shortcuts) -->
+  <!-- DATA VIEW -->
   <div id="data-view">
     <div class="ds">
       <div class="dsh">
@@ -468,7 +617,7 @@ textarea::placeholder{color:var(--mu)}
         <div id="fcmd-list"></div>
         <div class="hint-b">
           Tapez <b>/raccourci votre question</b> dans le chat pour analyser automatiquement le fichier associé.<br><br>
-          Exemple : <b>/emploi_du_temps j'ai quoi demain ?</b>
+          Exemple : <b>/planning j'ai quoi demain ?</b>
         </div>
         <button class="add-cmd" onclick="openAddCmd()">＋ Ajouter un raccourci</button>
       </div>
@@ -480,26 +629,28 @@ textarea::placeholder{color:var(--mu)}
     <div class="ds">
       <div class="dsh"><div class="dst">📚 Mode Apprentissage</div></div>
       <div class="dsb">
-        <input type="file" id="lf" hidden accept=".txt,.md,.csv,.json,.pdf,.png,.jpg,.jpeg,.xlsx" onchange="learnLoad(this)">
+        <input type="file" id="lf" hidden accept=".txt,.md,.csv,.json,.pdf,.png,.jpg,.jpeg,.xlsx,.docx" onchange="learnLoad(this)">
         <div class="ldrop" id="ldrop"
           onclick="document.getElementById('lf').click()"
           ondragover="event.preventDefault();this.classList.add('drag')"
           ondrop="lDrop(event)" ondragleave="this.classList.remove('drag')">
           <div class="ldrop-icon">📂</div>
-          <div class="ldrop-txt">Cliquez ou déposez un document ici<br><span style="font-size:.72rem">PDF, image, texte, Excel…</span></div>
+          <div class="ldrop-txt">Cliquez ou déposez un document ici<br><span style="font-size:.72rem">PDF, image, texte, Excel, Word…</span></div>
         </div>
         <div class="ldoc" id="ldoc">
           <div class="ldoc-name" id="ldoc-nm"></div>
           <div class="ldoc-meta" id="ldoc-mt"></div>
           <div class="lacts">
-            <button class="lab2 main" id="lb-audio" onclick="learnGen('audio')">🎧 Écouter l'explication</button>
+            <button class="lab2 main" id="lb-audio" onclick="learnGen('audio')">🎧 Écouter</button>
+            <button class="lab2 sec" id="lb-sum" onclick="learnGen('summary')">📋 Résumé</button>
             <button class="lab2 sec" id="lb-fc" onclick="learnGen('flash')">🃏 Flashcards</button>
             <button class="lab2 sec" id="lb-quiz" onclick="learnGen('quiz')">🧩 Quiz</button>
-            <button class="lab2 sec" style="margin-left:auto" onclick="learnReset()">✕ Changer</button>
+            <button class="lab2 sec" id="lb-chat" onclick="learnGen('chat')">💬 Chat</button>
+            <button class="lab2 sec" style="margin-left:auto" onclick="learnReset()">✕</button>
           </div>
         </div>
         <div class="laudio-bar" id="laudio">
-          <div style="font-size:.79rem;font-weight:600">🎧 Explication audio en cours…</div>
+          <div style="font-size:.79rem;font-weight:600">🎧 Explication audio…</div>
           <div class="aprog"><div class="aprog-b" id="apb"></div></div>
           <div class="actrl">
             <button class="abtn2" id="a-pp" onclick="audioToggle()">⏸</button>
@@ -546,59 +697,62 @@ textarea::placeholder{color:var(--mu)}
 
 <script>
 /* ══════════════════════════════════════════════════════
-   IXA v6 — ZERO BUG EDITION — by Tom
+   IXA v7 — MEGA EDITION — by Tom
+   80+ ans d'expérience cumulée, le meilleur du monde 🚀
 ══════════════════════════════════════════════════════ */
 
-// ── ACTIVE GROQ MODELS (no decommissioned models) ──
 const MODELS = {
-  smart:   'llama-3.3-70b-versatile',
-  fast:    'llama-3.1-8b-instant',
-  vision:  'llama-3.2-11b-vision-preview',
-  backup:  'gemma2-9b-it',
+  smart:  'llama-3.3-70b-versatile',
+  fast:   'llama-3.1-8b-instant',
+  vision: 'llama-3.2-11b-vision-preview',
+  backup: 'gemma2-9b-it',
 };
-// Fallback chains: on any error, silently try next
 const CHAINS = {
-  vision: ['llama-3.2-11b-vision-preview', 'llama-3.3-70b-versatile', 'gemma2-9b-it'],
-  smart:  ['llama-3.3-70b-versatile', 'gemma2-9b-it', 'llama-3.1-8b-instant'],
-  fast:   ['llama-3.1-8b-instant', 'gemma2-9b-it', 'llama-3.3-70b-versatile'],
+  vision: ['llama-3.2-11b-vision-preview','llama-3.3-70b-versatile','gemma2-9b-it'],
+  smart:  ['llama-3.3-70b-versatile','gemma2-9b-it','llama-3.1-8b-instant'],
+  fast:   ['llama-3.1-8b-instant','gemma2-9b-it','llama-3.3-70b-versatile'],
 };
 const TPM = {
-  'llama-3.3-70b-versatile': 12000,
-  'llama-3.1-8b-instant':     6000,
-  'llama-3.2-11b-vision-preview': 7000,
-  'gemma2-9b-it':            15000,
+  'llama-3.3-70b-versatile':12000,
+  'llama-3.1-8b-instant':6000,
+  'llama-3.2-11b-vision-preview':7000,
+  'gemma2-9b-it':15000,
 };
 
-// ── JARVIS SYSTEM PROMPT ──
-const SYS = () => `Tu es IXA (Intelligence eXpansive Avancée), un système d'IA personnel de haute technologie créé par Tom.
-PERSONNALITÉ : Tu parles comme JARVIS d'Iron Man — sophistiqué, légèrement formel mais chaleureux, efficace. Tu appelles Tom par son prénom naturellement ("Bien sûr, Tom.", "Voici l'analyse, Tom.").
-RÈGLES :
-• Réponds TOUJOURS en français (sauf autre langue de Tom)
-• Sois direct et structuré — utilise le Markdown
-• Ne dis jamais "Je suis une IA" — tu es IXA, le système de Tom
-DOCUMENTS — génère le contenu COMPLET entre balises :
+// ── SYSTEM PROMPT ──
+const SYS = (webContext='') => {
+  const userName = S.user?.display_name || S.user?.username || 'Tom';
+  return `Tu es IXA (Intelligence eXpansive Avancée), un système d'IA personnel de haute technologie créé par ${userName}.
+PERSONNALITÉ : Tu parles comme JARVIS d'Iron Man — sophistiqué, légèrement formel mais chaleureux, efficace et précis. Tu appelles ${userName} par son prénom naturellement.
+RÈGLES ABSOLUES :
+• Réponds TOUJOURS en français (sauf si ${userName} demande une autre langue)
+• Sois direct, structuré, utilise le Markdown pour la clarté
+• Ne dis jamais "Je suis une IA" — tu es IXA, le système de ${userName}
+• N'invente JAMAIS des liens YouTube, Amazon ou autres — donne uniquement des vrais liens vérifiables ou indique que tu n'as pas accès à internet en ce moment
+• IMPORTANT : Ne crée des documents (Word, Excel, PDF, PowerPoint) QUE si ${userName} le demande explicitement — jamais automatiquement
+• Pour les liens : utilise uniquement des URLs réelles (ex: https://www.youtube.com/results?search_query=MOT+CLE pour YouTube search, https://www.amazon.fr/s?k=MOT+CLE pour Amazon search)
+${webContext ? `\nINFORMATIONS WEB EN TEMPS RÉEL (utilise ces données pour répondre) :\n${webContext}` : ''}
+DOCUMENTS (UNIQUEMENT si demandé explicitement) :
 \`\`\`document:TYPE
 contenu complet ici
 \`\`\`
-Types: rapport, lettre, cv, contrat, document, excel, word, powerpoint, pdf
-Pour excel: JSON { "sheets":[{"name":"Feuille1","headers":["Col1","Col2"],"rows":[["val1","val2"]]}] }
+Types: excel, word, powerpoint, pdf, rapport, lettre, cv, contrat, code
+Pour excel: JSON { "sheets":[{"name":"Feuille1","headers":["Col1"],"rows":[["val1"]]}] }
 Pour powerpoint: JSON { "title":"Titre","slides":[{"title":"Slide","content":"Texte","bullets":["point1"]}] }
-Pour word/rapport/lettre/cv: Markdown structuré complet
-MODIFICATION: si fichier joint + demande de modification → retourner fichier COMPLET modifié dans \`\`\`document:TYPE\`\`\`.
-Date: ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}.`;
+Pour word/rapport/lettre/cv/pdf: Markdown structuré complet
+Date actuelle : ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}.`;
+};
 
 // ── STATE ──
 const S = {
-  groqKey: '', ghToken: '', ghUser: '', ghRepo: '', ghBranch: 'main',
-  user: null, allUsers: null, usersSHA: '',
-  chats: [], cid: null,
-  attachments: [],
-  commands: {},
-  memory: [],
-  tab: 'chat', loading: false,
-  recognition: null, synth: window.speechSynthesis,
-  voiceQueue: [], voiceActive: false, voicePaused: false,
-  learnDoc: null,
+  groqKey:'', ghToken:'', ghUser:'', ghRepo:'', ghBranch:'main', serperKey:'',
+  user:null, allUsers:null, usersSHA:'',
+  chats:[], cid:null, attachments:[], commands:{}, memory:[],
+  tab:'chat', loading:false,
+  recognition:null, synth:window.speechSynthesis,
+  voiceQueue:[], voiceActive:false, voicePaused:false,
+  voiceRate:1.0, voicePitch:1.0, voiceIdx:-1, voiceCont:false,
+  learnDoc:null, learnChatHistory:[], webEnabled:false,
 };
 window.__docs = {};
 
@@ -607,30 +761,26 @@ window.__docs = {};
 ══════════════════════════════════════════════════════ */
 async function boot() {
   setLStat('Chargement de la configuration…');
-  // Load config.json
   try {
     const r = await fetch('config.json');
     if (r.ok) {
       const cfg = await r.json();
-      S.groqKey = (cfg.groq_api_key || '').trim();
-      S.ghToken = (cfg.github_token || '').trim();
-      const repo = (cfg.github_repo || '').trim();
-      if (repo.includes('/')) { const p = repo.split('/'); S.ghUser = p[0]; S.ghRepo = p[1]; }
-      S.ghBranch = cfg.github_branch || 'main';
+      S.groqKey = (cfg.groq_api_key||'').trim();
+      S.ghToken = (cfg.github_token||'').trim();
+      S.serperKey = (cfg.serper_key||'').trim();
+      const repo = (cfg.github_repo||'').trim();
+      if (repo.includes('/')) { const p=repo.split('/'); S.ghUser=p[0]; S.ghRepo=p[1]; }
+      S.ghBranch = cfg.github_branch||'main';
     }
-  } catch(e) {}
+  } catch(e){}
 
-  // Try to load users from GitHub
   if (S.ghToken && S.ghUser && S.ghRepo) {
     setLStat('Connexion à la base de données…');
-    try { await fetchUsers(); } catch(e) {
-      S.allUsers = getLocalUsers();
-    }
+    try { await fetchUsers(); } catch(e) { S.allUsers = getLocalUsers(); }
   } else {
     S.allUsers = getLocalUsers();
   }
-
-  setLStat('', true);
+  setLStat('',true);
   showLoginForm();
 }
 
@@ -638,274 +788,1057 @@ function getLocalUsers() {
   try { return JSON.parse(localStorage.getItem('ixa_users')) || defaultUsers(); } catch(e) { return defaultUsers(); }
 }
 function defaultUsers() {
-  return { users: [{ id:'u001', username:'admin', password:'admin', display_name:'Admin', role:'admin', avatar:'👤', conversations:[], commands:{}, memory:['Tom est le créateur d\'IXA','IXA parle comme JARVIS','Répondre toujours en français'] }] };
+  return { version:'2.0', users:[{
+    id:'u001', username:'tom', password:'admin', display_name:'Tom', role:'admin',
+    avatar:'👤', avatarImg:null, conversations:[], commands:{},
+    memory:['Tom est le créateur et propriétaire du système IXA','IXA est inspiré de JARVIS','Répondre toujours en français'],
+    permissions:{ canSearch:true, canCreateDocs:true, canManageUsers:true }
+  }]};
 }
 
 function setLStat(txt, done=false) {
-  const el = document.getElementById('lstat');
-  const t = document.getElementById('lstat-t');
-  if (done) { el.style.display = 'none'; return; }
-  el.style.display = 'flex'; t.textContent = txt;
+  const el=document.getElementById('lstat'), t=document.getElementById('lstat-t');
+  if(done){el.style.display='none';return;}
+  el.style.display='flex'; t.textContent=txt;
 }
 function showLoginForm() {
-  ['li-u','li-p','li-btn'].forEach(id => document.getElementById(id).style.display = '');
+  ['li-u','li-p','li-btn'].forEach(id=>document.getElementById(id).style.display='');
   document.getElementById('li-u').focus();
-  document.getElementById('li-p').onkeydown = e => { if(e.key==='Enter') doLogin(); };
-  document.getElementById('li-u').onkeydown = e => { if(e.key==='Enter') document.getElementById('li-p').focus(); };
+  document.getElementById('li-p').onkeydown=e=>{if(e.key==='Enter')doLogin();};
+  document.getElementById('li-u').onkeydown=e=>{if(e.key==='Enter')document.getElementById('li-p').focus();};
+}
+
+// ── UTF-8 safe base64 decode ──
+function b64DecodeUTF8(b64) {
+  try { return decodeURIComponent(escape(atob(b64.replace(/\n/g,'')))); } catch(e) { return atob(b64.replace(/\n/g,'')); }
+}
+function b64EncodeUTF8(str) {
+  return btoa(unescape(encodeURIComponent(str)));
 }
 
 async function fetchUsers() {
-  const r = await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`, {
-    headers: { 'Authorization': `token ${S.ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
+  const r=await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`,{
+    headers:{'Authorization':`token ${S.ghToken}`,'Accept':'application/vnd.github.v3+json'}
   });
-  if (!r.ok) throw new Error('GH ' + r.status);
-  const d = await r.json();
-  S.usersSHA = d.sha;
-  S.allUsers = JSON.parse(atob(d.content.replace(/\n/g, '')));
-  localStorage.setItem('ixa_users', JSON.stringify(S.allUsers));
+  if(!r.ok) throw new Error('GH '+r.status);
+  const d=await r.json();
+  S.usersSHA=d.sha;
+  S.allUsers=JSON.parse(b64DecodeUTF8(d.content));
+  localStorage.setItem('ixa_users',JSON.stringify(S.allUsers));
 }
 
 async function pushUsers() {
-  if (!S.user || !S.allUsers) return;
-  const idx = S.allUsers.users.findIndex(u => u.id === S.user.id);
-  if (idx < 0) return;
-  S.allUsers.users[idx] = {
+  if(!S.user||!S.allUsers) return;
+  const idx=S.allUsers.users.findIndex(u=>u.id===S.user.id);
+  if(idx<0) return;
+  S.allUsers.users[idx]={
     ...S.allUsers.users[idx],
-    conversations: S.chats.slice(0,40).map(c => ({ ...c, messages: c.messages.slice(-20) })),
-    commands: S.commands,
-    memory: S.memory,
+    conversations:S.chats.slice(0,40).map(c=>({...c,messages:c.messages.slice(-20)})),
+    commands:S.commands, memory:S.memory,
   };
-  S.allUsers.updated = new Date().toISOString();
-  localStorage.setItem('ixa_users', JSON.stringify(S.allUsers));
-  if (!S.ghToken || !S.ghUser || !S.ghRepo) return;
+  S.allUsers.updated=new Date().toISOString();
+  localStorage.setItem('ixa_users',JSON.stringify(S.allUsers));
+  if(!S.ghToken||!S.ghUser||!S.ghRepo) return;
   try {
-    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(S.allUsers, null, 2))));
-    const body = { message:`IXA sync — ${new Date().toLocaleString('fr-FR')}`, content:b64, branch:S.ghBranch };
-    if (S.usersSHA) body.sha = S.usersSHA;
-    const r = await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`, {
-      method: 'PUT', headers: { 'Authorization':`token ${S.ghToken}`, 'Content-Type':'application/json', 'Accept':'application/vnd.github.v3+json' },
-      body: JSON.stringify(body)
+    const body={message:`IXA sync — ${new Date().toLocaleString('fr-FR')}`,content:b64EncodeUTF8(JSON.stringify(S.allUsers,null,2)),branch:S.ghBranch};
+    if(S.usersSHA) body.sha=S.usersSHA;
+    const r=await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`,{
+      method:'PUT',headers:{'Authorization':`token ${S.ghToken}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify(body)
     });
-    if (r.ok) { const d = await r.json(); if(d.content?.sha) S.usersSHA = d.content.sha; }
-  } catch(e) {}
+    if(r.ok){const d=await r.json();if(d.content?.sha)S.usersSHA=d.content.sha;}
+  } catch(e){}
 }
 
 /* ══════════════════════════════════════════════════════
    AUTH
 ══════════════════════════════════════════════════════ */
 function doLogin() {
-  const u = document.getElementById('li-u').value.trim().toLowerCase();
-  const p = document.getElementById('li-p').value;
-  const erEl = document.getElementById('lerr');
-  erEl.textContent = '';
-  if (!u || !p) { erEl.textContent = 'Veuillez remplir tous les champs.'; return; }
-  if (!S.allUsers?.users) { erEl.textContent = 'Base de données non chargée.'; return; }
-  const usr = S.allUsers.users.find(x => x.username.toLowerCase() === u && x.password === p);
-  if (!usr) { erEl.textContent = 'Identifiant ou mot de passe incorrect.'; return; }
-  S.user = usr;
-  S.chats = JSON.parse(JSON.stringify(usr.conversations || []));
-  S.commands = JSON.parse(JSON.stringify(usr.commands || {}));
-  S.memory = JSON.parse(JSON.stringify(usr.memory || []));
+  const u=document.getElementById('li-u').value.trim().toLowerCase();
+  const p=document.getElementById('li-p').value;
+  const erEl=document.getElementById('lerr');
+  erEl.textContent='';
+  if(!u||!p){erEl.textContent='Veuillez remplir tous les champs.';return;}
+  if(!S.allUsers?.users){erEl.textContent='Base de données non chargée.';return;}
+  const usr=S.allUsers.users.find(x=>x.username.toLowerCase()===u&&x.password===p);
+  if(!usr){erEl.textContent='Identifiant ou mot de passe incorrect.';return;}
+  S.user=usr;
+  S.chats=JSON.parse(JSON.stringify(usr.conversations||[]));
+  S.commands=JSON.parse(JSON.stringify(usr.commands||{}));
+  S.memory=JSON.parse(JSON.stringify(usr.memory||[]));
   document.getElementById('login').classList.add('hide');
-  setTimeout(() => { document.getElementById('login').style.display = 'none'; }, 420);
+  setTimeout(()=>{document.getElementById('login').style.display='none';},420);
   initApp();
 }
 
 function logout() {
-  S.user = null; S.chats = []; S.commands = {}; S.memory = [];
-  stopSpeech();
-  const loginEl = document.getElementById('login');
-  loginEl.style.display = 'flex'; loginEl.classList.remove('hide');
-  document.getElementById('li-p').value = ''; document.getElementById('lerr').textContent = '';
-  setLStat('', true); showLoginForm();
+  S.user=null; S.chats=[]; S.commands={}; S.memory=[];
+  stopSpeech(); closeProfileDrop();
+  const loginEl=document.getElementById('login');
+  loginEl.style.display='flex'; loginEl.classList.remove('hide');
+  document.getElementById('li-p').value=''; document.getElementById('lerr').textContent='';
+  document.getElementById('upill').style.display='none';
+  setLStat('',true); showLoginForm();
 }
 
 function initApp() {
-  document.getElementById('upill').style.display = 'flex';
-  document.getElementById('u-av').textContent = S.user.avatar || '👤';
-  document.getElementById('u-nm').textContent = S.user.display_name || S.user.username;
-  document.getElementById('u-rl').textContent = S.user.role === 'admin' ? 'Administrateur' : 'Utilisateur';
+  const u=S.user;
+  document.getElementById('upill').style.display='flex';
+  updateUserUI();
   updateApiSt();
   renderHist(); renderCmds();
   S.chats.length ? loadChat(S.chats[0].id) : createChat();
   initSpeech();
-  setInterval(() => { if(S.user) pushUsers(); }, 180000);
+  updateWebBtn();
+  setInterval(()=>{if(S.user)pushUsers();},180000);
+}
+
+function updateUserUI() {
+  const u=S.user; if(!u) return;
+  const av=u.avatarImg||u.avatar||'👤';
+  const isImg=u.avatarImg&&u.avatarImg.startsWith('data:');
+  const avHtml=isImg?`<img src="${u.avatarImg}" alt="av">`:(av||'👤');
+
+  // Sidebar pill
+  document.getElementById('u-av').innerHTML=isImg?`<img src="${u.avatarImg}" alt="av" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:av;
+  document.getElementById('u-nm').textContent=u.display_name||u.username;
+  document.getElementById('u-rl').textContent=u.role==='admin'?'Administrateur':u.role==='moderator'?'Modérateur':'Utilisateur';
+
+  // Profile dropdown
+  document.getElementById('pd-av-img').innerHTML=isImg?`<img src="${u.avatarImg}" alt="av" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:av;
+  document.getElementById('pd-name').textContent=u.display_name||u.username;
+  document.getElementById('pd-role-txt').textContent=u.role==='admin'?'Administrateur':u.role==='moderator'?'Modérateur':'Utilisateur';
+  document.getElementById('pd-badge').textContent=u.role==='admin'?'👑 Admin':u.role==='moderator'?'🛡️ Modérateur':'👤 Utilisateur';
+  document.getElementById('pd-nchats').textContent=S.chats.length;
+  document.getElementById('pd-nmem').textContent=S.memory.length;
+  document.getElementById('pd-ncmds').textContent=Object.keys(S.commands).length;
+  document.getElementById('pd-admin-btn').style.display=u.role==='admin'?'flex':'none';
+}
+
+function changeAvatar(input) {
+  const f=input.files[0]; if(!f) return;
+  if(f.size>2*1024*1024){toast('❌ Image trop grande (max 2MB)','err');return;}
+  const r=new FileReader(); r.readAsDataURL(f);
+  r.onload=e=>{
+    S.user.avatarImg=e.target.result;
+    const idx=S.allUsers.users.findIndex(u=>u.id===S.user.id);
+    if(idx>=0) S.allUsers.users[idx].avatarImg=e.target.result;
+    localStorage.setItem('ixa_users',JSON.stringify(S.allUsers));
+    updateUserUI();
+    toast('✅ Photo mise à jour !','ok');
+    setTimeout(()=>pushUsers(),1000);
+  };
+  input.value='';
 }
 
 /* ══════════════════════════════════════════════════════
-   SPEECH — IMPROVED TTS WITH SENTENCE QUEUE
+   PROFILE DROPDOWN
 ══════════════════════════════════════════════════════ */
-let _vOn = false;
+function toggleProfileDrop(e) {
+  e.stopPropagation();
+  const d=document.getElementById('prof-drop');
+  d.classList.toggle('open');
+  if(d.classList.contains('open')) updateUserUI();
+}
+function closeProfileDrop() {
+  document.getElementById('prof-drop').classList.remove('open');
+}
+document.addEventListener('click',e=>{
+  const pd=document.getElementById('prof-drop');
+  if(pd&&pd.classList.contains('open')&&!pd.closest('#sidebar')?.contains(e.target)) closeProfileDrop();
+});
+
+/* ══════════════════════════════════════════════════════
+   USER MANAGEMENT (Admin)
+══════════════════════════════════════════════════════ */
+function openUserMgmt() {
+  if(!S.allUsers) return;
+  const users=S.allUsers.users;
+  const listHtml=users.map(u=>`
+    <div class="user-row">
+      <div class="user-row-av">${u.avatarImg?`<img src="${u.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(u.avatar||'👤')}</div>
+      <div class="user-row-info">
+        <div class="user-row-name">${esc(u.display_name||u.username)} <span style="font-size:.64rem;color:var(--mu)">@${esc(u.username)}</span></div>
+        <div class="user-row-role">${u.role==='admin'?'👑 Admin':u.role==='moderator'?'🛡️ Modérateur':'👤 Utilisateur'}</div>
+      </div>
+      <div class="user-row-acts">
+        ${u.id!==S.user.id?`<button class="urb del" onclick="deleteUser('${u.id}')">Supprimer</button>`:'<span style="font-size:.7rem;color:var(--mu)">Vous</span>'}
+      </div>
+    </div>`).join('');
+  showModal('👥 Gestion des utilisateurs','',
+    `${listHtml}
+     <div class="pd-sep" style="margin:8px 0"></div>
+     <div style="font-size:.78rem;font-weight:600;color:var(--tx);margin-bottom:6px">Ajouter un utilisateur</div>
+     <div class="mi-row"><input class="mi" id="nu-user" placeholder="Identifiant" style="flex:1">
+     <input class="mi" id="nu-pass" placeholder="Mot de passe" type="password" style="flex:1"></div>
+     <input class="mi" id="nu-name" placeholder="Nom affiché">
+     <select class="mi" id="nu-role" style="cursor:pointer">
+       <option value="user">👤 Utilisateur</option>
+       <option value="moderator">🛡️ Modérateur</option>
+       <option value="admin">👑 Administrateur</option>
+     </select>`,
+    [{l:'Fermer',c:'can',f:'closeModal()'},{l:'Ajouter',c:'cfm',f:'addUser()'}]
+  );
+}
+
+function addUser() {
+  const un=(document.getElementById('nu-user')?.value||'').trim().toLowerCase();
+  const pw=(document.getElementById('nu-pass')?.value||'').trim();
+  const nm=(document.getElementById('nu-name')?.value||'').trim();
+  const rl=document.getElementById('nu-role')?.value||'user';
+  if(!un||!pw){toast('❌ Identifiant et mot de passe requis','err');return;}
+  if(S.allUsers.users.find(u=>u.username===un)){toast('❌ Identifiant déjà utilisé','err');return;}
+  const newUser={
+    id:'u'+Date.now(), username:un, password:pw,
+    display_name:nm||un, role:rl, avatar:'👤', avatarImg:null,
+    conversations:[], commands:{},
+    memory:[`${nm||un} est un utilisateur du système IXA`],
+    permissions:{canSearch:true, canCreateDocs:true, canManageUsers:rl==='admin'}
+  };
+  S.allUsers.users.push(newUser);
+  localStorage.setItem('ixa_users',JSON.stringify(S.allUsers));
+  setTimeout(()=>pushUsers(),500);
+  closeModal();
+  toast(`✅ Utilisateur ${un} créé !`,'ok');
+}
+
+function deleteUser(id) {
+  if(id===S.user.id){toast('❌ Impossible de supprimer votre propre compte','err');return;}
+  if(!confirm('Supprimer cet utilisateur ?')) return;
+  S.allUsers.users=S.allUsers.users.filter(u=>u.id!==id);
+  localStorage.setItem('ixa_users',JSON.stringify(S.allUsers));
+  setTimeout(()=>pushUsers(),500);
+  closeModal();
+  toast('✅ Utilisateur supprimé');
+  openUserMgmt();
+}
+
+/* ══════════════════════════════════════════════════════
+   WEB SEARCH (Serper.dev)
+══════════════════════════════════════════════════════ */
+function toggleWebSearch() {
+  S.webEnabled=!S.webEnabled;
+  updateWebBtn();
+  toast(S.webEnabled?'🌐 Recherche web activée':'🌐 Recherche web désactivée');
+}
+function updateWebBtn() {
+  const btn=document.getElementById('web-btn');
+  if(!btn) return;
+  btn.style.color=S.webEnabled?'var(--inf)':'';
+  btn.title=S.webEnabled?'Recherche web ON (clic pour désactiver)':'Recherche web OFF (clic pour activer)';
+}
+
+function needsWebSearch(text) {
+  if(S.webEnabled) return true;
+  const kw=/actualit|news|aujourd'hui|maintenant|récent|2024|2025|prix|météo|bourse|résultat|score|match|élection|crypto|bitcoin|dernier|latest|current|today/i;
+  return kw.test(text);
+}
+
+async function doWebSearch(query) {
+  if(!S.serperKey) {
+    // Try DuckDuckGo instant answers (CORS-free endpoint)
+    try {
+      const r=await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+      if(r.ok) {
+        const d=await r.json();
+        let results='';
+        if(d.AbstractText) results+=`Résumé : ${d.AbstractText}\n`;
+        if(d.RelatedTopics?.length) {
+          results+='\nSujets connexes :\n';
+          d.RelatedTopics.slice(0,5).forEach(t=>{if(t.Text)results+=`• ${t.Text}\n`;});
+        }
+        if(d.Answer) results+=`\nRéponse directe : ${d.Answer}`;
+        return results||null;
+      }
+    } catch(e){}
+    return null;
+  }
+  // Serper.dev
+  try {
+    const r=await fetch('https://google.serper.dev/search',{
+      method:'POST',
+      headers:{'X-API-KEY':S.serperKey,'Content-Type':'application/json'},
+      body:JSON.stringify({q:query,gl:'fr',hl:'fr',num:5})
+    });
+    if(!r.ok) return null;
+    const d=await r.json();
+    let results='';
+    if(d.answerBox?.answer) results+=`Réponse directe : ${d.answerBox.answer}\n\n`;
+    if(d.organic?.length) {
+      results+='Résultats de recherche :\n';
+      d.organic.slice(0,5).forEach((item,i)=>{
+        results+=`${i+1}. ${item.title}\n   ${item.snippet}\n   Source : ${item.link}\n\n`;
+      });
+    }
+    return results||null;
+  } catch(e) { return null; }
+}
+
+/* ══════════════════════════════════════════════════════
+   SPEECH — TTS AMÉLIORÉ
+══════════════════════════════════════════════════════ */
+let _vOn=false;
 
 function initSpeech() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return;
-  S.recognition = new SR();
-  S.recognition.lang = 'fr-FR'; S.recognition.interimResults = true; S.recognition.continuous = false;
-  S.recognition.onresult = e => {
-    const txt = Array.from(e.results).map(r => r[0].transcript).join('');
-    document.getElementById('vtr').textContent = txt;
-    if (e.results[e.results.length-1].isFinal) onVoiceResult(txt);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return;
+  S.recognition=new SR();
+  S.recognition.lang='fr-FR'; S.recognition.interimResults=true; S.recognition.continuous=false;
+  S.recognition.onresult=e=>{
+    const txt=Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('vtr').textContent=txt;
+    if(e.results[e.results.length-1].isFinal) onVoiceResult(txt);
   };
-  S.recognition.onerror = () => { _vOn = false; resetVUI(); };
-  S.recognition.onend   = () => { _vOn = false; document.getElementById('orb-box').classList.remove('listening'); };
+  S.recognition.onerror=()=>{_vOn=false;resetVUI();};
+  S.recognition.onend=()=>{
+    _vOn=false;
+    document.getElementById('orb-box').classList.remove('listening');
+  };
+  // Populate voice selector
+  populateVoiceList();
+  if(S.synth.onvoiceschanged!==undefined) S.synth.onvoiceschanged=populateVoiceList;
+}
+
+function populateVoiceList() {
+  const sel=document.getElementById('v-voice-sel'); if(!sel) return;
+  const voices=S.synth.getVoices();
+  const frVoices=voices.filter(v=>v.lang.startsWith('fr'));
+  sel.innerHTML='';
+  if(!frVoices.length){
+    const opt=document.createElement('option'); opt.value=-1; opt.textContent='(Voix système par défaut)'; sel.appendChild(opt); return;
+  }
+  frVoices.forEach((v,i)=>{
+    const opt=document.createElement('option'); opt.value=i; opt.textContent=`${v.name} (${v.lang})`;
+    if(/natural|premium|enhanced/i.test(v.name)) opt.textContent='⭐ '+opt.textContent;
+    sel.appendChild(opt);
+  });
+  // Auto-select best voice
+  const bestIdx=frVoices.findIndex(v=>/natural|premium|enhanced/i.test(v.name));
+  if(bestIdx>=0) sel.value=bestIdx;
+}
+
+function updateVoiceSetting() { S.voiceIdx=parseInt(document.getElementById('v-voice-sel').value); }
+function updateVoiceRate(v) { S.voiceRate=parseFloat(v); document.getElementById('v-rate-val').textContent=parseFloat(v).toFixed(1)+'×'; }
+function updateVoicePitch(v) { S.voicePitch=parseFloat(v); document.getElementById('v-pitch-val').textContent=parseFloat(v).toFixed(1); }
+
+function getSelectedVoice() {
+  const voices=S.synth.getVoices();
+  const frVoices=voices.filter(v=>v.lang.startsWith('fr'));
+  const sel=document.getElementById('v-voice-sel');
+  const idx=sel?parseInt(sel.value):-1;
+  if(idx>=0&&frVoices[idx]) return frVoices[idx];
+  return frVoices.find(v=>/natural|premium|enhanced/i.test(v.name))||frVoices[0]||null;
 }
 
 function toggleVoice() {
-  if (!S.recognition) { toast('❌ Vocal non supporté sur ce navigateur', 'err'); return; }
-  if (_vOn) { S.recognition.stop(); stopSpeech(); _vOn = false; resetVUI(); return; }
-  stopSpeech(); _vOn = true;
+  if(!S.recognition){toast('❌ Vocal non supporté sur ce navigateur','err');return;}
+  if(_vOn){S.recognition.stop();stopSpeech();_vOn=false;resetVUI();return;}
+  stopSpeech(); _vOn=true;
   document.getElementById('orb-box').classList.add('listening');
-  document.getElementById('vst').textContent = 'IXA vous écoute, Tom…';
-  document.getElementById('vtr').textContent = '';
+  document.getElementById('vst').textContent='IXA vous écoute…';
+  document.getElementById('vtr').textContent='';
   setVBtn('stop');
-  try { S.recognition.start(); } catch(e) { _vOn = false; resetVUI(); }
+  try{S.recognition.start();}catch(e){_vOn=false;resetVUI();}
 }
 
 async function onVoiceResult(text) {
-  _vOn = false;
+  _vOn=false;
   document.getElementById('orb-box').classList.remove('listening');
-  document.getElementById('vst').textContent = 'IXA analyse…';
+  document.getElementById('vst').textContent='IXA analyse…';
   setVBtn('start');
-  const reply = await handleSend(text);
-  if (reply && S.tab === 'voice') {
-    document.getElementById('vst').textContent = 'IXA répond…';
-    speakChunked(stripMd(reply));
+  const reply=await handleSend(text);
+  if(reply&&S.tab==='voice') {
+    document.getElementById('vst').textContent='IXA répond…';
+    speakChunked(stripMd(reply),()=>{
+      if(S.voiceCont&&S.tab==='voice') {
+        setTimeout(()=>{if(S.tab==='voice')toggleVoice();},600);
+      } else resetVUI();
+    });
   } else resetVUI();
 }
 
 function stripMd(t) {
-  return t.replace(/```[\s\S]*?```/g,'').replace(/[*#_`~\[\]]/g,'').replace(/<[^>]+>/g,'').replace(/\n{3,}/g,'\n\n').trim();
+  return t.replace(/```[\s\S]*?```/g,'').replace(/#{1,6}\s/g,'').replace(/[*_`~\[\]]/g,'').replace(/<[^>]+>/g,'').replace(/\n{3,}/g,'\n\n').trim();
 }
 
-function speakChunked(text) {
+function speakChunked(text, onDone=null) {
   stopSpeech();
-  const sentences = text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [text];
-  S.voiceQueue = sentences.map(s => s.trim()).filter(s => s.length > 2);
-  S.voiceActive = true; S.voicePaused = false;
-  document.getElementById('laudio').style.display = 'none';
-  document.getElementById('vpb').style.width = '0%';
-  speakNext();
+  const sentences=text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[text];
+  S.voiceQueue=sentences.map(s=>s.trim()).filter(s=>s.length>2);
+  S.voiceActive=true; S.voicePaused=false;
+  document.getElementById('laudio').style.display='none';
+  document.getElementById('vpb').style.width='0%';
+  speakNext(onDone);
 }
 
-function speakNext() {
-  if (!S.voiceQueue.length || !S.voiceActive) {
-    S.voiceActive = false;
-    document.getElementById('vpb').style.width = '100%';
-    setTimeout(() => { document.getElementById('vpb').style.width = '0%'; if(S.tab==='voice') resetVUI(); }, 1200);
+function speakNext(onDone=null) {
+  if(!S.voiceQueue.length||!S.voiceActive) {
+    S.voiceActive=false;
+    document.getElementById('vpb').style.width='100%';
+    setTimeout(()=>{document.getElementById('vpb').style.width='0%';if(S.tab==='voice'&&!onDone)resetVUI();if(onDone)onDone();},1200);
     return;
   }
-  const sentence = S.voiceQueue.shift();
-  const u = new SpeechSynthesisUtterance(sentence);
-  const voices = S.synth.getVoices();
-  const frVoice = voices.find(v => v.lang==='fr-FR' && /natural|premium|enhanced/i.test(v.name))
-    || voices.find(v => v.lang==='fr-FR') || voices.find(v => v.lang.startsWith('fr')) || null;
-  if (frVoice) u.voice = frVoice;
-  u.lang = 'fr-FR'; u.rate = 1.05; u.pitch = 1.0;
-  const total = S.voiceQueue.length + 1;
-  u.onend = () => { if (S.voiceActive && !S.voicePaused) speakNext(); };
-  u.onerror = () => speakNext();
-  const done = Math.round((1 - S.voiceQueue.length / total) * 95);
-  document.getElementById('vpb').style.width = done + '%';
+  const sentence=S.voiceQueue.shift();
+  const u=new SpeechSynthesisUtterance(sentence);
+  const frVoice=getSelectedVoice();
+  if(frVoice) u.voice=frVoice;
+  u.lang='fr-FR'; u.rate=S.voiceRate; u.pitch=S.voicePitch;
+  const total=S.voiceQueue.length+1;
+  u.onend=()=>{if(S.voiceActive&&!S.voicePaused)speakNext(onDone);};
+  u.onerror=()=>speakNext(onDone);
+  const done=Math.round((1-S.voiceQueue.length/total)*95);
+  document.getElementById('vpb').style.width=done+'%';
   S.synth.speak(u);
 }
 
 function stopSpeech() {
-  S.voiceQueue = []; S.voiceActive = false; S.voicePaused = false;
+  S.voiceQueue=[]; S.voiceActive=false; S.voicePaused=false;
   S.synth.cancel();
-  document.getElementById('vpb').style.width = '0%';
+  document.getElementById('vpb').style.width='0%';
 }
-
 function audioToggle() {
-  if (S.voicePaused) {
-    S.voicePaused = false; S.synth.resume();
-    document.getElementById('a-pp').textContent = '⏸'; document.getElementById('a-stat').textContent = 'Lecture…';
-  } else {
-    S.voicePaused = true; S.synth.pause();
-    document.getElementById('a-pp').textContent = '▶'; document.getElementById('a-stat').textContent = 'En pause';
-  }
+  if(S.voicePaused){S.voicePaused=false;S.synth.resume();document.getElementById('a-pp').textContent='⏸';document.getElementById('a-stat').textContent='Lecture…';}
+  else{S.voicePaused=true;S.synth.pause();document.getElementById('a-pp').textContent='▶';document.getElementById('a-stat').textContent='En pause';}
 }
 function audioStop() {
   stopSpeech();
-  document.getElementById('laudio').style.display = 'none';
-  document.getElementById('a-pp').textContent = '⏸'; document.getElementById('a-stat').textContent = 'Lecture…';
+  document.getElementById('laudio').style.display='none';
+  document.getElementById('a-pp').textContent='⏸'; document.getElementById('a-stat').textContent='Lecture…';
 }
-
 function resetVUI() {
-  _vOn = false;
+  _vOn=false;
   document.getElementById('orb-box').classList.remove('listening');
-  document.getElementById('vst').textContent = 'En attente de vos instructions, Tom';
-  document.getElementById('vtr').textContent = '';
-  document.getElementById('vpb').style.width = '0%';
+  document.getElementById('vst').textContent='En attente de vos instructions, Tom';
+  document.getElementById('vtr').textContent='';
+  document.getElementById('vpb').style.width='0%';
   setVBtn('start');
 }
-
 function setVBtn(mode) {
-  const b = document.getElementById('vbtn');
-  if (mode === 'stop') b.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Arrêter`;
-  else b.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Activer IXA`;
+  const b=document.getElementById('vbtn');
+  if(mode==='stop') b.innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Arrêter`;
+  else b.innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Activer IXA`;
 }
 
 /* ══════════════════════════════════════════════════════
-   FILE READING — text, xlsx, image, pdf
+   FILE READING
 ══════════════════════════════════════════════════════ */
-const IMG_EXT = ['png','jpg','jpeg','gif','webp'];
+const IMG_EXT=['png','jpg','jpeg','gif','webp'];
 
-function readFile(file, cb) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  const isImg = IMG_EXT.includes(ext);
-  const isXL = ['xlsx','xls'].includes(ext);
-  const isPDF = ext === 'pdf';
-  if (isXL) {
-    const r = new FileReader(); r.readAsArrayBuffer(file);
-    r.onload = e => {
+function readFile(file,cb) {
+  const ext=file.name.split('.').pop().toLowerCase();
+  const isImg=IMG_EXT.includes(ext);
+  const isXL=['xlsx','xls'].includes(ext);
+  const isPDF=ext==='pdf';
+  const isDocx=['docx','doc'].includes(ext);
+  if(isXL) {
+    const r=new FileReader(); r.readAsArrayBuffer(file);
+    r.onload=e=>{
       try {
-        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-        let txt = '';
-        wb.SheetNames.forEach(sn => { txt += `=== Feuille: ${sn} ===\n${XLSX.utils.sheet_to_csv(wb.Sheets[sn])}\n\n`; });
-        cb({ content: txt.trim(), name: file.name, isImg: false, isPDF: false, isXL: true });
-      } catch(err) { cb({ content: `[Erreur XLSX: ${err.message}]`, name: file.name, isImg: false, isPDF: false }); }
+        const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        let txt='';
+        wb.SheetNames.forEach(sn=>{txt+=`=== Feuille: ${sn} ===\n${XLSX.utils.sheet_to_csv(wb.Sheets[sn])}\n\n`;});
+        cb({content:txt.trim(),name:file.name,isImg:false,isPDF:false,isXL:true});
+      } catch(err){cb({content:`[Erreur XLSX: ${err.message}]`,name:file.name,isImg:false,isPDF:false});}
     };
-    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
-  } else if (isImg || isPDF) {
-    const r = new FileReader(); r.readAsDataURL(file);
-    r.onload = e => cb({ dataURL: e.target.result, b64: e.target.result.split(',')[1], name: file.name, isImg, isPDF, content: null });
-    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+    r.onerror=()=>cb({content:'[Erreur lecture]',name:file.name,isImg:false,isPDF:false});
+  } else if(isImg) {
+    const r=new FileReader(); r.readAsDataURL(file);
+    r.onload=e=>cb({dataURL:e.target.result,b64:e.target.result.split(',')[1],name:file.name,isImg:true,isPDF:false,content:null});
+    r.onerror=()=>cb({content:'[Erreur lecture image]',name:file.name,isImg:false,isPDF:false});
+  } else if(isPDF) {
+    const r=new FileReader(); r.readAsDataURL(file);
+    r.onload=e=>cb({dataURL:e.target.result,b64:e.target.result.split(',')[1],name:file.name,isImg:false,isPDF:true,content:null});
+    r.onerror=()=>cb({content:'[Erreur lecture PDF]',name:file.name,isImg:false,isPDF:false});
+  } else if(isDocx) {
+    // Read docx as binary, extract basic text
+    const r=new FileReader(); r.readAsText(file,'UTF-8');
+    r.onload=e=>cb({content:e.target.result,name:file.name,isImg:false,isPDF:false});
+    r.onerror=()=>cb({content:'[Erreur lecture DOCX]',name:file.name,isImg:false,isPDF:false});
   } else {
-    const r = new FileReader(); r.readAsText(file, 'UTF-8');
-    r.onload = e => cb({ content: e.target.result, name: file.name, isImg: false, isPDF: false });
-    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+    const r=new FileReader(); r.readAsText(file,'UTF-8');
+    r.onload=e=>cb({content:e.target.result,name:file.name,isImg:false,isPDF:false});
+    r.onerror=()=>cb({content:'[Erreur lecture]',name:file.name,isImg:false,isPDF:false});
   }
 }
 
 function handleFiles(input) {
-  Array.from(input.files).forEach(f => {
-    const ext = f.name.split('.').pop().toLowerCase();
-    const isXL = ['xlsx','xls'].includes(ext);
-    const max = (IMG_EXT.includes(ext) ? 5 : isXL ? 8 : ext==='pdf' ? 10 : 4) * 1024 * 1024;
-    if (f.size > max) { toast(`❌ Fichier trop grand : ${f.name}`, 'err'); return; }
-    readFile(f, d => { S.attachments.push({ ...d, fileType: f.type }); renderAT(); toast(`📎 ${f.name} ajouté`); });
+  Array.from(input.files).forEach(f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    const isXL=['xlsx','xls'].includes(ext);
+    const max=(IMG_EXT.includes(ext)?5:isXL?8:ext==='pdf'?10:4)*1024*1024;
+    if(f.size>max){toast(`❌ Fichier trop grand : ${f.name}`,'err');return;}
+    readFile(f,d=>{S.attachments.push({...d,fileType:f.type});renderAT();toast(`📎 ${f.name} ajouté`);});
   });
-  input.value = '';
+  input.value='';
 }
 
 function renderAT() {
-  document.getElementById('at').innerHTML = S.attachments.map((a,i) => `
+  document.getElementById('at').innerHTML=S.attachments.map((a,i)=>`
     <div class="ach">${a.isImg?'🖼️':a.isPDF?'📑':a.isXL?'📗':'📄'} ${esc(a.name)}
       <span class="arm" onclick="rmAT(${i})">×</span></div>`).join('');
 }
-function rmAT(i) { S.attachments.splice(i, 1); renderAT(); }
+function rmAT(i){S.attachments.splice(i,1);renderAT();}
 
 /* ══════════════════════════════════════════════════════
-   FILE SHORTCUTS (COMMANDS)
+   SEND + MODEL ROUTING
 ══════════════════════════════════════════════════════ */
-let _mf = null;
+async function handleSend(voiceText=null) {
+  if(S.loading) return null;
+  const inp=document.getElementById('mi');
+  let text=(voiceText!==null?voiceText:inp.value).trim();
+  if(!text&&S.attachments.length===0) return null;
+  document.getElementById('cmd-s').style.display='none';
+
+  // Resolve /command
+  let cmdAtts=[];
+  for(const [cmd] of Object.entries(S.commands)) {
+    if(text===cmd||text.startsWith(cmd+' ')) {
+      cmdAtts=[{...S.commands[cmd]}];
+      text=text.slice(cmd.length).trim()||'Analyse ce fichier en détail.';
+      break;
+    }
+  }
+  const atts=[...S.attachments,...cmdAtts];
+
+  document.getElementById('welcome')?.remove();
+  S.loading=true; document.getElementById('sbtn').disabled=true;
+
+  const display=text||`Analyse: ${atts.map(a=>a.name).join(', ')}`;
+  const userMsgEl=renderUserMsg(display,atts);
+  if(!voiceText){inp.value='';inp.style.height='auto';}
+
+  const chat=S.chats.find(c=>c.id===S.cid);
+  if(!chat){S.loading=false;document.getElementById('sbtn').disabled=false;return null;}
+  if(!chat.messages.length&&text){chat.title=text.slice(0,44)+(text.length>44?'…':'');renderHist();}
+
+  // Handle large files
+  let finalAtts=[...atts];
+  const bigFile=finalAtts.find(a=>!a.isImg&&!a.isPDF&&a.content&&a.content.length>9000);
+  if(bigFile) {
+    if(!chat._chunks) chat._chunks={};
+    chat._chunks[bigFile.name]={full:bigFile.content,idx:1,q:text};
+    const trunc=bigFile.content.slice(0,9000)+`\n\n[…Fichier tronqué. Tapez "suite" pour la partie suivante.]`;
+    finalAtts=finalAtts.map(a=>a===bigFile?{...a,content:trunc}:a);
+  }
+  if(text.toLowerCase().trim()==='suite'&&chat._chunks) {
+    const ck=Object.values(chat._chunks)[0];
+    if(ck&&ck.idx*9000<ck.full.length) {
+      finalAtts=[{name:'suite',content:`[PARTIE ${ck.idx+1}]\n${ck.full.slice(ck.idx*9000,(ck.idx+1)*9000)}`,isImg:false,isPDF:false}];
+      ck.idx++;
+    }
+  }
+
+  // Web search
+  let webContext='';
+  if(needsWebSearch(text)) {
+    const tid2=showSearchIndicator(text);
+    const results=await doWebSearch(text);
+    removeSearchIndicator(tid2);
+    if(results) { webContext=results; }
+  }
+
+  const chain=pickChain(text,finalAtts);
+  const reply=await callWithFallback(text,finalAtts,chat,CHAINS[chain],0,webContext);
+  S.attachments=[];
+  document.getElementById('at').innerHTML='';
+  S.loading=false; document.getElementById('sbtn').disabled=false;
+  setTimeout(()=>{if(S.user)pushUsers();},2000);
+  updateUserUI();
+  return reply;
+}
+
+function showSearchIndicator(query) {
+  const id=`srch_${Date.now()}`;
+  const cont=document.getElementById('msgs');
+  const d=document.createElement('div'); d.id=id; d.className='search-bar';
+  d.innerHTML=`<div class="spin"></div> Recherche en cours : <em>${esc(query.slice(0,60))}</em>`;
+  cont.appendChild(d); cont.scrollTop=cont.scrollHeight;
+  return id;
+}
+function removeSearchIndicator(id){document.getElementById(id)?.remove();}
+
+function hint(t){document.getElementById('mi').value=t;handleSend();}
+
+function pickChain(text,atts) {
+  if(atts.some(a=>a.isImg||a.isPDF)) return 'vision';
+  const hasDoc=atts.some(a=>a.content);
+  const isGen=/\bcrée\b|\bgénère\b|\brédige\b|\bécris\b|excel|word|powerpoint|pptx|pdf|rapport|lettre|cv|tableau|présentation|contrat/i.test(text);
+  if(isGen||hasDoc||text.length>400) return 'smart';
+  return 'fast';
+}
+
+async function callWithFallback(text,atts,chat,models,idx,webContext='') {
+  if(idx>=models.length) {
+    renderMsg('assistant','Tous les systèmes sont momentanément saturés, Tom. Veuillez patienter quelques instants.');
+    return null;
+  }
+  const model=models[idx];
+
+  let apiContent;
+  if(atts.some(a=>a.isImg||a.isPDF)) {
+    const parts=[];
+    atts.forEach(a=>{
+      if((a.isImg||a.isPDF)&&a.dataURL) {
+        const mtype=a.isPDF?'image/png':(a.dataURL.split(';')[0].split(':')[1]||'image/jpeg');
+        parts.push({type:'image_url',image_url:{url:a.dataURL}});
+      } else if(a.content) {
+        parts.push({type:'text',text:`=== Fichier: ${a.name} ===\n${a.content}\n===`});
+      }
+    });
+    parts.push({type:'text',text:text||'Analyse ce contenu en détail.'});
+    apiContent=parts;
+  } else if(atts.length>0) {
+    const docBlock=atts.map(a=>`=== Fichier: ${a.name} ===\n${a.content||''}\n=== Fin ${a.name} ===`).join('\n\n');
+    apiContent=`${docBlock}\n\n--- Instruction ---\n${text}`;
+  } else {
+    apiContent=text;
+  }
+
+  const estTok=Math.ceil(String(typeof apiContent==='string'?apiContent:JSON.stringify(apiContent)).length/3.5);
+  const modelLimit=TPM[model]||5000;
+  if(estTok>modelLimit*0.8&&idx+1<models.length) return callWithFallback(text,atts,chat,models,idx+1,webContext);
+
+  chat.messages.push({role:'user',content:typeof apiContent==='string'?apiContent.slice(0,500)+'…':text,displayContent:text,apiContent});
+  saveLocal();
+  const tid=showTyping();
+
+  try {
+    const sysPrompt=SYS(webContext)+(S.memory.length?'\n\nMÉMOIRE:\n'+S.memory.map(m=>`• ${m}`).join('\n'):'');
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model, messages:[
+          {role:'system',content:sysPrompt},
+          ...chat.messages.map(m=>({role:m.role,content:m.apiContent||m.content}))
+        ],
+        max_tokens:4096, temperature:0.72,
+      })
+    });
+    removeTyping(tid);
+
+    if(!res.ok) {
+      const errData=await res.json().catch(()=>({}));
+      const errMsg=errData.error?.message||'';
+      chat.messages.pop(); saveLocal();
+      if(res.status===429||res.status===503||errMsg.includes('decommissioned')||errMsg.includes('deprecated')||errMsg.includes('not found')||errMsg.includes('does not exist'))
+        return callWithFallback(text,atts,chat,models,idx+1,webContext);
+      if(res.status===401){updateApiSt(false);renderMsg('assistant','Clé API invalide, Tom. Vérifiez votre config.json.');return null;}
+      renderMsg('assistant','Une erreur temporaire s\'est produite, Tom. Veuillez réessayer.');
+      return null;
+    }
+
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||'';
+    if(!reply){chat.messages.pop();saveLocal();renderMsg('assistant','Réponse vide. Veuillez réessayer.');return null;}
+    renderMsg('assistant',reply);
+    chat.messages.push({role:'assistant',content:reply});
+    saveLocal();
+    return reply;
+
+  } catch(e) {
+    removeTyping(tid);
+    chat.messages.pop(); saveLocal();
+    renderMsg('assistant','Erreur réseau, Tom. Vérifiez votre connexion Internet.');
+    return null;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   RENDER MESSAGES + MARKDOWN
+══════════════════════════════════════════════════════ */
+let _msgId=0;
+
+function renderUserMsg(text, atts=[]) {
+  const cont=document.getElementById('msgs');
+  const div=document.createElement('div'); div.className='message user'; div.dataset.msgid=++_msgId;
+  const av=S.user?.avatarImg?`<img src="${S.user.avatarImg}" alt="av">`: (S.user?.avatar||'👤');
+  const avHtml=S.user?.avatarImg?`<img src="${S.user.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(S.user?.avatar||'👤');
+  const ah=atts.map(a=>a.isImg?`<img src="${a.dataURL}" class="msg-img" alt="${esc(a.name)}">`:`<div class="msg-file">${a.isPDF?'📑':a.isXL?'📗':'📄'} ${esc(a.name)}</div>`).join('');
+  const escapedText=esc(text);
+  const mid=_msgId;
+  div.innerHTML=`<div class="mav">${avHtml}</div><div class="mbody"><div class="mrole">${esc(S.user?.display_name||'Vous')}</div>${ah}<div class="mc">${escapedText}</div>
+    <div class="msg-actions">
+      <button class="mact" onclick="copyMsg(${mid})">📋 Copier</button>
+      <button class="mact" onclick="retryMsg(${mid})">🔄 Réessayer</button>
+      <button class="mact" onclick="editMsg(${mid},\`${escapedText.replace(/`/g,'\\`')}\`)">✏️ Modifier</button>
+    </div></div>`;
+  div.dataset.text=text;
+  cont.appendChild(div); cont.scrollTop=cont.scrollHeight;
+  return div;
+}
+
+function renderMsg(role,content) {
+  const cont=document.getElementById('msgs');
+  const div=document.createElement('div'); div.className=`message ${role==='user'?'user':'ass'}`; div.dataset.msgid=++_msgId;
+  const avHtml=role==='user'?(S.user?.avatarImg?`<img src="${S.user.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`: (S.user?.avatar||'👤')):'✦';
+  const body=role==='assistant'?renderAI(content):`<div class="mc">${esc(content)}</div>`;
+  const mid=_msgId;
+  div.innerHTML=`<div class="mav">${avHtml}</div><div class="mbody"><div class="mrole">${role==='user'?(S.user?.display_name||'Vous'):'IXA'}</div>${body}
+    <div class="msg-actions">
+      <button class="mact" onclick="copyMsg(${mid})">📋 Copier</button>
+      ${role==='assistant'?`<button class="mact" onclick="retryLast()">🔄 Régénérer</button>`:''}
+    </div></div>`;
+  div.dataset.rawContent=content;
+  cont.appendChild(div); cont.scrollTop=cont.scrollHeight;
+}
+
+function copyMsg(mid) {
+  const el=document.querySelector(`[data-msgid="${mid}"]`); if(!el) return;
+  const text=el.dataset.rawContent||el.dataset.text||el.querySelector('.mc')?.textContent||'';
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=el.querySelector('.mact');
+    if(btn){const orig=btn.innerHTML;btn.innerHTML='✅ Copié';btn.classList.add('ok');setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('ok');},1500);}
+    toast('📋 Copié !','ok');
+  });
+}
+
+function retryMsg(mid) {
+  const el=document.querySelector(`[data-msgid="${mid}"]`); if(!el) return;
+  const text=el.dataset.text||el.querySelector('.mc')?.textContent||'';
+  if(text) { document.getElementById('mi').value=text; handleSend(); }
+}
+
+function retryLast() {
+  const chat=S.chats.find(c=>c.id===S.cid); if(!chat||!chat.messages.length) return;
+  // Remove last assistant message
+  const lastAssIdx=chat.messages.map(m=>m.role).lastIndexOf('assistant');
+  if(lastAssIdx>=0) chat.messages.splice(lastAssIdx,1);
+  const lastUser=chat.messages.filter(m=>m.role==='user').slice(-1)[0];
+  if(!lastUser) return;
+  saveLocal();
+  // Remove last rendered assistant message
+  const msgs=document.getElementById('msgs');
+  const msgDivs=msgs.querySelectorAll('.message.ass');
+  msgDivs[msgDivs.length-1]?.remove();
+  // Re-send
+  S.loading=false;
+  document.getElementById('sbtn').disabled=false;
+  handleSend(lastUser.displayContent||lastUser.content);
+}
+
+function editMsg(mid,text) {
+  const inp=document.getElementById('mi');
+  inp.value=text.replace(/\\`/g,'`');
+  inp.focus(); inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,145)+'px';
+  // Remove the message and last assistant reply from history
+  const chat=S.chats.find(c=>c.id===S.cid); if(!chat) return;
+  const el=document.querySelector(`[data-msgid="${mid}"]`); if(el) el.remove();
+  // Remove last 2 messages from history (user + assistant)
+  if(chat.messages.length>=2) chat.messages.splice(-2,2);
+  else if(chat.messages.length===1) chat.messages.pop();
+  saveLocal();
+}
+
+/* ── MARKDOWN RENDERER (v2 — encodage corrigé) ── */
+function renderAI(raw) {
+  const re=/```document(?::(\w+))?\n([\s\S]*?)```/g;
+  let html='',li=0,m;
+  while((m=re.exec(raw))!==null) {
+    const before=raw.slice(li,m.index).trim();
+    if(before) html+=`<div class="mc">${md(before)}</div>`;
+    const dtype=m[1]||'document', dcontent=m[2].trim();
+    const did='doc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    window.__docs[did]={type:dtype,content:dcontent};
+    html+=makeDocCard(did,dtype,dcontent);
+    li=m.index+m[0].length;
+  }
+  const rem=raw.slice(li).trim();
+  if(rem) html+=`<div class="mc">${md(rem)}</div>`;
+  return html||`<div class="mc">${md(raw)}</div>`;
+}
+
+function md(raw) {
+  if(!raw) return '';
+  let t=raw;
+
+  // Code blocks (preserve content, no double-escape)
+  const codeMap={};
+  t=t.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>{
+    const id='cb_'+Math.random().toString(36).slice(2,8);
+    const bid='cb_b_'+id;
+    codeMap[id]=`<div class="cb"><div class="cbh"><span class="cbl">${lang||'text'}</span><button class="cpb" id="${bid}" onclick="copyCode('${bid}')">Copier</button></div><pre><code>${esc(code.trim())}</code></pre></div>`;
+    return `\x00CODE${id}\x00`;
+  });
+
+  // Inline code
+  const icMap={};
+  t=t.replace(/`([^`\n]+)`/g,(_,c)=>{
+    const id='ic_'+Math.random().toString(36).slice(2,8);
+    icMap[id]=`<code>${esc(c)}</code>`;
+    return `\x00IC${id}\x00`;
+  });
+
+  // Headings
+  t=t.replace(/^#{4,}\s+(.+)$/gm,'<h3>$1</h3>');
+  t=t.replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>');
+  t=t.replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>');
+  t=t.replace(/^#\s+(.+)$/gm,'<h1>$1</h1>');
+
+  // HR & blockquote
+  t=t.replace(/^-{3,}$/gm,'<hr>');
+  t=t.replace(/^>\s+(.+)$/gm,'<blockquote>$1</blockquote>');
+
+  // Bold/italic
+  t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/__(.+?)__/g,'<strong>$1</strong>');
+  t=t.replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
+  t=t.replace(/_([^_\n]+?)_/g,'<em>$1</em>');
+
+  // Tables
+  t=t.replace(/(\|.+\|\n\|[-|:\s]+\|\n(?:\|.+\|\n?)*)/g,match=>{
+    const lines=match.trim().split('\n').filter(l=>l.trim()&&!/^\|[-|:\s]+\|$/.test(l));
+    return '<table>'+lines.map((l,i)=>{
+      const cells=l.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+      return i===0?`<tr>${cells.map(c=>`<th>${c}</th>`).join('')}</tr>`:`<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+    }).join('')+'</table>';
+  });
+
+  // Lists
+  t=t.replace(/^[-*•]\s+(.+)$/gm,'<li>$1</li>');
+  t=t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g,m=>`<ul>${m}</ul>`);
+  t=t.replace(/^\d+\.\s+(.+)$/gm,'<liord>$1</liord>');
+  t=t.replace(/(<liord>[\s\S]*?<\/liord>\n?)+/g,m=>`<ol>${m.replace(/<liord>/g,'<li>').replace(/<\/liord>/g,'</li>')}</ol>`);
+
+  // Links — smart rendering
+  t=t.replace(/\[([^\]]+)\]\(([^)]+)\)/g,(_, label, url)=>{
+    const cleanUrl=url.trim();
+    let icon='';
+    if(/youtube\.com|youtu\.be/i.test(cleanUrl)) icon='▶️ ';
+    else if(/amazon\./i.test(cleanUrl)) icon='🛒 ';
+    return `<a href="${esc(cleanUrl)}" target="_blank" rel="noopener">${icon}${label}</a>`;
+  });
+
+  // Paragraphs
+  const lines=t.split('\n');
+  const out=[];
+  let inBlock=false;
+  for(const line of lines){
+    const trimmed=line.trim();
+    if(!trimmed){if(inBlock){out.push('</p>');inBlock=false;}continue;}
+    if(/^<(h[1-3]|ul|ol|table|blockquote|hr|div|pre)/.test(trimmed)||trimmed.startsWith('\x00CODE')){
+      if(inBlock){out.push('</p>');inBlock=false;}
+      out.push(trimmed);
+    } else {
+      if(!inBlock){out.push('<p>');inBlock=true;}
+      else out.push('<br>');
+      out.push(trimmed);
+    }
+  }
+  if(inBlock) out.push('</p>');
+  t=out.join('');
+
+  // Restore code
+  Object.entries(codeMap).forEach(([id,html])=>{t=t.replace(`\x00CODE${id}\x00`,html);});
+  Object.entries(icMap).forEach(([id,html])=>{t=t.replace(`\x00IC${id}\x00`,html);});
+
+  return t;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function copyCode(id) {
+  const btn=document.getElementById(id); if(!btn) return;
+  const code=btn.closest('.cb')?.querySelector('code'); if(!code) return;
+  navigator.clipboard.writeText(code.textContent).then(()=>{
+    btn.textContent='✓ Copié'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent='Copier';btn.classList.remove('ok');},2000);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   DOCUMENT GENERATION
+══════════════════════════════════════════════════════ */
+function makeDocCard(id,type,content) {
+  const icons={rapport:'📊',lettre:'✉️',cv:'👤',tableau:'📋',code:'💻',document:'📄',contrat:'📝',presentation:'📑',excel:'📗',word:'📘',powerpoint:'📑',pdf:'📕'};
+  const icon=icons[type]||'📄';
+  const isXL=type==='excel', isPPT=['powerpoint','presentation'].includes(type), isPDF=type==='pdf';
+  return `<div class="doc-card">
+    <div class="dch"><span class="dci">${icon}</span><div>
+      <div class="dct">${type.charAt(0).toUpperCase()+type.slice(1)} — prêt à télécharger</div>
+      <div class="dcs">${content.split('\n').length} lignes · ${content.length} car.</div>
+    </div></div>
+    <div class="dca">
+      ${isXL?`<button class="dcb dl" onclick="genXLSX('${id}')">⬇ Excel (.xlsx)</button>`:''}
+      ${isPPT?`<button class="dcb dl" onclick="genPPTX('${id}')">⬇ Présentation (.html)</button>`:''}
+      ${isPDF?`<button class="dcb dl" onclick="genPDF('${id}')">⬇ PDF (.pdf)</button>`:''}
+      ${!isXL&&!isPPT?`<button class="dcb dl" onclick="genWord('${id}')">⬇ Word (.doc)</button>`:''}
+      ${!isXL&&!isPPT&&!isPDF?`<button class="dcb dl" onclick="dlRaw('${id}','md')">⬇ Markdown (.md)</button>`:''}
+      <button class="dcb pv" onclick="prvDoc('${id}')">👁 Aperçu</button>
+      <button class="dcb pv" onclick="cpDoc('${id}')">📋 Copier</button>
+    </div></div>`;
+}
+
+function getDoc(id){return window.__docs[id]||null;}
+
+function dlRaw(id,ext) {
+  const d=getDoc(id); if(!d) return;
+  const blob=new Blob([d.content],{type:'text/plain;charset=utf-8'});
+  dlBlob(blob,`ixa_${d.type}.${ext}`);
+  toast('✅ Fichier téléchargé !','ok');
+}
+function cpDoc(id){const d=getDoc(id);if(!d)return;navigator.clipboard.writeText(d.content).then(()=>toast('📋 Copié !','ok'));}
+
+function dlBlob(blob,name) {
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=name; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function genWord(id) {
+  const d=getDoc(id); if(!d) return;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Calibri,sans-serif;font-size:11pt;margin:2.5cm;line-height:1.6}
+  h1{font-size:16pt;color:#2c3e50}h2{font-size:13pt;color:#34495e}h3{font-size:11pt;color:#555}
+  table{border-collapse:collapse;width:100%}th,td{border:1px solid #bdc3c7;padding:7px}
+  th{background:#ecf0f1;font-weight:bold}pre{background:#f5f5f5;padding:10px;border-radius:4px;font-size:10pt;font-family:Consolas,monospace}
+  blockquote{border-left:4px solid #6c5ce7;padding-left:12px;color:#666;margin:8px 0}
+  ul,ol{padding-left:20px}li{margin-bottom:4px}
+  </style></head><body>${md2htmlExport(d.content)}</body></html>`;
+  dlBlob(new Blob([html],{type:'application/msword;charset=utf-8'}),`ixa_${d.type}.doc`);
+  toast('✅ Word téléchargé !','ok');
+}
+
+function genPDF(id) {
+  // Generate print-ready HTML that user can print to PDF
+  const d=getDoc(id); if(!d) return;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — ${d.type}</title>
+  <style>@media print{@page{margin:2cm}body{margin:0}}
+  body{font-family:Georgia,serif;font-size:11pt;max-width:800px;margin:2cm auto;line-height:1.7;color:#1a1a1a}
+  h1{font-size:18pt;color:#6c5ce7;border-bottom:2px solid #6c5ce7;padding-bottom:8px}
+  h2{font-size:13pt;color:#333}h3{font-size:11pt}
+  table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #ccc;padding:7px}
+  th{background:#f5f5ff;font-weight:bold}pre{background:#f5f5f5;padding:12px;border-radius:4px;font-size:9pt;overflow-x:auto}
+  blockquote{border-left:4px solid #6c5ce7;padding-left:12px;color:#555;margin:10px 0}
+  .no-print{display:none}
+  </style></head><body>
+  <div class="no-print" style="display:block!important;background:#6c5ce7;color:#fff;padding:12px 20px;margin-bottom:20px;border-radius:8px;font-family:sans-serif;font-size:13px">
+    📄 Pour sauvegarder en PDF : <strong>Ctrl+P → Enregistrer en PDF</strong>
+    <button onclick="window.print()" style="margin-left:12px;background:#fff;color:#6c5ce7;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600">🖨️ Imprimer / PDF</button>
+  </div>
+  ${md2htmlExport(d.content)}</body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html); w.document.close();
+  toast('✅ Ouvrir → Ctrl+P → Enregistrer en PDF','ok');
+}
+
+function genXLSX(id) {
+  const d=getDoc(id); if(!d) return;
+  try {
+    let data;
+    try{data=JSON.parse(d.content);}catch(e){
+      const lines=d.content.trim().split('\n').filter(l=>l.trim());
+      const rows=lines.map(l=>l.split(/[,\t|]/).map(c=>c.trim()));
+      data={sheets:[{name:'Données',headers:rows[0]||[],rows:rows.slice(1)}]};
+    }
+    const wb=XLSX.utils.book_new();
+    const sheets=data.sheets||[{name:'Feuille1',headers:[],rows:[]}];
+    sheets.forEach(s=>{
+      const wsData=[];
+      if(s.headers?.length) wsData.push(s.headers);
+      (s.rows||[]).forEach(r=>wsData.push(Array.isArray(r)?r:Object.values(r)));
+      const ws=XLSX.utils.aoa_to_sheet(wsData);
+      const colWidths=wsData.reduce((acc,row)=>{row.forEach((cell,i)=>{acc[i]=Math.max(acc[i]||0,String(cell||'').length);});return acc;},[]);
+      ws['!cols']=colWidths.map(w=>({wch:Math.min(w+2,40)}));
+      XLSX.utils.book_append_sheet(wb,ws,s.name||'Feuille');
+    });
+    XLSX.writeFile(wb,`ixa_${d.type}.xlsx`);
+    toast('✅ Excel téléchargé !','ok');
+  } catch(e){toast('❌ Erreur Excel: '+e.message,'err');}
+}
+
+function genPPTX(id) {
+  const d=getDoc(id); if(!d) return;
+  try {
+    let data;
+    try{data=JSON.parse(d.content);}catch(e){data={title:'Présentation IXA',slides:[{title:'Contenu',content:d.content,bullets:[]}]};}
+    const slides=(data.slides||[]).map((sl,i)=>`
+      <section style="min-height:100vh;background:${i===0?'linear-gradient(135deg,#6c5ce7,#d63af9)':'#0f0f1e'};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;text-align:center;page-break-after:always;box-sizing:border-box">
+        <h${i===0?'1':'2'} style="font-family:sans-serif;color:#fff;font-size:${i===0?'2.5rem':'2rem'};margin-bottom:20px;font-weight:700">${esc(sl.title||'')}</h${i===0?'1':'2'}>
+        ${sl.content?`<p style="color:rgba(255,255,255,.85);font-size:1.1rem;max-width:700px;line-height:1.7;font-family:sans-serif">${esc(sl.content)}</p>`:''}
+        ${sl.bullets?.length?`<ul style="text-align:left;max-width:650px;margin-top:20px">${sl.bullets.map(b=>`<li style="color:rgba(255,255,255,.9);font-size:1rem;margin-bottom:10px;font-family:sans-serif;list-style:none;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#d63af9">▸</span>${esc(b)}</li>`).join('')}</ul>`:''}
+        <div style="position:absolute;bottom:20px;right:30px;font-size:.75rem;color:rgba(255,255,255,.4);font-family:sans-serif">${i+1}/${data.slides.length}</div>
+      </section>`).join('');
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(data.title||'Présentation')}</title>
+      <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000}@media print{section{min-height:100vh}}</style>
+      </head><body>${slides}<script>document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){window.scrollBy({top:window.innerHeight,behavior:'smooth'})}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){window.scrollBy({top:-window.innerHeight,behavior:'smooth'})}})<\/script></body></html>`;
+    dlBlob(new Blob([html],{type:'text/html;charset=utf-8'}),'ixa_presentation.html');
+    toast('✅ Présentation téléchargée ! (Ouvrir dans Chrome, F11 pour plein écran)','ok');
+  } catch(e){toast('❌ Erreur PPT: '+e.message,'err');}
+}
+
+function prvDoc(id) {
+  const d=getDoc(id); if(!d) return;
+  const w=window.open('','_blank');
+  const isXL=d.type==='excel';
+  const bodyHtml=isXL?`<pre style="font-family:Consolas,monospace;font-size:13px;padding:20px;background:#f9f9f9;border-radius:8px;overflow-x:auto">${esc(d.content)}</pre>`:md2htmlExport(d.content);
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — ${d.type}</title>
+    <style>body{font-family:Calibri,sans-serif;max-width:860px;margin:40px auto;padding:24px;line-height:1.8;color:#1a1a2e;background:#fafafa}
+    h1{font-size:1.6rem;color:#6c5ce7}h2{font-size:1.2rem;color:#444}h3{font-size:1rem;color:#666}
+    table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #ddd;padding:8px}
+    th{background:#f0f0f8;color:#6c5ce7;font-weight:bold}pre{background:#f0f0f8;padding:14px;border-radius:8px;overflow-x:auto}
+    code{background:#f0f0f8;padding:2px 6px;border-radius:4px}
+    .header{background:linear-gradient(120deg,#6c5ce7,#d63af9);padding:20px 24px;border-radius:10px;margin-bottom:28px}
+    .header h1{color:#fff;margin:0}.header p{color:rgba(255,255,255,.8);margin:4px 0 0;font-size:.82rem}
+    ul,ol{padding-left:20px}li{margin-bottom:4px}blockquote{border-left:4px solid #6c5ce7;padding-left:12px;color:#555;margin:10px 0}
+    </style></head>
+    <body><div class="header"><h1>${esc(d.type.toUpperCase())} — IXA</h1>
+    <p>Généré le ${new Date().toLocaleDateString('fr-FR')} par le Système IXA</p></div>
+    ${bodyHtml}</body></html>`);
+  w.document.close();
+}
+
+function md2htmlExport(raw) {
+  return md(raw);
+}
+
+function exportChat() {
+  const chat=S.chats.find(c=>c.id===S.cid); if(!chat||!chat.messages.length){toast('Aucun message');return;}
+  const content=`# ${chat.title}\n_Export IXA — ${new Date().toLocaleDateString('fr-FR')}_\n\n---\n\n`+
+    chat.messages.map(m=>`**${m.role==='user'?(S.user?.display_name||'Vous'):'IXA'}:**\n\n${m.displayContent||m.content}`).join('\n\n---\n\n');
+  dlBlob(new Blob([content],{type:'text/markdown;charset=utf-8'}),`ixa_${(chat.title||'conv').replace(/[^a-zA-Z0-9]/g,'_').slice(0,28)}.md`);
+  toast('✅ Export réussi !','ok');
+}
+
+/* ══════════════════════════════════════════════════════
+   MEMORY MODAL
+══════════════════════════════════════════════════════ */
+function openMemory() {
+  showModal('🧠 Mémoire IXA','Informations mémorisées sur vous',
+    `<div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto" id="mem-list">
+      ${S.memory.map((m,i)=>`<div style="display:flex;align-items:center;gap:7px;background:var(--c2);border:1px solid var(--bd2);border-radius:8px;padding:8px 10px;font-size:.8rem">
+        <span style="flex:1;color:var(--tx)">${esc(m)}</span>
+        <button onclick="delMem(${i})" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:.78rem;padding:2px 4px;border-radius:4px;transition:.15s" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--mu)'">✕</button>
+      </div>`).join('')||'<div style="color:var(--mu);font-size:.8rem;text-align:center;padding:10px">Aucune mémoire pour le moment</div>'}
+    </div>
+    <input class="mi" id="mem-inp" placeholder="Ajouter une information…" onkeydown="if(event.key==='Enter')addMem()">`,
+    [{l:'Fermer',c:'can',f:'closeModal()'},{l:'Ajouter',c:'cfm',f:'addMem()'}]
+  );
+}
+
+function delMem(i) {
+  S.memory.splice(i,1); saveLocal(); closeModal(); openMemory();
+  toast('Souvenir supprimé');
+}
+function addMem() {
+  const v=(document.getElementById('mem-inp')?.value||'').trim();
+  if(!v){toast('❌ Entrez une information','err');return;}
+  S.memory.push(v); saveLocal(); closeModal(); openMemory();
+  toast('✅ Mémorisé !','ok');
+}
+
+/* ══════════════════════════════════════════════════════
+   FILE SHORTCUTS
+══════════════════════════════════════════════════════ */
+let _mf=null;
 
 function renderCmds() {
-  const l = document.getElementById('fcmd-list');
-  const cmds = Object.entries(S.commands);
-  if (!cmds.length) { l.innerHTML = '<div class="cmd-empty">Aucun raccourci. Ajoutez-en un ci-dessous.</div>'; return; }
-  l.innerHTML = cmds.map(([c,d]) => `
+  const l=document.getElementById('fcmd-list');
+  const cmds=Object.entries(S.commands);
+  if(!cmds.length){l.innerHTML='<div class="cmd-empty">Aucun raccourci. Ajoutez-en un ci-dessous.</div>';return;}
+  l.innerHTML=cmds.map(([c,d])=>`
     <div class="fi2" onclick="hint('${esc(c)} ')">
       <span class="fi2-badge">${esc(c)}</span>
       <span class="fi2-name">${esc(d.desc||d.name)}</span>
@@ -917,7 +1850,7 @@ function renderCmds() {
 }
 
 function openAddCmd() {
-  _mf = null;
+  _mf=null;
   showModal('Ajouter un raccourci',
     'Associez un <b>/mot-clé</b> à un fichier. Tapez ensuite <b>/mot-clé votre question</b> dans le chat.',
     `<input class="mi" id="mc-cmd" placeholder="/planning (sans espaces)">
@@ -928,540 +1861,203 @@ function openAddCmd() {
     [{l:'Annuler',c:'can',f:'closeModal()'},{l:'Enregistrer',c:'cfm',f:'saveCmd()'}]
   );
 }
-
 function mcFChange(input) {
-  const f = input.files[0]; if (!f) return;
-  const max = 8 * 1024 * 1024;
-  if (f.size > max) { toast('❌ Fichier trop grand (max 8MB)', 'err'); return; }
-  readFile(f, d => { _mf = { ...d, fileType: f.type }; document.getElementById('mc-fn').textContent = '📎 ' + f.name; });
+  const f=input.files[0]; if(!f) return;
+  if(f.size>8*1024*1024){toast('❌ Fichier trop grand (max 8MB)','err');return;}
+  readFile(f,d=>{_mf={...d,fileType:f.type};document.getElementById('mc-fn').textContent='📎 '+f.name;});
 }
-
 function saveCmd() {
-  let cmd = (document.getElementById('mc-cmd')?.value || '').trim();
-  const desc = (document.getElementById('mc-desc')?.value || '').trim();
-  if (!cmd || !_mf) { toast('❌ Mot-clé et fichier requis', 'err'); return; }
-  if (!cmd.startsWith('/')) cmd = '/' + cmd;
-  cmd = cmd.replace(/\s+/g, '_');
-  S.commands[cmd] = { ..._mf, desc };
+  let cmd=(document.getElementById('mc-cmd')?.value||'').trim();
+  const desc=(document.getElementById('mc-desc')?.value||'').trim();
+  if(!cmd||!_mf){toast('❌ Mot-clé et fichier requis','err');return;}
+  if(!cmd.startsWith('/')) cmd='/'+cmd;
+  cmd=cmd.replace(/\s+/g,'_');
+  S.commands[cmd]={..._mf,desc};
   saveLocal(); renderCmds(); closeModal();
-  toast(`✅ Raccourci ${cmd} enregistré !`, 'ok');
+  toast(`✅ Raccourci ${cmd} enregistré !`,'ok');
 }
-
-function rmCmd(cmd, e) {
-  e.stopPropagation();
-  delete S.commands[cmd]; saveLocal(); renderCmds();
+function rmCmd(cmd,e) {
+  e.stopPropagation(); delete S.commands[cmd]; saveLocal(); renderCmds();
   toast(`Raccourci ${cmd} supprimé`);
 }
-
-function openRenCmd(cmd, e) {
+function openRenCmd(cmd,e) {
   e.stopPropagation();
-  showModal('Renommer le raccourci', `Nouveau nom pour <b>${esc(cmd)}</b> :`,
+  showModal('Renommer le raccourci',`Nouveau nom pour <b>${esc(cmd)}</b> :`,
     `<input class="mi" id="rn-v" value="${esc(cmd)}" placeholder="/nouveau_nom">`,
     [{l:'Annuler',c:'can',f:'closeModal()'},{l:'Renommer',c:'cfm',f:'applyRenCmd()'}]
   );
-  document.getElementById('mo').dataset.ren = cmd;
-  setTimeout(() => { const el=document.getElementById('rn-v'); if(el){el.focus();el.select();} }, 80);
+  document.getElementById('mo').dataset.ren=cmd;
+  setTimeout(()=>{const el=document.getElementById('rn-v');if(el){el.focus();el.select();}},80);
 }
-
 function applyRenCmd() {
-  let nv = (document.getElementById('rn-v')?.value || '').trim();
-  const old = document.getElementById('mo').dataset.ren;
-  if (!nv || !old) { closeModal(); return; }
-  if (!nv.startsWith('/')) nv = '/' + nv;
-  nv = nv.replace(/\s+/g, '_');
-  if (nv !== old) { S.commands[nv] = { ...S.commands[old] }; delete S.commands[old]; saveLocal(); renderCmds(); }
-  closeModal(); toast(`✅ Renommé en ${nv}`, 'ok');
+  let nv=(document.getElementById('rn-v')?.value||'').trim();
+  const old=document.getElementById('mo').dataset.ren;
+  if(!nv||!old){closeModal();return;}
+  if(!nv.startsWith('/')) nv='/'+nv;
+  nv=nv.replace(/\s+/g,'_');
+  if(nv!==old){S.commands[nv]={...S.commands[old]};delete S.commands[old];saveLocal();renderCmds();}
+  closeModal(); toast(`✅ Renommé en ${nv}`,'ok');
 }
-
 function showCmdSuggest(val) {
-  const box = document.getElementById('cmd-s');
-  if (!val.startsWith('/') || val.includes(' ')) { box.style.display='none'; return; }
-  const m = Object.entries(S.commands).filter(([c]) => c.startsWith(val));
-  if (!m.length) { box.style.display='none'; return; }
-  box.style.display = 'flex';
-  box.innerHTML = m.map(([c,d]) => `<div class="csi" onclick="selectCmd('${esc(c)}')"><span class="cmd">${esc(c)}</span><span class="fn">${esc(d.desc||d.name)}</span></div>`).join('');
+  const box=document.getElementById('cmd-s');
+  if(!val.startsWith('/')||val.includes(' ')){box.style.display='none';return;}
+  const m=Object.entries(S.commands).filter(([c])=>c.startsWith(val));
+  if(!m.length){box.style.display='none';return;}
+  box.style.display='flex';
+  box.innerHTML=m.map(([c,d])=>`<div class="csi" onclick="selectCmd('${esc(c)}')"><span class="cmd">${esc(c)}</span><span class="fn">${esc(d.desc||d.name)}</span></div>`).join('');
 }
 function selectCmd(cmd) {
-  document.getElementById('mi').value = cmd + ' ';
-  document.getElementById('cmd-s').style.display = 'none';
+  document.getElementById('mi').value=cmd+' ';
+  document.getElementById('cmd-s').style.display='none';
   document.getElementById('mi').focus();
 }
 
 /* ══════════════════════════════════════════════════════
-   SEND + INVISIBLE MODEL ROUTING
-══════════════════════════════════════════════════════ */
-async function handleSend(voiceText = null) {
-  if (S.loading) return null;
-  const inp = document.getElementById('mi');
-  let text = (voiceText !== null ? voiceText : inp.value).trim();
-  if (!text && S.attachments.length === 0) return null;
-  document.getElementById('cmd-s').style.display = 'none';
-
-  // Resolve /command → inject file automatically
-  let cmdAtts = [];
-  for (const [cmd] of Object.entries(S.commands)) {
-    if (text === cmd || text.startsWith(cmd + ' ')) {
-      cmdAtts = [{ ...S.commands[cmd] }];
-      text = text.slice(cmd.length).trim() || 'Analyse ce fichier en détail et réponds à ma question.';
-      break;
-    }
-  }
-  const atts = [...S.attachments, ...cmdAtts];
-
-  document.getElementById('welcome')?.remove();
-  S.loading = true; document.getElementById('sbtn').disabled = true;
-
-  const display = text || `Analyse: ${atts.map(a=>a.name).join(', ')}`;
-  renderUserMsg(display, atts);
-  if (!voiceText) { inp.value = ''; inp.style.height = 'auto'; }
-
-  const chat = S.chats.find(c => c.id === S.cid);
-  if (!chat) { S.loading=false; document.getElementById('sbtn').disabled=false; return null; }
-  if (!chat.messages.length && text) { chat.title = text.slice(0,44)+(text.length>44?'…':''); renderHist(); }
-
-  // Handle large files (chunk)
-  let finalAtts = [...atts];
-  const bigFile = finalAtts.find(a => !a.isImg && !a.isPDF && a.content && a.content.length > 9000);
-  if (bigFile) {
-    if (!chat._chunks) chat._chunks = {};
-    chat._chunks[bigFile.name] = { full: bigFile.content, idx: 1, q: text };
-    const trunc = bigFile.content.slice(0, 9000) + `\n\n[…Fichier tronqué (${bigFile.content.length} car. total). Tapez "suite" pour la partie suivante.]`;
-    finalAtts = finalAtts.map(a => a === bigFile ? { ...a, content: trunc } : a);
-  }
-  // Handle "suite" continuation
-  if (text.toLowerCase().trim() === 'suite' && chat._chunks) {
-    const ck = Object.values(chat._chunks)[0];
-    if (ck && ck.idx * 9000 < ck.full.length) {
-      finalAtts = [{ name:'suite', content:`[PARTIE ${ck.idx+1}]\n${ck.full.slice(ck.idx*9000,(ck.idx+1)*9000)}`, isImg:false, isPDF:false }];
-      ck.idx++;
-    }
-  }
-
-  const chain = pickChain(text, finalAtts);
-  const reply = await callWithFallback(text, finalAtts, chat, CHAINS[chain], 0);
-  S.attachments = []; document.getElementById('at').innerHTML = '';
-  S.loading = false; document.getElementById('sbtn').disabled = false;
-  setTimeout(() => { if(S.user) pushUsers(); }, 2000);
-  return reply;
-}
-
-function hint(t) { document.getElementById('mi').value = t; handleSend(); }
-
-function pickChain(text, atts) {
-  if (atts.some(a => a.isImg)) return 'vision';
-  const hasDoc = atts.some(a => a.content || a.isPDF);
-  const isGen = /crée|génère|rédige|écris|produis|word|excel|powerpoint|pptx|pdf|rapport|lettre|cv|tableau|présentation|contrat/i.test(text);
-  if (isGen || hasDoc || text.length > 400) return 'smart';
-  return 'fast';
-}
-
-async function callWithFallback(text, atts, chat, models, idx) {
-  if (idx >= models.length) {
-    renderMsg('assistant', 'Tous les systèmes sont momentanément saturés, Tom. Veuillez patienter quelques instants.');
-    return null;
-  }
-  const model = models[idx];
-
-  // Build API content properly
-  let apiContent;
-  if (atts.some(a => a.isImg)) {
-    // Vision: multipart array
-    const parts = [];
-    atts.forEach(a => {
-      if (a.isImg && a.dataURL) {
-        parts.push({ type:'image_url', image_url:{ url: a.dataURL } });
-      } else if (a.content) {
-        parts.push({ type:'text', text:`=== Fichier: ${a.name} ===\n${a.content}\n===` });
-      } else if (a.isPDF) {
-        parts.push({ type:'text', text:`[Document PDF joint: ${a.name}]` });
-      }
-    });
-    parts.push({ type:'text', text: text || 'Analyse ce contenu en détail.' });
-    apiContent = parts;
-  } else if (atts.length > 0) {
-    // Text documents: inject as text
-    const docBlock = atts.map(a => {
-      if (a.isPDF) return `=== Document PDF: ${a.name} ===\n[PDF joint — analyse basée sur le nom et le contexte de la conversation]\n=== Fin ${a.name} ===`;
-      return `=== Fichier: ${a.name} ===\n${a.content || ''}\n=== Fin ${a.name} ===`;
-    }).join('\n\n');
-    apiContent = `${docBlock}\n\n--- Instruction ---\n${text}`;
-  } else {
-    apiContent = text;
-  }
-
-  // Check token estimate, auto-escalate to bigger model if needed
-  const estTok = Math.ceil(String(typeof apiContent==='string' ? apiContent : JSON.stringify(apiContent)).length / 3.5);
-  const modelLimit = TPM[model] || 5000;
-  if (estTok > modelLimit * 0.8 && idx + 1 < models.length) {
-    return callWithFallback(text, atts, chat, models, idx + 1);
-  }
-
-  // Store user message for history
-  chat.messages.push({ role:'user', content: typeof apiContent==='string' ? apiContent.slice(0,500)+'…' : text, displayContent: text, apiContent });
-  saveLocal();
-  const tid = showTyping();
-
-  try {
-    const sysPrompt = SYS() + (S.memory.length ? '\n\nMÉMOIRE:\n' + S.memory.map(m=>`• ${m}`).join('\n') : '');
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization':`Bearer ${S.groqKey}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role:'system', content: sysPrompt },
-          ...chat.messages.map(m => ({ role: m.role, content: m.apiContent || m.content }))
-        ],
-        max_tokens: 4096,
-        temperature: 0.72,
-      })
-    });
-    removeTyping(tid);
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      const errMsg = errData.error?.message || '';
-      chat.messages.pop(); saveLocal();
-      // Silently fallback on 429, decommissioned, or model errors
-      if (res.status === 429 || res.status === 503 || errMsg.includes('decommissioned') || errMsg.includes('deprecated') || errMsg.includes('not found') || errMsg.includes('does not exist')) {
-        return callWithFallback(text, atts, chat, models, idx + 1);
-      }
-      if (res.status === 401) { updateApiSt(false); renderMsg('assistant', 'Clé API invalide, Tom. Vérifiez votre config.json.'); return null; }
-      renderMsg('assistant', 'Une erreur temporaire s\'est produite, Tom. Veuillez réessayer.');
-      return null;
-    }
-
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content || '';
-    if (!reply) { chat.messages.pop(); saveLocal(); renderMsg('assistant', 'Réponse vide. Veuillez réessayer, Tom.'); return null; }
-    renderMsg('assistant', reply);
-    chat.messages.push({ role:'assistant', content: reply });
-    saveLocal();
-    return reply;
-
-  } catch(e) {
-    removeTyping(tid);
-    chat.messages.pop(); saveLocal();
-    renderMsg('assistant', 'Erreur réseau, Tom. Vérifiez votre connexion Internet.');
-    return null;
-  }
-}
-
-/* ══════════════════════════════════════════════════════
-   RENDER MESSAGES + MARKDOWN
-══════════════════════════════════════════════════════ */
-function renderUserMsg(text, atts = []) {
-  const cont = document.getElementById('msgs');
-  const div = document.createElement('div'); div.className = 'message user';
-  const ah = atts.map(a =>
-    a.isImg ? `<img src="${a.dataURL}" class="msg-img" alt="${esc(a.name)}">` :
-    `<div class="msg-file">${a.isPDF?'📑':a.isXL?'📗':'📄'} ${esc(a.name)}</div>`
-  ).join('');
-  div.innerHTML = `<div class="mav">👤</div><div class="mbody"><div class="mrole">Tom</div>${ah}<div class="mc">${esc(text)}</div></div>`;
-  cont.appendChild(div); cont.scrollTop = cont.scrollHeight;
-}
-
-function renderMsg(role, content) {
-  const cont = document.getElementById('msgs');
-  const div = document.createElement('div'); div.className = `message ${role==='user'?'user':'ass'}`;
-  const body = role === 'assistant' ? renderAI(content) : `<div class="mc">${esc(content)}</div>`;
-  div.innerHTML = `<div class="mav">${role==='user'?'👤':'🤖'}</div><div class="mbody"><div class="mrole">${role==='user'?'Tom':'IXA'}</div>${body}</div>`;
-  cont.appendChild(div); cont.scrollTop = cont.scrollHeight;
-}
-
-function renderAI(raw) {
-  const re = /```document(?::(\w+))?\n([\s\S]*?)```/g;
-  let html = '', li = 0, m;
-  while ((m = re.exec(raw)) !== null) {
-    const before = raw.slice(li, m.index).trim();
-    if (before) html += `<div class="mc">${md(before)}</div>`;
-    const dtype = m[1] || 'document', dcontent = m[2].trim();
-    const did = 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-    window.__docs[did] = { type: dtype, content: dcontent };
-    html += makeDocCard(did, dtype, dcontent);
-    li = m.index + m[0].length;
-  }
-  const rem = raw.slice(li).trim();
-  if (rem) html += `<div class="mc">${md(rem)}</div>`;
-  return html || `<div class="mc">${md(raw)}</div>`;
-}
-
-function md(raw) {
-  let t = raw;
-  // Code blocks
-  t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-    const id = 'cb_' + Math.random().toString(36).slice(2);
-    return `<div class="cb"><div class="cbh"><span class="cbl">${lang||'text'}</span><button class="cpb" id="${id}" onclick="copyCode('${id}')">Copier</button></div><pre><code>${esc(code.trim())}</code></pre></div>`;
-  });
-  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
-  t = t.replace(/^#{4}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#\s+(.+)$/gm,'<h1>$1</h1>');
-  t = t.replace(/^>\s+(.+)$/gm,'<blockquote>$1</blockquote>').replace(/^-{3,}$/gm,'<hr>');
-  t = t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/__(.+?)__/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/_([^_]+)_/g,'<em>$1</em>');
-  // Tables
-  t = t.replace(/(\|.+\|\n\|[-|:\s]+\|\n(?:\|.+\|\n?)*)/g, match => {
-    const lines = match.trim().split('\n').filter(l => l.trim() && !/^\|[-|:\s]+\|$/.test(l));
-    return '<table>' + lines.map((l,i) => {
-      const cells = l.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
-      return i===0 ? `<tr>${cells.map(c=>`<th>${c}</th>`).join('')}</tr>` : `<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
-    }).join('') + '</table>';
-  });
-  t = t.replace(/^[-*•]\s+(.+)$/gm,'<li>$1</li>');
-  t = t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
-  t = t.replace(/^\d+\.\s+(.+)$/gm,'<li>$1</li>');
-  t = t.replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  t = t.replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
-  return `<p>${t}</p>`;
-}
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function copyCode(id) {
-  const b = document.getElementById(id)?.closest('.cb'); if(!b) return;
-  navigator.clipboard.writeText(b.querySelector('code').textContent).then(() => {
-    const btn = document.getElementById(id); btn.textContent='✓ Copié'; btn.classList.add('ok');
-    setTimeout(() => { btn.textContent='Copier'; btn.classList.remove('ok'); }, 2000);
-  });
-}
-
-/* ══════════════════════════════════════════════════════
-   DOCUMENT GENERATION — Word, Excel, PowerPoint, PDF
-══════════════════════════════════════════════════════ */
-function makeDocCard(id, type, content) {
-  const icons = { rapport:'📊',lettre:'✉️',cv:'👤',tableau:'📋',code:'💻',document:'📄',contrat:'📝',presentation:'📑',excel:'📗',word:'📘',powerpoint:'📑',pdf:'📕' };
-  const icon = icons[type] || '📄';
-  const isXL = type==='excel', isPPT = ['powerpoint','presentation'].includes(type);
-  return `<div class="doc-card">
-    <div class="dch"><span class="dci">${icon}</span><div>
-      <div class="dct">${type.charAt(0).toUpperCase()+type.slice(1)} — prêt à télécharger</div>
-      <div class="dcs">${content.split('\n').length} lignes · ${content.length} car.</div>
-    </div></div>
-    <div class="dca">
-      ${isXL  ? `<button class="dcb dl" onclick="genXLSX('${id}')">⬇ Excel (.xlsx)</button>` : ''}
-      ${isPPT ? `<button class="dcb dl" onclick="genPPTX('${id}')">⬇ PowerPoint (.pptx)</button>` : ''}
-      ${!isXL && !isPPT ? `<button class="dcb dl" onclick="genWord('${id}')">⬇ Word (.doc)</button>` : ''}
-      ${!isXL && !isPPT ? `<button class="dcb dl" onclick="dlRaw('${id}','md')">⬇ Markdown (.md)</button>` : ''}
-      <button class="dcb pv" onclick="prvDoc('${id}')">👁 Aperçu</button>
-      <button class="dcb pv" onclick="cpDoc('${id}')">📋 Copier</button>
-    </div></div>`;
-}
-
-function getDoc(id) { return window.__docs[id] || null; }
-
-function dlRaw(id, ext) {
-  const d = getDoc(id); if(!d) return;
-  const blob = new Blob([d.content], { type:'text/plain;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `ixa_${d.type}.${ext}`; a.click(); URL.revokeObjectURL(a.href);
-  toast('✅ Fichier téléchargé !', 'ok');
-}
-
-function cpDoc(id) {
-  const d = getDoc(id); if(!d) return;
-  navigator.clipboard.writeText(d.content).then(() => toast('📋 Copié !','ok'));
-}
-
-function genWord(id) {
-  const d = getDoc(id); if(!d) return;
-  const body = md2html(d.content);
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <style>body{font-family:Calibri,sans-serif;font-size:11pt;margin:2.5cm;line-height:1.6}
-  h1{font-size:16pt;color:#2c3e50}h2{font-size:13pt;color:#34495e}h3{font-size:11pt;color:#555}
-  table{border-collapse:collapse;width:100%}th,td{border:1px solid #bdc3c7;padding:7px}
-  th{background:#ecf0f1;font-weight:bold}pre{background:#f5f5f5;padding:10px;border-radius:4px;font-size:10pt}
-  blockquote{border-left:4px solid #6c5ce7;padding-left:12px;color:#666;margin:8px 0}
-  </style></head><body>${body}</body></html>`;
-  const blob = new Blob([html], { type:'application/msword;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `ixa_${d.type}.doc`; a.click(); URL.revokeObjectURL(a.href);
-  toast('✅ Word téléchargé !', 'ok');
-}
-
-function genXLSX(id) {
-  const d = getDoc(id); if(!d) return;
-  try {
-    let data;
-    try { data = JSON.parse(d.content); } catch(e) {
-      const lines = d.content.trim().split('\n').filter(l=>l.trim());
-      const rows = lines.map(l => l.split(/[,\t|]/).map(c=>c.trim()));
-      data = { sheets: [{ name:'Données', headers: rows[0]||[], rows: rows.slice(1) }] };
-    }
-    const wb = XLSX.utils.book_new();
-    const sheets = data.sheets || [{ name:'Feuille1', headers:[], rows:[] }];
-    sheets.forEach(s => {
-      const wsData = [];
-      if (s.headers?.length) wsData.push(s.headers);
-      (s.rows||[]).forEach(r => wsData.push(Array.isArray(r) ? r : Object.values(r)));
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      // Auto column width
-      const colWidths = wsData.reduce((acc, row) => { row.forEach((cell, i) => { acc[i] = Math.max(acc[i]||0, String(cell||'').length); }); return acc; }, []);
-      ws['!cols'] = colWidths.map(w => ({ wch: Math.min(w + 2, 40) }));
-      XLSX.utils.book_append_sheet(wb, ws, s.name || 'Feuille');
-    });
-    XLSX.writeFile(wb, `ixa_${d.type}.xlsx`);
-    toast('✅ Excel téléchargé !', 'ok');
-  } catch(e) { toast('❌ Erreur Excel: ' + e.message, 'err'); }
-}
-
-function genPPTX(id) {
-  const d = getDoc(id); if(!d) return;
-  // Generate HTML presentation (PPTX requires external lib, HTML-based slides work universally)
-  try {
-    let data;
-    try { data = JSON.parse(d.content); } catch(e) { data = { title:'Présentation IXA', slides:[{title:'Contenu',content:d.content,bullets:[]}] }; }
-    const slides = (data.slides||[]).map((sl, i) => `
-      <section style="min-height:100vh;background:${i===0?'linear-gradient(135deg,#6c5ce7,#d63af9)':'#0f0f1e'};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;text-align:center;page-break-after:always;box-sizing:border-box">
-        <h${i===0?'1':'2'} style="font-family:sans-serif;color:#fff;font-size:${i===0?'2.5rem':'2rem'};margin-bottom:20px;font-weight:700">${esc(sl.title||'')}</h${i===0?'1':'2'}>
-        ${sl.content ? `<p style="color:rgba(255,255,255,.85);font-size:1.1rem;max-width:700px;line-height:1.7;font-family:sans-serif">${esc(sl.content)}</p>` : ''}
-        ${sl.bullets?.length ? `<ul style="text-align:left;max-width:650px;margin-top:20px">${sl.bullets.map(b=>`<li style="color:rgba(255,255,255,.9);font-size:1rem;margin-bottom:10px;font-family:sans-serif;list-style:none;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#d63af9">▸</span>${esc(b)}</li>`).join('')}</ul>` : ''}
-        <div style="position:absolute;bottom:20px;right:30px;font-size:.75rem;color:rgba(255,255,255,.4);font-family:sans-serif">${i+1}/${data.slides.length}</div>
-      </section>`).join('');
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(data.title||'Présentation')}</title>
-      <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000}@media print{section{min-height:100vh}}</style>
-      </head><body>${slides}<script>document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){window.scrollBy({top:window.innerHeight,behavior:'smooth'})}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){window.scrollBy({top:-window.innerHeight,behavior:'smooth'})}})<\/script></body></html>`;
-    const blob = new Blob([html], { type:'text/html;charset=utf-8' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `ixa_presentation.html`; a.click(); URL.revokeObjectURL(a.href);
-    toast('✅ Présentation téléchargée ! (Ouvrir dans Chrome, F11 pour plein écran)', 'ok');
-  } catch(e) { toast('❌ Erreur PPT: ' + e.message, 'err'); }
-}
-
-function prvDoc(id) {
-  const d = getDoc(id); if(!d) return;
-  const w = window.open('', '_blank');
-  const isXL = d.type==='excel', isPPT = ['powerpoint','presentation'].includes(d.type);
-  let bodyHtml;
-  if (isXL) { bodyHtml = `<pre style="font-family:Consolas,monospace;font-size:13px;padding:20px;background:#f9f9f9;border-radius:8px;overflow-x:auto">${esc(d.content)}</pre>`; }
-  else { bodyHtml = md2html(d.content); }
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — ${d.type}</title>
-    <style>body{font-family:Calibri,sans-serif;max-width:860px;margin:40px auto;padding:24px;line-height:1.8;color:#1a1a2e;background:#fafafa}
-    h1{font-size:1.6rem;color:#6c5ce7}h2{font-size:1.2rem;color:#444}h3{font-size:1rem;color:#666}
-    table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #ddd;padding:8px}
-    th{background:#f0f0f8;color:#6c5ce7;font-weight:bold}pre{background:#f0f0f8;padding:14px;border-radius:8px;overflow-x:auto}
-    code{background:#f0f0f8;padding:2px 6px;border-radius:4px}.header{background:linear-gradient(120deg,#6c5ce7,#d63af9);padding:20px 24px;border-radius:10px;margin-bottom:28px}
-    .header h1{color:#fff;margin:0}.header p{color:rgba(255,255,255,.8);margin:4px 0 0;font-size:.82rem}</style></head>
-    <body><div class="header"><h1>${esc(d.type.toUpperCase())} — IXA</h1>
-    <p>Généré le ${new Date().toLocaleDateString('fr-FR')} par le Système IXA de Tom</p></div>
-    ${bodyHtml}</body></html>`);
-  w.document.close();
-}
-
-function md2html(raw) {
-  // Full HTML version for export
-  return md(raw).replace(/<p>|<\/p>/g, '');
-}
-
-function exportChat() {
-  const chat = S.chats.find(c => c.id===S.cid); if(!chat||!chat.messages.length){toast('Aucun message');return;}
-  const content = `# ${chat.title}\n_Export IXA — ${new Date().toLocaleDateString('fr-FR')}_\n\n---\n\n` +
-    chat.messages.map(m => `**${m.role==='user'?'Tom':'IXA'}:**\n\n${m.displayContent||m.content}`).join('\n\n---\n\n');
-  const blob = new Blob([content], { type:'text/markdown;charset=utf-8' });
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download = `ixa_${(chat.title||'conv').replace(/[^a-zA-Z0-9]/g,'_').slice(0,28)}.md`;
-  a.click(); URL.revokeObjectURL(a.href); toast('✅ Export réussi !','ok');
-}
-
-/* ══════════════════════════════════════════════════════
-   LEARN TAB
+   LEARN TAB — VERSION AMÉLIORÉE
 ══════════════════════════════════════════════════════ */
 function lDrop(e) {
   e.preventDefault(); document.getElementById('ldrop').classList.remove('drag');
-  const f = e.dataTransfer?.files?.[0]; if(!f) return;
-  const fakeInput = { files: [f] }; learnLoad(fakeInput);
+  const f=e.dataTransfer?.files?.[0]; if(!f) return;
+  learnLoad({files:[f]});
 }
 
 function learnLoad(input) {
-  const f = input.files?.[0] || input; if(!f) return;
-  const ext = f.name.split('.').pop().toLowerCase();
-  const max = 8 * 1024 * 1024;
-  if (f.size > max) { toast('❌ Fichier trop grand pour l\'apprentissage (max 8MB)','err'); return; }
-  readFile(f, d => {
-    S.learnDoc = { name: f.name, content: d.content || '[Image/PDF — analyse visuelle]', isImg: d.isImg, dataURL: d.dataURL, wordCount: (d.content||'').split(/\s+/).filter(Boolean).length };
-    document.getElementById('ldrop').style.display = 'none';
-    const di = document.getElementById('ldoc'); di.style.display = 'flex';
-    document.getElementById('ldoc-nm').textContent = '📄 ' + f.name;
-    document.getElementById('ldoc-mt').textContent = `${S.learnDoc.wordCount} mots · Prêt pour l'apprentissage`;
-    document.getElementById('lc').style.display = 'none';
-    document.getElementById('lc').innerHTML = '';
-    document.getElementById('laudio').style.display = 'none';
+  const f=input.files?.[0]||input; if(!f) return;
+  const ext=f.name.split('.').pop().toLowerCase();
+  if(f.size>12*1024*1024){toast('❌ Fichier trop grand (max 12MB)','err');return;}
+  readFile(f,d=>{
+    S.learnDoc={
+      name:f.name, content:d.content||null,
+      isImg:d.isImg, isPDF:d.isPDF, dataURL:d.dataURL,
+      wordCount:(d.content||'').split(/\s+/).filter(Boolean).length
+    };
+    S.learnChatHistory=[];
+    document.getElementById('ldrop').style.display='none';
+    const di=document.getElementById('ldoc'); di.style.display='flex';
+    document.getElementById('ldoc-nm').innerHTML=`📄 ${esc(f.name)} ${d.isImg?'<span style="font-size:.7rem;color:var(--inf)">🖼️ Image</span>':d.isPDF?'<span style="font-size:.7rem;color:var(--inf)">📑 PDF</span>':''}`;
+    document.getElementById('ldoc-mt').textContent=d.isImg||d.isPDF?'Document visuel — analyse par IA vision':''+S.learnDoc.wordCount+' mots · Prêt pour l\'apprentissage';
+    document.getElementById('lc').style.display='none'; document.getElementById('lc').innerHTML='';
+    document.getElementById('laudio').style.display='none';
     toast(`📂 ${f.name} chargé`,'ok');
   });
-  if (input.value !== undefined) input.value = '';
+  if(input.value!==undefined) input.value='';
 }
 
 function learnReset() {
-  S.learnDoc = null;
-  document.getElementById('ldrop').style.display = 'flex';
-  document.getElementById('ldoc').style.display = 'none';
-  document.getElementById('lc').style.display = 'none';
-  document.getElementById('laudio').style.display = 'none';
+  S.learnDoc=null; S.learnChatHistory=[];
+  document.getElementById('ldrop').style.display='flex';
+  document.getElementById('ldoc').style.display='none';
+  document.getElementById('lc').style.display='none';
+  document.getElementById('laudio').style.display='none';
   stopSpeech();
 }
 
-async function learnGen(mode) {
-  if (!S.learnDoc) return;
-  const btns = ['lb-audio','lb-fc','lb-quiz'].map(id => document.getElementById(id));
-  btns.forEach(b => b.disabled = true);
-  toast('🧠 IXA génère le contenu…');
+// Build the document context for learn calls
+function getLearnContext() {
+  if(!S.learnDoc) return null;
+  if(S.learnDoc.isImg||S.learnDoc.isPDF) return null; // use vision API instead
+  return (S.learnDoc.content||'').slice(0,6000);
+}
 
-  const prompts = {
-    audio: `Tu es un excellent pédagogue. Explique ce document de façon claire, structurée et accessible, comme si tu l'expliquais à voix haute à quelqu'un qui ne connaît pas le sujet. Utilise des métaphores et exemples concrets. Longueur: 300-500 mots.\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,6000)}`,
-    flash: `Génère exactement 8 flashcards pour apprendre ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown, sans explication) :\n[{"q":"Question courte","a":"Réponse claire"},{"q":"...","a":"..."}]\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,5000)}`,
-    quiz:  `Génère un quiz de 5 questions à choix multiples sur ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown, sans explication) :\n[{"q":"Question ?","opts":["A","B","C","D"],"correct":0,"explanation":"Explication courte"}]\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,5000)}`,
+async function learnCallAPI(userPrompt, useVision=false) {
+  const doc=S.learnDoc; if(!doc) throw new Error('Aucun document');
+  let messages;
+  if((doc.isImg||doc.isPDF||useVision)&&doc.dataURL) {
+    messages=[{role:'user',content:[
+      {type:'image_url',image_url:{url:doc.dataURL}},
+      {type:'text',text:userPrompt}
+    ]}];
+  } else {
+    const ctx=getLearnContext()||'[Document vide]';
+    messages=[{role:'user',content:`DOCUMENT:\n${ctx}\n\n---\n${userPrompt}`}];
+  }
+  const isVision=(doc.isImg||doc.isPDF)&&doc.dataURL;
+  const model=isVision?MODELS.vision:MODELS.smart;
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
+    body:JSON.stringify({model,messages,max_tokens:3000,temperature:0.6})
+  });
+  if(!res.ok) throw new Error('API '+res.status);
+  const data=await res.json();
+  return data.choices?.[0]?.message?.content||'';
+}
+
+async function learnGen(mode) {
+  if(!S.learnDoc) return;
+  const btns=['lb-audio','lb-sum','lb-fc','lb-quiz','lb-chat'].map(id=>document.getElementById(id));
+  btns.forEach(b=>{if(b)b.disabled=true;});
+  const lc=document.getElementById('lc');
+  lc.style.display='flex'; lc.innerHTML='';
+
+  if(mode==='chat') {
+    // Show chat UI
+    lc.innerHTML=`<div class="learn-chat">
+      <div class="learn-chat-msgs" id="lc-msgs">
+        <div class="lcm a">💬 Posez-moi des questions sur ce document, je vous répondrai !</div>
+      </div>
+      <div class="learn-chat-inp">
+        <input id="lc-inp" placeholder="Votre question sur le document…" onkeydown="if(event.key==='Enter')learnChatSend()">
+        <button onclick="learnChatSend()">Envoyer</button>
+      </div>
+    </div>`;
+    btns.forEach(b=>{if(b)b.disabled=false;});
+    return;
+  }
+
+  toast('🧠 IXA génère le contenu…');
+  const prompts={
+    audio:`Explique ce document de façon claire et accessible, comme si tu l'expliquais à voix haute. Utilise des exemples concrets. 300-500 mots.`,
+    summary:`Fais un résumé structuré et complet de ce document. Utilise des titres, points clés, et une conclusion. Sois précis et exhaustif.`,
+    flash:`Génère exactement 8 flashcards pour apprendre ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown) :\n[{"q":"Question courte","a":"Réponse claire"}]`,
+    quiz:`Génère un quiz de 5 questions à choix multiples. Réponds UNIQUEMENT avec ce JSON (sans Markdown) :\n[{"q":"Question ?","opts":["A","B","C","D"],"correct":0,"explanation":"Explication courte"}]`,
   };
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
-      body: JSON.stringify({ model: MODELS.smart, messages: [{ role:'user', content: prompts[mode] }], max_tokens: 3000, temperature: 0.6 })
-    });
-    if (!res.ok) { throw new Error('API ' + res.status); }
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content || '';
-    if (!reply) throw new Error('Réponse vide');
+    const reply=await learnCallAPI(prompts[mode]);
+    if(!reply) throw new Error('Réponse vide');
 
-    const lc = document.getElementById('lc');
-    lc.style.display = 'flex'; lc.innerHTML = '';
-
-    if (mode === 'audio') {
-      lc.innerHTML = `<div class="expl"><div class="mc">${md(reply)}</div></div>`;
-      document.getElementById('laudio').style.display = 'flex';
-      document.getElementById('apb').style.width = '0%';
-      document.getElementById('a-pp').textContent = '⏸';
-      document.getElementById('a-stat').textContent = 'Lecture…';
-      const cleanReply = stripMd(reply);
-      S.voiceActive = false; S.voicePaused = false;
-      S.voiceQueue = (cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]).map(s=>s.trim()).filter(s=>s.length>2);
-      S.voiceActive = true;
-      // Update apb on progress
-      const total = S.voiceQueue.length;
-      const origSN = speakNext.toString();
+    if(mode==='audio') {
+      lc.innerHTML=`<div class="expl"><div class="mc">${md(reply)}</div></div>`;
+      document.getElementById('laudio').style.display='flex';
+      document.getElementById('apb').style.width='0%';
+      document.getElementById('a-pp').textContent='⏸';
+      document.getElementById('a-stat').textContent='Lecture…';
+      const cleanReply=stripMd(reply);
+      S.voiceActive=false; S.voicePaused=false;
+      const total_sents=(cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]).length;
+      S.voiceQueue=(cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]).map(s=>s.trim()).filter(s=>s.length>2);
+      S.voiceActive=true;
+      const total=S.voiceQueue.length;
       function speakNextLearn() {
-        if (!S.voiceQueue.length || !S.voiceActive) {
-          S.voiceActive = false;
-          document.getElementById('apb').style.width = '100%';
-          document.getElementById('a-stat').textContent = 'Terminé';
+        if(!S.voiceQueue.length||!S.voiceActive){
+          S.voiceActive=false;
+          document.getElementById('apb').style.width='100%';
+          document.getElementById('a-stat').textContent='Terminé';
           return;
         }
-        const sentence = S.voiceQueue.shift();
-        const u = new SpeechSynthesisUtterance(sentence);
-        const voices = S.synth.getVoices();
-        const frV = voices.find(v=>v.lang==='fr-FR'&&/natural|premium/i.test(v.name))||voices.find(v=>v.lang==='fr-FR')||voices.find(v=>v.lang.startsWith('fr'))||null;
-        if(frV) u.voice=frV; u.lang='fr-FR'; u.rate=1.05; u.pitch=1.0;
-        u.onend = () => { if(S.voiceActive&&!S.voicePaused) speakNextLearn(); };
-        u.onerror = () => speakNextLearn();
-        const done = Math.round((1-S.voiceQueue.length/total)*95);
-        document.getElementById('apb').style.width = done + '%';
+        const sentence=S.voiceQueue.shift();
+        const u=new SpeechSynthesisUtterance(sentence);
+        const frVoice=getSelectedVoice();
+        if(frVoice) u.voice=frVoice;
+        u.lang='fr-FR'; u.rate=S.voiceRate; u.pitch=S.voicePitch;
+        u.onend=()=>{if(S.voiceActive&&!S.voicePaused)speakNextLearn();};
+        u.onerror=()=>speakNextLearn();
+        const done=Math.round((1-S.voiceQueue.length/total)*95);
+        document.getElementById('apb').style.width=done+'%';
         S.synth.speak(u);
       }
       speakNextLearn();
 
-    } else if (mode === 'flash') {
+    } else if(mode==='summary') {
+      lc.innerHTML=`<div class="expl"><div class="mc">${md(reply)}</div></div>`;
+
+    } else if(mode==='flash') {
       let cards;
-      try { cards = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
-      catch(e) { const m=reply.match(/\[[\s\S]*\]/); cards = m ? JSON.parse(m[0]) : []; }
-      if (!Array.isArray(cards)||!cards.length) throw new Error('JSON invalide');
-      lc.innerHTML = `<div style="font-weight:600;font-size:.84rem;margin-bottom:2px">🃏 ${cards.length} Flashcards — Cliquez pour révéler</div>
+      try{cards=JSON.parse(reply.replace(/```json|```/g,'').trim());}
+      catch(e){const m=reply.match(/\[[\s\S]*\]/);cards=m?JSON.parse(m[0]):[];}
+      if(!Array.isArray(cards)||!cards.length) throw new Error('JSON invalide');
+      lc.innerHTML=`<div style="font-weight:600;font-size:.84rem;margin-bottom:2px">🃏 ${cards.length} Flashcards — Cliquez pour révéler</div>
         <div class="fc-grid">${cards.map((c,i)=>`
           <div class="fc" id="fc${i}" onclick="this.classList.toggle('flipped')">
             <div class="fc-inner">
@@ -1470,14 +2066,14 @@ async function learnGen(mode) {
             </div></div>`).join('')}
         </div>`;
 
-    } else if (mode === 'quiz') {
+    } else if(mode==='quiz') {
       let questions;
-      try { questions = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
-      catch(e) { const m=reply.match(/\[[\s\S]*\]/); questions = m ? JSON.parse(m[0]) : []; }
-      if (!Array.isArray(questions)||!questions.length) throw new Error('JSON invalide');
-      let score = 0, answered = 0;
-      lc.innerHTML = `<div style="font-weight:600;font-size:.84rem;margin-bottom:4px">🧩 Quiz — ${questions.length} questions</div>` +
-        questions.map((q,qi) => `
+      try{questions=JSON.parse(reply.replace(/```json|```/g,'').trim());}
+      catch(e){const m=reply.match(/\[[\s\S]*\]/);questions=m?JSON.parse(m[0]):[];}
+      if(!Array.isArray(questions)||!questions.length) throw new Error('JSON invalide');
+      window._quizScore=0; window._quizAnswered=0; window._quizTotal=questions.length;
+      lc.innerHTML=`<div style="font-weight:600;font-size:.84rem;margin-bottom:4px">🧩 Quiz — ${questions.length} questions</div>`+
+        questions.map((q,qi)=>`
           <div class="quiz-q" id="qq${qi}">
             <div class="quiz-qt">${qi+1}. ${esc(q.q||q.question||'?')}</div>
             <div class="quiz-opts">${(q.opts||q.options||[]).map((opt,oi)=>`
@@ -1486,30 +2082,52 @@ async function learnGen(mode) {
               </button>`).join('')}
             </div>
           </div>`).join('');
-      window._quizScore = 0; window._quizAnswered = 0; window._quizTotal = questions.length;
     }
     toast('✅ Contenu généré !','ok');
   } catch(e) {
-    toast('❌ Erreur génération: ' + e.message, 'err');
+    toast('❌ Erreur: '+e.message,'err');
+    lc.innerHTML=`<div style="color:var(--err);font-size:.8rem;padding:10px">❌ Erreur lors de la génération: ${esc(e.message)}</div>`;
   }
-  btns.forEach(b => b.disabled = false);
+  btns.forEach(b=>{if(b)b.disabled=false;});
 }
 
-function quizAnswer(qi, chosen, correct, total, explanation) {
-  const opts = document.querySelectorAll(`#qq${qi} .qopt`);
-  opts.forEach(b => b.disabled = true);
+async function learnChatSend() {
+  const inp=document.getElementById('lc-inp'); if(!inp) return;
+  const q=inp.value.trim(); if(!q) return;
+  inp.value='';
+  const msgs=document.getElementById('lc-msgs');
+  msgs.innerHTML+=`<div class="lcm u">${esc(q)}</div>`;
+  msgs.innerHTML+=`<div class="lcm a" id="lc-typing"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  try {
+    S.learnChatHistory.push({role:'user',content:q});
+    const ctx=S.learnDoc?.content?`DOCUMENT:\n${S.learnDoc.content.slice(0,4000)}\n\n---\nQuestion : ${q}`:`Question sur le document : ${q}`;
+    const reply=await learnCallAPI(ctx,S.learnDoc?.isImg||S.learnDoc?.isPDF);
+    document.getElementById('lc-typing')?.remove();
+    S.learnChatHistory.push({role:'assistant',content:reply});
+    msgs.innerHTML+=`<div class="lcm a"><div class="mc">${md(reply)}</div></div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  } catch(e) {
+    document.getElementById('lc-typing')?.remove();
+    msgs.innerHTML+=`<div class="lcm a" style="color:var(--err)">❌ Erreur: ${esc(e.message)}</div>`;
+  }
+}
+
+function quizAnswer(qi,chosen,correct,total,explanation) {
+  const opts=document.querySelectorAll(`#qq${qi} .qopt`);
+  opts.forEach(b=>b.disabled=true);
   opts[correct].classList.add('correct');
-  if (chosen !== correct) { opts[chosen].classList.add('wrong'); }
-  else { window._quizScore = (window._quizScore||0) + 1; }
-  window._quizAnswered = (window._quizAnswered||0) + 1;
-  if (explanation) {
-    const ex = document.createElement('div'); ex.className='quiz-expl'; ex.textContent='💡 '+explanation;
+  if(chosen!==correct){opts[chosen].classList.add('wrong');}
+  else{window._quizScore=(window._quizScore||0)+1;}
+  window._quizAnswered=(window._quizAnswered||0)+1;
+  if(explanation){
+    const ex=document.createElement('div'); ex.className='quiz-expl'; ex.textContent='💡 '+explanation;
     document.getElementById('qq'+qi).appendChild(ex);
   }
-  if (window._quizAnswered >= total) {
-    const sc = window._quizScore, pct = Math.round(sc/total*100);
-    const scoreDiv = document.createElement('div'); scoreDiv.className='quiz-score';
-    scoreDiv.innerHTML = `${pct>=80?'🏆':pct>=60?'👍':'📚'} Score : <strong>${sc}/${total}</strong> (${pct}%)<br><span style="font-size:.8rem;color:var(--mu);font-weight:400">${pct>=80?'Excellent !':pct>=60?'Bien !':'Révisez encore un peu, Tom.'}</span>`;
+  if(window._quizAnswered>=total){
+    const sc=window._quizScore, pct=Math.round(sc/total*100);
+    const scoreDiv=document.createElement('div'); scoreDiv.className='quiz-score';
+    scoreDiv.innerHTML=`${pct>=80?'🏆':pct>=60?'👍':'📚'} Score : <strong>${sc}/${total}</strong> (${pct}%)<br><span style="font-size:.8rem;color:var(--mu);font-weight:400">${pct>=80?'Excellent !':pct>=60?'Bien joué !':'Continuez à réviser !'}</span>`;
     document.getElementById('lc').appendChild(scoreDiv);
   }
 }
@@ -1517,15 +2135,15 @@ function quizAnswer(qi, chosen, correct, total, explanation) {
 /* ══════════════════════════════════════════════════════
    TYPING INDICATOR
 ══════════════════════════════════════════════════════ */
-let _tc = 0;
+let _tc=0;
 function showTyping() {
-  const id = `tp_${++_tc}`;
-  const cont = document.getElementById('msgs');
-  const d = document.createElement('div'); d.className='message ass'; d.id=id;
-  d.innerHTML=`<div class="mav">🤖</div><div class="mbody"><div class="mrole">IXA</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  const id=`tp_${++_tc}`;
+  const cont=document.getElementById('msgs');
+  const d=document.createElement('div'); d.className='message ass'; d.id=id;
+  d.innerHTML=`<div class="mav">✦</div><div class="mbody"><div class="mrole">IXA</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
   cont.appendChild(d); cont.scrollTop=cont.scrollHeight; return id;
 }
-function removeTyping(id) { document.getElementById(id)?.remove(); }
+function removeTyping(id){document.getElementById(id)?.remove();}
 
 /* ══════════════════════════════════════════════════════
    INPUT HANDLING
@@ -1535,91 +2153,91 @@ function onInput(el) {
   showCmdSuggest(el.value);
 }
 function onKey(e) {
-  if (e.key==='Enter' && !e.shiftKey && window.innerWidth>640) { e.preventDefault(); handleSend(); }
-  if (e.key==='Escape') document.getElementById('cmd-s').style.display='none';
+  if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>640){e.preventDefault();handleSend();}
+  if(e.key==='Escape') document.getElementById('cmd-s').style.display='none';
 }
 
 /* ══════════════════════════════════════════════════════
    TABS / SIDEBAR
 ══════════════════════════════════════════════════════ */
 function showTab(tab) {
-  S.tab = tab;
-  const views = { chat:'chat-view', voice:'voice-view', data:'data-view', learn:'learn-view' };
-  ['chat','voice','data','learn'].forEach(t => {
-    document.getElementById(`tab-${t}`).classList.toggle('act', t===tab);
-    const v = document.getElementById(views[t]);
-    if (v) { v.style.display = t===tab ? (t==='chat'?'flex':'flex') : 'none'; }
+  S.tab=tab;
+  const views={chat:'chat-view',voice:'voice-view',data:'data-view',learn:'learn-view'};
+  ['chat','voice','data','learn'].forEach(t=>{
+    document.getElementById(`tab-${t}`).classList.toggle('act',t===tab);
+    const v=document.getElementById(views[t]);
+    if(v) v.style.display=t===tab?'flex':'none';
   });
-  if (tab==='voice') { document.getElementById('voice-view').style.display='flex'; }
-  if (tab==='learn') { document.getElementById('learn-view').style.display='flex'; }
-  if (tab!=='voice') { stopSpeech(); resetVUI(); }
+  if(tab==='voice') document.getElementById('voice-view').style.display='flex';
+  if(tab==='learn') document.getElementById('learn-view').style.display='flex';
+  if(tab!=='voice'){stopSpeech();resetVUI();}
 }
 function setMT(t) {
   document.querySelectorAll('.mtab').forEach(e=>e.classList.remove('act'));
   document.getElementById('mn-'+t)?.classList.add('act');
 }
-function openSB() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sov').classList.add('open'); }
-function closeSB() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sov').classList.remove('open'); }
+function openSB(){document.getElementById('sidebar').classList.add('open');document.getElementById('sov').classList.add('open');}
+function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sov').classList.remove('open');}
 
 /* ══════════════════════════════════════════════════════
    CHAT MANAGEMENT
 ══════════════════════════════════════════════════════ */
 function createChat() {
-  const id = Date.now();
-  S.chats.unshift({ id, title:'Nouvelle conversation', messages:[] });
+  const id=Date.now();
+  S.chats.unshift({id,title:'Nouvelle conversation',messages:[]});
   saveLocal(); loadChat(id);
 }
 function loadChat(id) {
-  S.cid = id; const chat = S.chats.find(c=>c.id===id); if(!chat) return;
-  const cont = document.getElementById('msgs'); cont.innerHTML='';
-  if (!chat.messages.length) {
+  S.cid=id; const chat=S.chats.find(c=>c.id===id); if(!chat) return;
+  const cont=document.getElementById('msgs'); cont.innerHTML='';
+  if(!chat.messages.length) {
     cont.innerHTML=`<div id="welcome">
       <div class="wlogo">IXA</div>
-      <div class="wsub">Système IA de <b>Tom</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
+      <div class="wsub">Système IA de <b>${esc(S.user?.display_name||'Tom')}</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
       <div class="wg">
-        <div class="wc" onclick="hint('Crée un rapport Word complet sur Napoléon Bonaparte')"><span>📘</span><span>Rapport Word</span></div>
-        <div class="wc" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel')"><span>📗</span><span>Fichier Excel</span></div>
-        <div class="wc" onclick="hint('Crée une présentation PowerPoint de 5 slides sur l\\'IA')"><span>📑</span><span>PowerPoint</span></div>
-        <div class="wc" onclick="hint('Génère un CV professionnel complet en format PDF')"><span>📕</span><span>CV / PDF</span></div>
+        <div class="wc" onclick="hint('Quelles sont les dernières actualités importantes ?')"><span>🌐</span><span>Actualités</span></div>
+        <div class="wc" onclick="hint('Explique-moi un concept complexe simplement')"><span>🧠</span><span>Expliquer</span></div>
+        <div class="wc" onclick="hint('Aide-moi à écrire un texte professionnel')"><span>✍️</span><span>Rédiger</span></div>
+        <div class="wc" onclick="hint('Analyse et améliore mon code')"><span>💻</span><span>Code</span></div>
       </div></div>`;
   } else {
-    chat.messages.forEach(m => {
-      if (m.role==='user') renderUserMsg(m.displayContent||m.content);
-      else renderMsg('assistant', m.content);
+    chat.messages.forEach(m=>{
+      if(m.role==='user') renderUserMsg(m.displayContent||m.content);
+      else renderMsg('assistant',m.content);
     });
   }
   renderHist();
 }
-function deleteChat(id, e) {
-  e.stopPropagation(); S.chats = S.chats.filter(c=>c.id!==id); saveLocal();
-  if (S.cid===id) S.chats.length ? loadChat(S.chats[0].id) : createChat();
+function deleteChat(id,e) {
+  e.stopPropagation(); S.chats=S.chats.filter(c=>c.id!==id); saveLocal();
+  if(S.cid===id) S.chats.length?loadChat(S.chats[0].id):createChat();
   else renderHist();
   toast('Conversation supprimée');
 }
 function clearChat() {
-  const chat = S.chats.find(c=>c.id===S.cid); if(!chat) return;
-  if (!chat.messages.length) { toast('Déjà vide'); return; }
+  const chat=S.chats.find(c=>c.id===S.cid); if(!chat) return;
+  if(!chat.messages.length){toast('Déjà vide');return;}
   chat.messages=[]; chat.title='Nouvelle conversation'; saveLocal(); loadChat(S.cid);
   toast('Conversation effacée');
 }
-function startRenameChat(id, e) {
+function startRenameChat(id,e) {
   e.stopPropagation();
-  const el = document.querySelector(`.ci[data-id="${id}"]`); if(!el) return;
-  const tSpan = el.querySelector('.ci-t');
-  const inp = document.createElement('input'); inp.className='ci-ri'; inp.value=S.chats.find(c=>c.id===id)?.title||'';
-  tSpan.style.display='none'; el.insertBefore(inp, el.querySelector('.cia')); inp.focus(); inp.select();
-  const commit = () => {
-    const nv = inp.value.trim();
-    if (nv) { const c=S.chats.find(c=>c.id===id); if(c) c.title=nv; saveLocal(); }
+  const el=document.querySelector(`.ci[data-id="${id}"]`); if(!el) return;
+  const tSpan=el.querySelector('.ci-t');
+  const inp=document.createElement('input'); inp.className='ci-ri'; inp.value=S.chats.find(c=>c.id===id)?.title||'';
+  tSpan.style.display='none'; el.insertBefore(inp,el.querySelector('.cia')); inp.focus(); inp.select();
+  const commit=()=>{
+    const nv=inp.value.trim();
+    if(nv){const c=S.chats.find(c=>c.id===id);if(c)c.title=nv;saveLocal();}
     inp.remove(); tSpan.style.display=''; renderHist();
   };
-  inp.addEventListener('blur', commit);
-  inp.addEventListener('keydown', ev => { if(ev.key==='Enter'){ev.preventDefault();commit();} if(ev.key==='Escape'){inp.remove();tSpan.style.display='';} });
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();commit();}if(ev.key==='Escape'){inp.remove();tSpan.style.display='';}});
 }
 function renderHist() {
-  const l = document.getElementById('history-list');
-  if (!S.chats.length) { l.innerHTML='<div style="font-size:.75rem;color:var(--mu);padding:5px 4px">Aucune conversation</div>'; return; }
-  l.innerHTML = S.chats.map(c=>`
+  const l=document.getElementById('history-list');
+  if(!S.chats.length){l.innerHTML='<div style="font-size:.75rem;color:var(--mu);padding:5px 4px">Aucune conversation</div>';return;}
+  l.innerHTML=S.chats.map(c=>`
     <div class="ci ${c.id===S.cid?'act':''}" data-id="${c.id}" onclick="loadChat(${c.id});closeSB()">
       <span style="font-size:.74rem;flex-shrink:0">💬</span>
       <span class="ci-t">${esc(c.title||'Nouvelle conversation')}</span>
@@ -1633,35 +2251,37 @@ function renderHist() {
 /* ══════════════════════════════════════════════════════
    MODAL
 ══════════════════════════════════════════════════════ */
-function showModal(title, sub, bodyHtml, btns) {
-  document.getElementById('mo-t').innerHTML = title;
-  document.getElementById('mo-s').innerHTML = sub;
-  document.getElementById('mo-b').innerHTML = bodyHtml;
-  document.getElementById('mo-btns').innerHTML = btns.map(b => `<button class="mdb ${b.c}" onclick="${b.f}">${b.l}</button>`).join('');
+function showModal(title,sub,bodyHtml,btns) {
+  document.getElementById('mo-t').innerHTML=title;
+  document.getElementById('mo-s').innerHTML=sub;
+  document.getElementById('mo-b').innerHTML=bodyHtml;
+  document.getElementById('mo-btns').innerHTML=btns.map(b=>`<button class="mdb ${b.c}" onclick="${b.f}">${b.l}</button>`).join('');
   document.getElementById('mo').classList.add('open');
 }
-function closeModal() { document.getElementById('mo').classList.remove('open'); }
-document.getElementById('mo').addEventListener('click', e => { if(e.target===document.getElementById('mo')) closeModal(); });
+function closeModal(){document.getElementById('mo').classList.remove('open');}
+document.getElementById('mo').addEventListener('click',e=>{if(e.target===document.getElementById('mo'))closeModal();});
 
 /* ══════════════════════════════════════════════════════
    UTILS
 ══════════════════════════════════════════════════════ */
 function updateApiSt(ok=null) {
-  const has = ok!==false && !!S.groqKey;
-  const el = document.getElementById('ast'); const t = document.getElementById('ast-t');
-  el.className = has?'ok':'err'; t.textContent = has?'API connectée':'Clé API manquante';
+  const has=ok!==false&&!!S.groqKey;
+  const el=document.getElementById('ast'); const t=document.getElementById('ast-t');
+  const hasSearch=!!S.serperKey;
+  if(!has){el.className='err';t.textContent='Clé API manquante';return;}
+  el.className=hasSearch?'web':'ok';
+  t.textContent=hasSearch?'API + Recherche web':'API connectée';
 }
 function saveLocal() {
-  if (S.chats.length>60) S.chats=S.chats.slice(0,60);
-  try { localStorage.setItem('ixa_chats', JSON.stringify(S.chats)); } catch(e) {
-    S.chats.forEach(c=>{ if(c.messages.length>8) c.messages=c.messages.slice(-8); });
-    try { localStorage.setItem('ixa_chats', JSON.stringify(S.chats)); } catch(e2){}
+  if(S.chats.length>60) S.chats=S.chats.slice(0,60);
+  try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e){
+    S.chats.forEach(c=>{if(c.messages.length>8)c.messages=c.messages.slice(-8);});
+    try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e2){}
   }
 }
-
 let _tt;
-function toast(msg, type='') {
-  const t = document.getElementById('toast');
+function toast(msg,type='') {
+  const t=document.getElementById('toast');
   t.textContent=msg; t.className=type?`show ${type}`:'show';
   clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3200);
 }
