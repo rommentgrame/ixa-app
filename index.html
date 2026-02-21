@@ -3,415 +3,372 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>IXA — Système IA de Tom</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<title>IXA — Système de Tom</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#06060f;--sb:#0a0a16;--card:#111120;--card2:#181828;
-  --acc:#6c5ce7;--acc2:#d63af9;--glow:rgba(108,92,231,.3);--soft:rgba(108,92,231,.12);
-  --tx:#e8e8f2;--muted:#777799;--bd:#181830;--bd2:#252545;--ub:#13132a;
-  --err:#ff6b6b;--ok:#00cec9;--warn:#fdcb6e;--info:#74b9ff;
-  --t:all .28s cubic-bezier(.4,0,.2,1);--sw:276px;--hh:60px;--mnh:58px;
+  --bg:#06060f;--sb:#09091a;--c1:#111124;--c2:#181835;
+  --a:#6c5ce7;--a2:#d63af9;--glow:rgba(108,92,231,.28);--soft:rgba(108,92,231,.12);
+  --tx:#e6e6f0;--mu:#6a6a90;--bd:#16163a;--bd2:#22224a;--ub:#12122a;
+  --err:#ff6b6b;--ok:#00d4aa;--warn:#fdc96e;--inf:#74b9ff;
+  --t:all .26s cubic-bezier(.4,0,.2,1);--sw:270px;--hh:58px;--mnh:56px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
-body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx);display:flex;position:relative}
-
-/* ambient glow bg */
-body::before{content:'';position:fixed;width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(circle,rgba(108,92,231,.06) 0%,transparent 70%);
-  top:-200px;right:-200px;pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;width:400px;height:400px;border-radius:50%;
-  background:radial-gradient(circle,rgba(214,58,249,.04) 0%,transparent 70%);
-  bottom:-100px;left:-100px;pointer-events:none;z-index:0}
-
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx);display:flex}
 ::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:99px}
-::-webkit-scrollbar-thumb:hover{background:var(--acc)}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:9px}
 
-/* ═══ SIDEBAR ═══ */
-#sidebar{width:var(--sw);min-width:var(--sw);background:var(--sb);border-right:1px solid var(--bd);
-  display:flex;flex-direction:column;padding:18px 12px;gap:10px;overflow:hidden;position:relative;
-  transition:transform .32s cubic-bezier(.4,0,.2,1);z-index:200}
-#sidebar::before{content:'';position:absolute;top:-80px;left:-80px;width:200px;height:200px;
-  background:radial-gradient(circle,rgba(108,92,231,.15),transparent 70%);pointer-events:none}
-.sbhdr{display:flex;align-items:center;justify-content:space-between}
-.brand{font-family:'Syne',sans-serif;font-size:1.45rem;font-weight:800;
-  background:linear-gradient(120deg,var(--acc),var(--acc2));-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;background-clip:text;display:flex;align-items:center;gap:8px}
-.bdt{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);
-  -webkit-text-fill-color:initial;flex-shrink:0;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
-.xbtn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;
-  padding:5px;border-radius:7px;transition:.2s;line-height:1}
-.xbtn:hover{color:var(--tx);background:var(--card)}
-.btn-new{background:linear-gradient(120deg,var(--acc),var(--acc2));color:#fff;border:none;
-  padding:10px 13px;border-radius:12px;font-weight:600;font-size:.85rem;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--t);
-  font-family:'Space Grotesk',sans-serif;letter-spacing:.2px}
-.btn-new:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--glow)}
-.sect{font-size:.63rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--muted);padding:2px 4px;margin-top:2px}
-#history-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
-.ci{padding:8px 9px;border-radius:9px;font-size:.82rem;color:var(--muted);cursor:pointer;
-  transition:var(--t);display:flex;align-items:center;gap:7px;border:1px solid transparent;min-height:36px}
-.ci-t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
-.ci:hover{background:var(--card);color:var(--tx)}
-.ci.act{background:var(--soft);color:var(--acc);border-color:rgba(108,92,231,.25)}
-.ci-actions{display:flex;gap:2px;opacity:0;transition:.15s;flex-shrink:0}
-.ci:hover .ci-actions,.ci.act .ci-actions{opacity:1}
-.ci-btn{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;
-  font-size:.72rem;transition:.15s;line-height:1}
-.ci-btn.ren{color:var(--muted)} .ci-btn.ren:hover{color:var(--info);background:rgba(116,185,255,.1)}
-.ci-btn.del{color:var(--muted)} .ci-btn.del:hover{color:var(--err);background:rgba(255,107,107,.1)}
+/* ── LOGIN ── */
+#login{position:fixed;inset:0;background:radial-gradient(ellipse at 40% 40%,#0f0f2a,#06060f 70%);
+  display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px}
+#login.hide{animation:fadeOut .4s ease forwards;pointer-events:none}
+@keyframes fadeOut{to{opacity:0}}
+.lbox{background:var(--sb);border:1px solid var(--bd2);border-radius:20px;padding:36px 30px;
+  width:100%;max-width:350px;display:flex;flex-direction:column;gap:16px;
+  box-shadow:0 0 80px rgba(108,92,231,.18)}
+.llogo{font-family:'Syne',sans-serif;font-size:2.3rem;font-weight:800;text-align:center;
+  background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.lsub{text-align:center;font-size:.8rem;color:var(--mu)}
+.lsep{height:1px;background:var(--bd2)}
+.lstat{font-size:.74rem;color:var(--mu);display:flex;align-items:center;justify-content:center;gap:6px;min-height:20px}
+.spin{width:11px;height:11px;border:2px solid var(--bd2);border-top-color:var(--a);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.linp{background:var(--c1);border:1px solid var(--bd2);color:var(--tx);padding:12px 14px;
+  border-radius:11px;font-size:.88rem;font-family:'Space Grotesk',sans-serif;outline:none;
+  transition:.2s;width:100%}
+.linp:focus{border-color:var(--a);box-shadow:0 0 0 3px var(--soft)}
+.linp::placeholder{color:var(--mu)}
+.lbtn{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;
+  padding:13px;border-radius:11px;font-weight:700;font-size:.9rem;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;transition:var(--t)}
+.lbtn:hover{box-shadow:0 8px 28px var(--glow);transform:translateY(-1px)}
+.lbtn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.lerr{font-size:.76rem;color:var(--err);text-align:center;min-height:16px}
 
-/* inline rename input */
-.ci.renaming .ci-t{display:none}
-.ci-rename-inp{flex:1;background:var(--card);border:1px solid var(--acc);color:var(--tx);
-  padding:3px 7px;border-radius:6px;font-size:.8rem;font-family:'Space Grotesk',sans-serif;outline:none}
-
-/* API status */
-#ast{font-size:.68rem;display:flex;align-items:center;gap:5px;color:var(--muted);padding:4px 4px}
-#ast.ok{color:var(--ok)} #ast.err{color:var(--err)}
-
-/* Sync status */
-#sync-st{font-size:.67rem;display:flex;align-items:center;gap:5px;color:var(--muted);
-  padding:3px 4px;cursor:pointer;transition:.2s;border-radius:7px}
-#sync-st:hover{color:var(--info)}
-#sync-st.syncing{color:var(--warn)}
-#sync-st.synced{color:var(--ok)}
-#sync-st.error{color:var(--err)}
-
-/* File commands */
-#fcmd-list{display:flex;flex-direction:column;gap:2px;max-height:130px;overflow-y:auto}
-.fcmd-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;
-  background:var(--card);border:1px solid var(--bd2);font-size:.76rem;cursor:pointer;transition:.2s}
-.fcmd-item:hover{border-color:var(--acc)}
-.fcmd-item .fcmd-badge{background:var(--soft);color:var(--acc);padding:2px 7px;border-radius:5px;
-  font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;flex-shrink:0}
-.fcmd-item .fcmd-name{flex:1;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fcmd-actions{display:flex;gap:2px;opacity:0;flex-shrink:0;transition:.15s}
-.fcmd-item:hover .fcmd-actions{opacity:1}
-.fcmd-ibtn{background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:.7rem}
-.fcmd-ibtn.ren:hover{color:var(--info);background:rgba(116,185,255,.1)}
-.fcmd-ibtn.del:hover{color:var(--err);background:rgba(255,107,107,.1)}
-.add-fcmd{background:none;border:1px dashed var(--bd2);color:var(--muted);padding:7px;
-  border-radius:8px;font-size:.77rem;cursor:pointer;display:flex;align-items:center;
-  justify-content:center;gap:5px;transition:.2s;font-family:'Space Grotesk',sans-serif;width:100%}
-.add-fcmd:hover{border-color:var(--acc);color:var(--acc)}
+/* ── SIDEBAR ── */
 #sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);z-index:199}
+#sidebar{width:var(--sw);min-width:var(--sw);background:var(--sb);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;padding:16px 11px;gap:9px;overflow:hidden;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200;position:relative}
+#sidebar::before{content:'';position:absolute;top:-60px;left:-60px;width:150px;height:150px;
+  background:radial-gradient(circle,rgba(108,92,231,.1),transparent 70%);pointer-events:none}
+.sbhdr{display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;
+  background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;display:flex;align-items:center;gap:7px}
+.bdt{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);
+  -webkit-text-fill-color:initial;flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.xb{background:none;border:none;color:var(--mu);cursor:pointer;padding:5px;border-radius:7px;font-size:.9rem;transition:.2s}
+.xb:hover{color:var(--tx);background:var(--c1)}
+.upill{background:var(--c1);border:1px solid var(--bd2);border-radius:10px;padding:8px 10px;
+  display:flex;align-items:center;gap:8px}
+.uav{width:28px;height:28px;border-radius:50%;background:linear-gradient(120deg,var(--a),var(--a2));
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0}
+.uname{flex:1;font-weight:600;font-size:.8rem}
+.urole{font-size:.64rem;color:var(--mu)}
+.logoutb{background:none;border:none;color:var(--mu);cursor:pointer;font-size:.72rem;transition:.2s;padding:3px}
+.logoutb:hover{color:var(--err)}
+.btn-new{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;
+  padding:10px 13px;border-radius:12px;font-weight:600;font-size:.83rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--t);
+  font-family:'Space Grotesk',sans-serif;width:100%}
+.btn-new:hover{transform:translateY(-2px);box-shadow:0 8px 22px var(--glow)}
+.sect{font-size:.61rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--mu);padding:1px 4px;margin-top:2px}
+#history-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.ci{padding:8px 9px;border-radius:9px;font-size:.8rem;color:var(--mu);cursor:pointer;
+  transition:var(--t);display:flex;align-items:center;gap:7px;border:1px solid transparent;min-height:34px}
+.ci-t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci:hover{background:var(--c1);color:var(--tx)}
+.ci.act{background:var(--soft);color:var(--a);border-color:rgba(108,92,231,.22)}
+.cia{display:flex;gap:1px;opacity:0;flex-shrink:0;transition:.15s}
+.ci:hover .cia,.ci.act .cia{opacity:1}
+.cib{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;font-size:.68rem;transition:.15s;color:var(--mu)}
+.cib.r:hover{color:var(--inf)}
+.cib.d:hover{color:var(--err)}
+.ci-ri{flex:1;background:var(--c1);border:1px solid var(--a);color:var(--tx);
+  padding:3px 7px;border-radius:6px;font-size:.77rem;font-family:'Space Grotesk',sans-serif;outline:none}
+#ast{font-size:.65rem;display:flex;align-items:center;gap:5px;padding:3px 4px;color:var(--mu)}
+#ast.ok{color:var(--ok)}#ast.err{color:var(--err)}
 
-/* ═══ MAIN ═══ */
-main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);
-  position:relative;overflow:hidden;z-index:1}
-main::before{content:'';position:absolute;inset:0;
-  background-image:linear-gradient(var(--bd) 1px,transparent 1px),
-    linear-gradient(90deg,var(--bd) 1px,transparent 1px);
-  background-size:44px 44px;opacity:.12;pointer-events:none;z-index:0}
-
-/* ═══ HEADER ═══ */
-header{height:var(--hh);padding:0 20px;border-bottom:1px solid var(--bd);
+/* ── MAIN ── */
+main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);position:relative;overflow:hidden;z-index:1}
+main::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px);background-size:44px 44px;opacity:.1;pointer-events:none;z-index:0}
+header{height:var(--hh);padding:0 18px;border-bottom:1px solid var(--bd);
   display:flex;align-items:center;justify-content:space-between;
-  background:rgba(6,6,15,.9);backdrop-filter:blur(18px);
-  position:relative;z-index:10;flex-shrink:0;gap:12px}
-.hleft{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.mbtn{display:none;background:none;border:none;color:var(--muted);cursor:pointer;
-  padding:7px;border-radius:9px;transition:.2s}
-.mbtn:hover{color:var(--acc);background:var(--soft)}
-.ntabs{display:flex;gap:3px}
-.ntab{cursor:pointer;font-weight:500;font-size:.83rem;color:var(--muted);
-  padding:7px 12px;border-radius:9px;transition:.22s;border:1px solid transparent;
+  background:rgba(6,6,15,.92);backdrop-filter:blur(18px);
+  position:relative;z-index:10;flex-shrink:0;gap:10px}
+.hleft{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.mbtn{display:none;background:none;border:none;color:var(--mu);cursor:pointer;padding:7px;border-radius:9px;transition:.2s}
+.mbtn:hover{color:var(--a);background:var(--soft)}
+.ntabs{display:flex;gap:2px}
+.ntab{cursor:pointer;font-weight:500;font-size:.8rem;color:var(--mu);padding:6px 11px;
+  border-radius:9px;transition:.22s;border:1px solid transparent;
   display:flex;align-items:center;gap:5px;white-space:nowrap}
-.ntab:hover{color:var(--tx);background:var(--card)}
-.ntab.act{color:var(--acc);background:var(--soft);border-color:rgba(108,92,231,.3)}
-.hright{display:flex;gap:6px;flex-shrink:0}
-.hbtn{background:none;border:1px solid var(--bd2);color:var(--muted);padding:6px 11px;
-  border-radius:9px;font-size:.76rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;
-  transition:.2s;white-space:nowrap;display:flex;align-items:center;gap:4px}
-.hbtn:hover{border-color:var(--err);color:var(--err)}
-.hbtn.p{border-color:rgba(108,92,231,.4);color:var(--acc)}
-.hbtn.p:hover{background:var(--soft)}
+.ntab:hover{color:var(--tx);background:var(--c1)}
+.ntab.act{color:var(--a);background:var(--soft);border-color:rgba(108,92,231,.28)}
+.hright{display:flex;gap:5px;flex-shrink:0}
+.hb{background:none;border:1px solid var(--bd2);color:var(--mu);padding:5px 10px;
+  border-radius:9px;font-size:.73rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;
+  transition:.2s;white-space:nowrap}
+.hb:hover{border-color:var(--err);color:var(--err)}
+.hb.p{border-color:rgba(108,92,231,.35);color:var(--a)}
+.hb.p:hover{background:var(--soft)}
 
-/* ═══ CHAT ═══ */
-#chat-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
-#msgs{flex:1;overflow-y:auto;padding:22px max(3.5%,14px);
-  display:flex;flex-direction:column;gap:16px;position:relative;z-index:1}
-
-/* Welcome */
-#welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  height:100%;gap:14px;text-align:center;padding:20px;animation:fadeUp .6s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.wlogo{font-family:'Syne',sans-serif;font-size:3.2rem;font-weight:800;
-  background:linear-gradient(120deg,var(--acc),var(--acc2));-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px}
-.wsub{color:var(--muted);font-size:.88rem;max-width:360px;line-height:1.65}
-.wsub b{color:var(--acc);-webkit-text-fill-color:var(--acc)}
-.wgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px;max-width:420px;width:100%}
-.wchip{background:var(--card);border:1px solid var(--bd2);padding:10px 13px;border-radius:11px;
-  font-size:.8rem;color:var(--muted);cursor:pointer;transition:.2s;text-align:left;
-  display:flex;align-items:flex-start;gap:7px;line-height:1.4}
-.wchip:hover{border-color:var(--acc);color:var(--tx);background:var(--card2);transform:translateY(-1px)}
-.wchip .wi{font-size:1.1rem;flex-shrink:0;margin-top:1px}
-.wchip .wt{flex:1}
-
-/* ═══ MESSAGES ═══ */
-.message{display:flex;gap:10px;align-items:flex-start;animation:mIn .28s ease-out}
-@keyframes mIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.message.user{flex-direction:row-reverse;align-self:flex-end;max-width:85%}
+/* ── MESSAGES ── */
+#msgs{flex:1;overflow-y:auto;padding:20px max(3%,13px);display:flex;flex-direction:column;gap:15px;position:relative;z-index:1}
+#welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:13px;text-align:center;padding:20px;animation:fU .5s ease}
+@keyframes fU{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+.wlogo{font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px}
+.wsub{color:var(--mu);font-size:.85rem;max-width:340px;line-height:1.65}
+.wsub b{color:var(--a);-webkit-text-fill-color:var(--a)}
+.wg{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:5px;max-width:400px;width:100%}
+.wc{background:var(--c1);border:1px solid var(--bd2);padding:10px 12px;border-radius:11px;font-size:.78rem;color:var(--mu);cursor:pointer;transition:.2s;text-align:left;display:flex;align-items:flex-start;gap:7px;line-height:1.4}
+.wc:hover{border-color:var(--a);color:var(--tx);background:var(--c2);transform:translateY(-1px)}
+.message{display:flex;gap:9px;align-items:flex-start;animation:mI .25s ease-out}
+@keyframes mI{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.message.user{flex-direction:row-reverse;align-self:flex-end;max-width:86%}
 .message.ass{align-self:flex-start;width:100%;max-width:800px}
-.mav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:.8rem;flex-shrink:0;border:2px solid var(--bd2)}
-.message.user .mav{background:linear-gradient(120deg,var(--acc),var(--acc2));border:none;font-size:.75rem}
-.message.ass .mav{background:var(--card2);border-color:rgba(108,92,231,.3)}
+.mav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.76rem;flex-shrink:0;border:2px solid var(--bd2)}
+.message.user .mav{background:linear-gradient(120deg,var(--a),var(--a2));border:none}
+.message.ass .mav{background:var(--c2);border-color:rgba(108,92,231,.25)}
 .mbody{flex:1;min-width:0}
-.mrole{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;
-  margin-bottom:5px;color:var(--muted)}
-.message.user .mrole{text-align:right;color:var(--acc)}
-.mc{line-height:1.78;font-size:.91rem;color:var(--tx)}
-.message.user .mc{background:var(--ub);padding:11px 16px;border-radius:16px 16px 4px 16px;
-  border:1px solid var(--bd2);display:inline-block;text-align:left}
-/* markdown */
-.mc h1,.mc h2,.mc h3{margin:14px 0 6px;font-family:'Syne',sans-serif;line-height:1.3}
-.mc h1{font-size:1.28rem}.mc h2{font-size:1.04rem;color:var(--acc)}.mc h3{font-size:.92rem;color:var(--muted)}
-.mc p{margin-bottom:8px}.mc strong{color:#fff;font-weight:600}.mc em{color:var(--muted)}
-.mc ul,.mc ol{padding-left:19px;margin-bottom:8px}.mc li{margin-bottom:3px}
-.mc a{color:var(--acc);text-decoration:none}.mc a:hover{text-decoration:underline}
-.mc blockquote{border-left:3px solid var(--acc);padding-left:11px;color:var(--muted);margin:8px 0}
-.mc hr{border:none;border-top:1px solid var(--bd2);margin:12px 0}
-.mc code:not(pre code){background:var(--card2);border:1px solid var(--bd2);padding:2px 6px;
-  border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.82em;color:var(--acc2)}
-.mc table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.84rem;border-radius:9px;overflow:hidden}
-.mc th,.mc td{border:1px solid var(--bd2);padding:6px 10px;text-align:left}
-.mc th{background:var(--card2);color:var(--acc);font-weight:600;font-size:.8rem}
+.mrole{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px;color:var(--mu)}
+.message.user .mrole{text-align:right;color:var(--a)}
+.mc{line-height:1.78;font-size:.9rem;color:var(--tx)}
+.message.user .mc{background:var(--ub);padding:10px 15px;border-radius:15px 15px 3px 15px;border:1px solid var(--bd2);display:inline-block;text-align:left}
+.mc h1,.mc h2,.mc h3{margin:13px 0 6px;font-family:'Syne',sans-serif}
+.mc h1{font-size:1.24rem}.mc h2{font-size:1.01rem;color:var(--a)}.mc h3{font-size:.88rem;color:var(--mu)}
+.mc p{margin-bottom:7px}.mc strong{color:#fff;font-weight:600}.mc em{color:var(--mu)}
+.mc ul,.mc ol{padding-left:18px;margin-bottom:7px}.mc li{margin-bottom:3px}
+.mc a{color:var(--a)}.mc blockquote{border-left:3px solid var(--a);padding-left:11px;color:var(--mu);margin:8px 0}
+.mc hr{border:none;border-top:1px solid var(--bd2);margin:10px 0}
+.mc code:not(pre code){background:var(--c2);border:1px solid var(--bd2);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.8em;color:var(--a2)}
+.mc table{width:100%;border-collapse:collapse;margin:9px 0;font-size:.82rem}
+.mc th,.mc td{border:1px solid var(--bd2);padding:6px 9px;text-align:left}
+.mc th{background:var(--c2);color:var(--a);font-weight:600}
 .mc tr:nth-child(even) td{background:rgba(108,92,231,.03)}
-
-/* code block */
-.cb{background:#050510;border:1px solid var(--bd2);border-radius:10px;overflow:hidden;margin:10px 0}
-.cbh{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;
-  background:var(--card);border-bottom:1px solid var(--bd2)}
-.cbl{color:var(--acc);font-family:'JetBrains Mono',monospace;font-weight:500;font-size:.72rem}
-.cpb{background:none;border:1px solid var(--bd2);color:var(--muted);padding:3px 9px;
-  border-radius:5px;font-size:.67rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.2s}
-.cpb:hover{border-color:var(--acc);color:var(--acc)}
-.cpb.ok{color:var(--ok);border-color:var(--ok)}
-.cb pre{margin:0;padding:13px 15px;font-family:'JetBrains Mono',monospace;font-size:.83rem;overflow-x:auto;line-height:1.6}
-
-/* doc card */
-.doc-card{background:linear-gradient(135deg,var(--card2),rgba(108,92,231,.05));
-  border:1px solid rgba(108,92,231,.3);border-radius:13px;padding:16px;margin-top:10px;
-  position:relative;overflow:hidden}
-.doc-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;
-  background:linear-gradient(180deg,var(--acc),var(--acc2))}
-.dch{display:flex;align-items:center;gap:9px;margin-bottom:10px;padding-left:10px}
-.dci{font-size:1.3rem}.dct{font-weight:600;font-size:.92rem}.dcs{font-size:.73rem;color:var(--muted);margin-top:2px}
-.dca{display:flex;gap:6px;flex-wrap:wrap;padding-left:10px}
-.dcb{padding:7px 13px;border-radius:8px;font-size:.78rem;cursor:pointer;
-  font-family:'Space Grotesk',sans-serif;transition:.2s;border:none;font-weight:500}
-.dcb.dl{background:linear-gradient(120deg,var(--acc),var(--acc2));color:#fff}
-.dcb.dl:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--glow)}
-.dcb.pv{background:var(--card);border:1px solid var(--bd2);color:var(--muted)}
-.dcb.pv:hover{border-color:var(--acc);color:var(--acc)}
-
-/* file in msg */
-.msg-img{max-height:140px;border-radius:9px;max-width:100%;margin-bottom:6px;display:block;
-  border:1px solid var(--bd2)}
-.msg-file{display:inline-flex;align-items:center;gap:6px;background:var(--card2);
-  border:1px solid var(--bd2);padding:6px 11px;border-radius:8px;font-size:.78rem;margin-bottom:6px}
-
-/* chunk notice */
-.chunk-notice{background:rgba(253,203,110,.07);border:1px solid rgba(253,203,110,.3);
-  border-radius:9px;padding:9px 13px;font-size:.78rem;color:var(--warn);margin-bottom:8px;
-  display:flex;align-items:center;gap:7px}
-
-/* typing */
-.typing{display:flex;gap:4px;align-items:center;padding:5px 0}
-.td{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:td 1.3s infinite}
+.cb{background:#040410;border:1px solid var(--bd2);border-radius:10px;overflow:hidden;margin:9px 0}
+.cbh{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:var(--c1);border-bottom:1px solid var(--bd2)}
+.cbl{color:var(--a);font-family:'JetBrains Mono',monospace;font-size:.69rem;font-weight:500}
+.cpb{background:none;border:1px solid var(--bd2);color:var(--mu);padding:3px 8px;border-radius:5px;font-size:.65rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.2s}
+.cpb:hover{border-color:var(--a);color:var(--a)}.cpb.ok{color:var(--ok);border-color:var(--ok)}
+.cb pre{margin:0;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:.81rem;overflow-x:auto;line-height:1.6}
+.doc-card{background:linear-gradient(135deg,var(--c2),rgba(108,92,231,.05));border:1px solid rgba(108,92,231,.3);border-radius:12px;padding:14px;margin-top:9px;position:relative;overflow:hidden}
+.doc-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--a),var(--a2))}
+.dch{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding-left:9px}
+.dci{font-size:1.22rem}.dct{font-weight:600;font-size:.89rem}.dcs{font-size:.7rem;color:var(--mu);margin-top:2px}
+.dca{display:flex;gap:5px;flex-wrap:wrap;padding-left:9px}
+.dcb{padding:6px 12px;border-radius:8px;font-size:.75rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none;font-weight:500}
+.dcb.dl{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}
+.dcb.dl:hover{transform:translateY(-1px);box-shadow:0 4px 14px var(--glow)}
+.dcb.pv{background:var(--c1);border:1px solid var(--bd2);color:var(--mu)}
+.dcb.pv:hover{border-color:var(--a);color:var(--a)}
+.msg-img{max-height:130px;border-radius:9px;max-width:100%;margin-bottom:6px;display:block;border:1px solid var(--bd2)}
+.msg-file{display:inline-flex;align-items:center;gap:6px;background:var(--c2);border:1px solid var(--bd2);padding:5px 10px;border-radius:8px;font-size:.76rem;margin-bottom:6px}
+.typing{display:flex;gap:4px;align-items:center;padding:4px 0}
+.td{width:6px;height:6px;border-radius:50%;background:var(--a);animation:td 1.2s infinite}
 .td:nth-child(2){animation-delay:.22s}.td:nth-child(3){animation-delay:.44s}
 @keyframes td{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-5px);opacity:1}}
 
-/* ═══ INPUT ═══ */
-#input-area{padding:8px max(3.5%,12px) 15px;position:relative;z-index:10;flex-shrink:0}
-#at{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
-.ach{background:var(--card2);border:1px solid var(--bd2);padding:4px 10px;border-radius:18px;
-  font-size:.74rem;color:var(--acc);display:flex;align-items:center;gap:5px}
-.arm{cursor:pointer;color:var(--muted);font-size:.85rem;transition:.2s}
-.arm:hover{color:var(--err)}
-#cmd-suggest{background:var(--card2);border:1px solid var(--bd2);border-radius:11px;
-  padding:5px;margin-bottom:7px;display:none;flex-direction:column;gap:2px;max-height:130px;overflow-y:auto}
+/* ── INPUT ── */
+#input-area{padding:7px max(3%,11px) 14px;position:relative;z-index:10;flex-shrink:0}
+#at{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+.ach{background:var(--c2);border:1px solid var(--bd2);padding:4px 9px;border-radius:17px;font-size:.72rem;color:var(--a);display:flex;align-items:center;gap:5px}
+.arm{cursor:pointer;color:var(--mu);font-size:.84rem;transition:.2s}.arm:hover{color:var(--err)}
+#cmd-s{background:var(--c2);border:1px solid var(--bd2);border-radius:10px;padding:4px;margin-bottom:6px;display:none;flex-direction:column;gap:2px;max-height:120px;overflow-y:auto}
 .csi{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:.2s}
-.csi:hover,.csi.sel{background:var(--soft)}
-.csi .cmd{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--acc);font-weight:600}
-.csi .fn{font-size:.76rem;color:var(--muted)}
-.iwrap{background:var(--card);border:1px solid var(--bd2);border-radius:16px;padding:7px 9px;
-  display:flex;align-items:flex-end;gap:5px;transition:border-color .22s,box-shadow .22s}
-.iwrap:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px var(--soft),0 8px 32px rgba(0,0,0,.5)}
-textarea{flex:1;background:none;border:none;color:var(--tx);padding:9px 4px;resize:none;outline:none;
-  font-size:.93rem;font-family:'Space Grotesk',sans-serif;line-height:1.6;max-height:150px}
-textarea::placeholder{color:var(--muted)}
-.abtn{background:none;border:none;color:var(--muted);cursor:pointer;padding:8px;
-  border-radius:8px;transition:.2s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.abtn:hover{color:var(--acc);background:var(--soft)}
-.sbtn{background:linear-gradient(120deg,var(--acc),var(--acc2));color:#fff;
-  width:35px;height:35px;border-radius:10px;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
+.csi:hover{background:var(--soft)}
+.csi .cmd{font-family:'JetBrains Mono',monospace;font-size:.73rem;color:var(--a);font-weight:600}
+.csi .fn{font-size:.73rem;color:var(--mu)}
+.iw{background:var(--c1);border:1px solid var(--bd2);border-radius:15px;padding:6px 9px;display:flex;align-items:flex-end;gap:5px;transition:border-color .22s,box-shadow .22s}
+.iw:focus-within{border-color:var(--a);box-shadow:0 0 0 3px var(--soft),0 8px 30px rgba(0,0,0,.5)}
+textarea{flex:1;background:none;border:none;color:var(--tx);padding:8px 4px;resize:none;outline:none;font-size:.9rem;font-family:'Space Grotesk',sans-serif;line-height:1.6;max-height:145px}
+textarea::placeholder{color:var(--mu)}
+.abtn{background:none;border:none;color:var(--mu);cursor:pointer;padding:7px;border-radius:8px;transition:.2s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.abtn:hover{color:var(--a);background:var(--soft)}
+.sbtn{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
 .sbtn:hover{transform:scale(1.1);box-shadow:0 4px 16px var(--glow)}
 .sbtn:disabled{opacity:.3;transform:none;cursor:not-allowed}
 
-/* ═══ VOICE ═══ */
-#voice-view{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;
-  padding:28px;position:relative;z-index:1}
-.owrap{position:relative;width:180px;height:180px;display:flex;align-items:center;justify-content:center}
-.orb{width:90px;height:90px;background:linear-gradient(120deg,var(--acc),var(--acc2));
-  border-radius:50%;transition:.5s;z-index:2;position:relative}
-.orb::after{content:'';position:absolute;inset:-3px;border-radius:50%;
-  background:linear-gradient(120deg,var(--acc),var(--acc2));opacity:.3;filter:blur(10px)}
+/* ── VOICE ── */
+#voice-view{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+.owrap{position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center}
+.orb{width:86px;height:86px;background:linear-gradient(120deg,var(--a),var(--a2));border-radius:50%;transition:.5s;z-index:2;position:relative;box-shadow:0 0 30px rgba(108,92,231,.3)}
 .oring{position:absolute;border-radius:50%;border:1.5px solid;opacity:0}
 .listening .oring{animation:ori 2s infinite}
 .listening .oring:nth-child(2){animation-delay:.35s}
 .listening .oring:nth-child(3){animation-delay:.7s}
 .listening .orb{transform:scale(1.15);box-shadow:0 0 50px var(--glow)}
-@keyframes ori{0%{width:90px;height:90px;top:45px;left:45px;opacity:.8;border-color:var(--acc)}
-  100%{width:180px;height:180px;top:0;left:0;opacity:0;border-color:var(--acc2)}}
-#vst{margin-top:30px;font-weight:300;color:var(--muted);font-size:1rem;letter-spacing:.5px}
-#vtr{margin-top:10px;font-size:.85rem;color:var(--tx);max-width:320px;min-height:20px;text-align:center;font-style:italic}
-.vbtn{margin-top:24px;background:linear-gradient(120deg,var(--acc),var(--acc2));
-  color:#fff;border:none;padding:13px 26px;border-radius:100px;font-weight:600;
-  font-size:.93rem;cursor:pointer;transition:var(--t);font-family:'Space Grotesk',sans-serif;
-  display:flex;align-items:center;gap:8px}
-.vbtn:hover{transform:scale(1.05);box-shadow:0 8px 32px var(--glow)}
+@keyframes ori{0%{width:86px;height:86px;top:42px;left:42px;opacity:.8;border-color:var(--a)}100%{width:170px;height:170px;top:0;left:0;opacity:0;border-color:var(--a2)}}
+#vst{margin-top:28px;font-weight:300;color:var(--mu);font-size:.96rem}
+#vtr{margin-top:8px;font-size:.82rem;color:var(--tx);max-width:300px;min-height:18px;text-align:center;font-style:italic}
+#vprog{height:3px;width:200px;background:var(--bd2);border-radius:9px;margin-top:12px;overflow:hidden}
+#vpb{height:100%;width:0%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .4s ease;border-radius:9px}
+.vbtn{margin-top:22px;background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;padding:12px 24px;border-radius:100px;font-weight:600;font-size:.9rem;cursor:pointer;transition:var(--t);font-family:'Space Grotesk',sans-serif;display:flex;align-items:center;gap:8px}
+.vbtn:hover{transform:scale(1.05);box-shadow:0 8px 28px var(--glow)}
 
-/* ═══ DATA TAB ═══ */
-#data-view{display:none;flex:1;overflow-y:auto;padding:20px max(3.5%,14px);
-  flex-direction:column;gap:15px;position:relative;z-index:1}
-.ds{background:var(--card);border:1px solid var(--bd2);border-radius:13px;overflow:hidden}
-.ds-head{padding:13px 16px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;
-  justify-content:space-between;background:var(--card2);gap:10px}
-.ds-title{font-weight:600;font-size:.88rem;display:flex;align-items:center;gap:7px;flex:1}
-.ds-body{padding:15px 16px;display:flex;flex-direction:column;gap:11px}
-.fl{display:flex;flex-direction:column;gap:4px}
-.fl-label{font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
-.fi{background:var(--card2);border:1px solid var(--bd2);color:var(--tx);padding:9px 12px;
-  border-radius:9px;font-size:.83rem;font-family:'Space Grotesk',sans-serif;outline:none;transition:.2s;width:100%}
-.fi:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--soft)}
-.fi::placeholder{color:var(--muted)}
-.fl-hint{font-size:.71rem;color:var(--muted);line-height:1.55}
-.dbtn2{padding:10px 16px;border-radius:10px;font-size:.82rem;cursor:pointer;font-weight:600;
-  font-family:'Space Grotesk',sans-serif;transition:.2s;border:none;width:100%;text-align:center}
-.dbtn2.primary{background:linear-gradient(120deg,var(--acc),var(--acc2));color:#fff}
-.dbtn2.primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px var(--glow)}
-.dbtn2.sec{background:var(--card2);border:1px solid var(--bd2);color:var(--muted)}
-.dbtn2.sec:hover{border-color:var(--acc);color:var(--acc)}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:18px;font-size:.7rem;font-weight:600}
-.badge.ok{background:rgba(0,206,201,.1);color:var(--ok);border:1px solid rgba(0,206,201,.3)}
-.badge.err{background:rgba(255,107,107,.1);color:var(--err);border:1px solid rgba(255,107,107,.3)}
-.badge.warn{background:rgba(253,203,110,.1);color:var(--warn);border:1px solid rgba(253,203,110,.3)}
-.badge.info{background:rgba(116,185,255,.1);color:var(--info);border:1px solid rgba(116,185,255,.3)}
-.gh-res{background:var(--card2);border:1px solid var(--bd2);border-radius:9px;padding:12px;
-  font-size:.8rem;line-height:1.7;display:none;font-family:'JetBrains Mono',monospace;
-  color:var(--ok);white-space:pre-wrap;word-break:break-all}
-.gh-res.err{color:var(--err)}
-/* memory display */
-.mem-chip{background:var(--card2);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;
-  font-size:.78rem;color:var(--muted);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
-.mem-chip::before{content:'💡';flex-shrink:0}
+/* ── DATA TAB (shortcuts only) ── */
+#data-view{display:none;flex:1;overflow-y:auto;padding:18px max(3%,13px);flex-direction:column;gap:13px;position:relative;z-index:1}
+.ds{background:var(--c1);border:1px solid var(--bd2);border-radius:12px;overflow:hidden}
+.dsh{padding:12px 15px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;justify-content:space-between;background:var(--c2)}
+.dst{font-weight:600;font-size:.86rem;display:flex;align-items:center;gap:7px}
+.dsb{padding:13px 15px;display:flex;flex-direction:column;gap:10px}
+#fcmd-list{display:flex;flex-direction:column;gap:5px}
+.fi2{display:flex;align-items:center;gap:7px;padding:9px 11px;border-radius:9px;background:var(--c2);border:1px solid var(--bd2);font-size:.77rem;cursor:pointer;transition:.2s}
+.fi2:hover{border-color:var(--a)}
+.fi2-badge{background:var(--soft);color:var(--a);padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.71rem;font-weight:600;flex-shrink:0}
+.fi2-name{flex:1;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi2-acts{display:flex;gap:2px;opacity:0;flex-shrink:0;transition:.15s}
+.fi2:hover .fi2-acts{opacity:1}
+.fi2b{background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:.69rem;transition:.15s;color:var(--mu)}
+.fi2b.r:hover{color:var(--inf)}.fi2b.d:hover{color:var(--err)}
+.add-cmd{background:none;border:1px dashed var(--bd2);color:var(--mu);padding:9px;border-radius:9px;font-size:.77rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:.2s;font-family:'Space Grotesk',sans-serif;width:100%}
+.add-cmd:hover{border-color:var(--a);color:var(--a)}
+.cmd-empty{font-size:.76rem;color:var(--mu);text-align:center;padding:10px 0}
+.hint-b{background:var(--c2);border:1px solid var(--bd2);border-radius:9px;padding:11px 13px;font-size:.76rem;color:var(--mu);line-height:1.65}
+.hint-b b{color:var(--a)}
 
-/* ═══ TOAST ═══ */
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(14px);
-  background:var(--card2);border:1px solid var(--bd2);color:var(--tx);padding:10px 20px;
-  border-radius:100px;font-size:.81rem;opacity:0;transition:.28s;z-index:9999;
-  pointer-events:none;max-width:92vw;text-align:center}
+/* ── LEARN TAB ── */
+#learn-view{display:none;flex:1;overflow-y:auto;padding:18px max(3%,13px);flex-direction:column;gap:12px;position:relative;z-index:1}
+.ldrop{border:2px dashed var(--bd2);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:.25s;display:flex;flex-direction:column;align-items:center;gap:9px}
+.ldrop:hover,.ldrop.drag{border-color:var(--a);background:var(--soft)}
+.ldrop-icon{font-size:2rem}
+.ldrop-txt{font-size:.83rem;color:var(--mu);line-height:1.6}
+.ldoc{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:13px 15px;display:none;flex-direction:column;gap:9px}
+.ldoc-name{font-weight:600;font-size:.87rem;display:flex;align-items:center;gap:7px}
+.ldoc-meta{font-size:.74rem;color:var(--mu)}
+.lacts{display:flex;gap:6px;flex-wrap:wrap}
+.lab2{padding:9px 15px;border-radius:10px;font-size:.79rem;cursor:pointer;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none;display:flex;align-items:center;gap:5px}
+.lab2.main{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}
+.lab2.main:hover{transform:translateY(-1px);box-shadow:0 5px 18px var(--glow)}
+.lab2.sec{background:var(--c2);border:1px solid var(--bd2);color:var(--mu)}
+.lab2.sec:hover{border-color:var(--a);color:var(--a)}
+.lab2:disabled{opacity:.4;cursor:not-allowed;transform:none !important;box-shadow:none !important}
+.laudio-bar{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:13px 15px;display:none;flex-direction:column;gap:8px}
+.aprog{height:4px;background:var(--bd2);border-radius:9px;overflow:hidden}
+.aprog-b{height:100%;width:0%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .5s linear;border-radius:9px}
+.actrl{display:flex;align-items:center;gap:9px;font-size:.79rem;color:var(--mu)}
+.abtn2{background:none;border:none;cursor:pointer;color:var(--a);font-size:1.1rem;padding:4px;transition:.2s;line-height:1}
+.abtn2:hover{transform:scale(1.15)}
+.lc{display:none;flex-direction:column;gap:10px;margin-top:4px}
+.expl{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:14px;font-size:.86rem;line-height:1.75}
+/* Flashcards */
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px}
+.fc{perspective:800px;height:120px;cursor:pointer}
+.fc-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,.2,.2,1)}
+.fc.flipped .fc-inner{transform:rotateY(180deg)}
+.fc-f,.fc-b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:11px;display:flex;align-items:center;justify-content:center;padding:13px;text-align:center;font-size:.81rem;line-height:1.5;border:1px solid var(--bd2)}
+.fc-f{background:var(--c1);color:var(--tx);font-weight:500}
+.fc-b{background:linear-gradient(135deg,var(--c2),rgba(108,92,231,.07));color:var(--mu);transform:rotateY(180deg)}
+/* Quiz */
+.quiz-q{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.quiz-qt{font-size:.85rem;font-weight:600;color:var(--tx)}
+.quiz-opts{display:flex;flex-direction:column;gap:5px}
+.qopt{background:var(--c2);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:.81rem;cursor:pointer;transition:.2s;color:var(--mu);text-align:left;font-family:'Space Grotesk',sans-serif;width:100%}
+.qopt:hover:not(:disabled){border-color:var(--a);color:var(--a);background:var(--soft)}
+.qopt.correct{border-color:var(--ok)!important;color:var(--ok)!important;background:rgba(0,212,170,.08)!important}
+.qopt.wrong{border-color:var(--err)!important;color:var(--err)!important;background:rgba(255,107,107,.08)!important}
+.quiz-expl{font-size:.75rem;color:var(--mu);padding:7px 10px;background:var(--c2);border-radius:7px;border-left:3px solid var(--a)}
+.quiz-score{text-align:center;font-size:.97rem;font-weight:600;padding:16px;background:linear-gradient(135deg,var(--c2),rgba(108,92,231,.06));border:1px solid rgba(108,92,231,.25);border-radius:11px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--c2);border:1px solid var(--bd2);color:var(--tx);padding:9px 18px;
+  border-radius:100px;font-size:.79rem;opacity:0;transition:.25s;z-index:9999;
+  pointer-events:none;max-width:92vw;text-align:center;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#toast.ok-t{border-color:var(--ok);color:var(--ok)}
-#toast.err-t{border-color:var(--err);color:var(--err)}
+#toast.ok{border-color:var(--ok);color:var(--ok)}
+#toast.err{border-color:var(--err);color:var(--err)}
 
-/* ═══ MOBILE NAV ═══ */
+/* ── MOBILE NAV ── */
 #mnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--mnh);
   background:rgba(6,6,15,.98);backdrop-filter:blur(22px);border-top:1px solid var(--bd);
-  z-index:100;flex-direction:row;align-items:center;justify-content:space-around;padding:0 8px}
-.mtab{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
-  padding:5px 10px;border-radius:10px;transition:.2s;color:var(--muted);
-  font-size:.63rem;font-weight:600;border:1px solid transparent;letter-spacing:.3px}
-.mtab:hover{color:var(--tx)}.mtab.act{color:var(--acc);background:var(--soft);border-color:rgba(108,92,231,.2)}
-.mtab svg{width:18px;height:18px}
-.mnew{background:linear-gradient(120deg,var(--acc),var(--acc2));width:40px;height:40px;
-  border-radius:12px;border:none;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:var(--t);color:#fff;flex-shrink:0}
+  z-index:100;flex-direction:row;align-items:center;justify-content:space-around;padding:0 7px}
+.mtab{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+  padding:5px 8px;border-radius:10px;transition:.2s;color:var(--mu);
+  font-size:.6rem;font-weight:600;border:1px solid transparent}
+.mtab:hover{color:var(--tx)}.mtab.act{color:var(--a);background:var(--soft);border-color:rgba(108,92,231,.18)}
+.mtab svg{width:17px;height:17px}
+.mnew{background:linear-gradient(120deg,var(--a),var(--a2));width:38px;height:38px;border-radius:11px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);color:#fff;flex-shrink:0}
 .mnew:active{transform:scale(.88)}
 
-/* ═══ MODAL ═══ */
-#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
-  backdrop-filter:blur(7px);z-index:500;align-items:center;justify-content:center;padding:18px}
-#modal-overlay.open{display:flex}
-.modal{background:var(--sb);border:1px solid var(--bd2);border-radius:16px;
-  padding:22px;max-width:460px;width:100%;display:flex;flex-direction:column;gap:13px;
-  box-shadow:0 24px 60px rgba(0,0,0,.6)}
-.modal-title{font-family:'Syne',sans-serif;font-size:1.08rem;font-weight:700;
-  background:linear-gradient(120deg,var(--acc),var(--acc2));-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;background-clip:text}
-.modal-sub{font-size:.8rem;color:var(--muted);line-height:1.6}
-.modal-inp{background:var(--card);border:1px solid var(--bd2);color:var(--tx);
-  padding:10px 13px;border-radius:10px;font-size:.85rem;font-family:'Space Grotesk',sans-serif;
-  outline:none;transition:.2s;width:100%}
-.modal-inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--soft)}
-.modal-inp::placeholder{color:var(--muted)}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end}
-.mdbtn{padding:9px 18px;border-radius:9px;font-size:.82rem;cursor:pointer;
-  font-weight:600;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none}
-.mdbtn.cancel{background:var(--card);border:1px solid var(--bd2);color:var(--muted)}
-.mdbtn.cancel:hover{color:var(--tx)}
-.mdbtn.confirm{background:linear-gradient(120deg,var(--acc),var(--acc2));color:#fff}
-.mdbtn.confirm:hover{box-shadow:0 4px 16px var(--glow)}
+/* ── MODAL ── */
+#mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(7px);z-index:500;align-items:center;justify-content:center;padding:16px}
+#mo.open{display:flex}
+.modal{background:var(--sb);border:1px solid var(--bd2);border-radius:15px;padding:22px;max-width:430px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.mo-t{font-family:'Syne',sans-serif;font-size:1.02rem;font-weight:700;background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.mo-s{font-size:.77rem;color:var(--mu);line-height:1.6}
+.mi{background:var(--c1);border:1px solid var(--bd2);color:var(--tx);padding:10px 12px;border-radius:10px;font-size:.83rem;font-family:'Space Grotesk',sans-serif;outline:none;transition:.2s;width:100%}
+.mi:focus{border-color:var(--a);box-shadow:0 0 0 3px var(--soft)}.mi::placeholder{color:var(--mu)}
+.mbtns{display:flex;gap:7px;justify-content:flex-end}
+.mdb{padding:8px 16px;border-radius:9px;font-size:.79rem;cursor:pointer;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none}
+.mdb.can{background:var(--c1);border:1px solid var(--bd2);color:var(--mu)}.mdb.can:hover{color:var(--tx)}
+.mdb.cfm{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}.mdb.cfm:hover{box-shadow:0 4px 14px var(--glow)}
+.mdb.del{background:rgba(255,107,107,.1);border:1px solid var(--err);color:var(--err)}
 
-/* ═══ RESPONSIVE ═══ */
-@media(max-width:900px){
-  header{padding:0 13px}
-  #msgs,#data-view{padding:17px 12px}
-  #input-area{padding:7px 10px 12px}
-}
+/* ── RESPONSIVE ── */
+@media(max-width:900px){header{padding:0 12px}#msgs,#data-view,#learn-view{padding:15px 11px}#input-area{padding:6px 9px 11px}}
 @media(max-width:640px){
-  #sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-102%);
-    box-shadow:6px 0 32px rgba(0,0,0,.8)}
+  #sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-102%);box-shadow:6px 0 30px rgba(0,0,0,.8)}
   #sidebar.open{transform:translateX(0)}
   #sov.open{display:block}
   .mbtn{display:flex}
-  .hright .hbtn:not(.p){display:none}
+  .hright .hb:not(.p){display:none}
   #mnav{display:flex}
   main{padding-bottom:var(--mnh)}
   .message.user{max-width:90%}
-  #msgs,#data-view{padding:12px 10px;gap:14px}
-  #input-area{padding:5px 8px 10px}
-  .iwrap{border-radius:13px}
-  .wlogo{font-size:2.6rem}
-  .wgrid{grid-template-columns:1fr}
-  header{height:52px;padding:0 10px}
-  :root{--hh:52px}
-  .ntab{padding:6px 9px;font-size:.79rem}
-  .cb pre{font-size:.74rem;padding:10px}
-  .dca{flex-direction:column}
+  #msgs,#data-view,#learn-view{padding:11px 9px;gap:13px}
+  #input-area{padding:5px 8px 9px}
+  .iw{border-radius:13px}.wlogo{font-size:2.5rem}
+  .wg{grid-template-columns:1fr}
+  header{height:52px;padding:0 9px}:root{--hh:52px}
+  .ntab{padding:6px 9px;font-size:.76rem}
   textarea{font-size:16px}
-  .ds-body{padding:12px 13px}
-  .ci-actions{opacity:1}
+  .fc-grid{grid-template-columns:1fr 1fr}
+  .dca{flex-direction:column}
 }
-@media(max-width:380px){
-  .wlogo{font-size:2.1rem}
-  #msgs{padding:10px 8px}
-}
+@media(max-width:380px){.wlogo{font-size:2rem}#msgs{padding:9px 7px}}
 @supports(padding-bottom:env(safe-area-inset-bottom)){
-  #mnav{padding-bottom:env(safe-area-inset-bottom);
-    height:calc(var(--mnh) + env(safe-area-inset-bottom))}
+  #mnav{padding-bottom:env(safe-area-inset-bottom);height:calc(var(--mnh) + env(safe-area-inset-bottom))}
   main{padding-bottom:calc(var(--mnh) + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
 <body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lbox">
+    <div class="llogo">IXA</div>
+    <div class="lsub">Système d'Intelligence Avancée de Tom</div>
+    <div class="lsep"></div>
+    <div class="lstat" id="lstat"><div class="spin"></div><span id="lstat-t">Chargement…</span></div>
+    <input class="linp" id="li-u" type="text" placeholder="Identifiant" autocomplete="username" style="display:none">
+    <input class="linp" id="li-p" type="password" placeholder="Mot de passe" autocomplete="current-password" style="display:none">
+    <button class="lbtn" id="li-btn" onclick="doLogin()" style="display:none">Connexion</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
 <div id="sov" onclick="closeSB()"></div>
 
-<!-- ═══ SIDEBAR ═══ -->
+<!-- SIDEBAR -->
 <aside id="sidebar">
   <div class="sbhdr">
     <div class="brand"><div class="bdt"></div>IXA</div>
-    <button class="xbtn" onclick="closeSB()">✕</button>
+    <button class="xb" onclick="closeSB()">✕</button>
+  </div>
+  <div class="upill" id="upill" style="display:none">
+    <div class="uav" id="u-av">👤</div>
+    <div style="flex:1;min-width:0"><div class="uname" id="u-nm">—</div><div class="urole" id="u-rl">—</div></div>
+    <button class="logoutb" onclick="logout()" title="Déconnexion">⏻</button>
   </div>
   <button class="btn-new" onclick="createChat();closeSB()">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -419,74 +376,65 @@ textarea::placeholder{color:var(--muted)}
   </button>
   <span class="sect">Conversations</span>
   <div id="history-list"></div>
-  <span class="sect">Raccourcis /fichiers</span>
-  <div id="fcmd-list"></div>
-  <button class="add-fcmd" onclick="openAddCmd()">＋ Ajouter un raccourci</button>
-  <div id="sync-st" onclick="manualSync()" title="Synchronisation GitHub">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-    <span id="sync-txt">Sync GitHub</span>
-  </div>
   <div id="ast">
     <svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
-    <span id="ast-txt">Initialisation…</span>
+    <span id="ast-t">—</span>
   </div>
 </aside>
 
-<!-- ═══ MAIN ═══ -->
+<!-- MAIN -->
 <main>
   <header>
     <div class="hleft">
-      <button class="mbtn abtn" onclick="openSB()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <button class="mbtn" onclick="openSB()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <div class="ntabs">
         <span id="tab-chat" class="ntab act" onclick="showTab('chat')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Chat
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat
         </span>
         <span id="tab-voice" class="ntab" onclick="showTab('voice')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-          Vocal
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>Vocal
         </span>
         <span id="tab-data" class="ntab" onclick="showTab('data')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-          Data
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Fichiers
+        </span>
+        <span id="tab-learn" class="ntab" onclick="showTab('learn')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Apprendre
         </span>
       </div>
     </div>
     <div class="hright">
-      <button class="hbtn" onclick="clearChat()">🗑 Effacer</button>
-      <button class="hbtn p" onclick="exportChat()">📤 Export</button>
+      <button class="hb" onclick="clearChat()">🗑 Effacer</button>
+      <button class="hb p" onclick="exportChat()">📤 Export</button>
     </div>
   </header>
 
-  <!-- Chat -->
+  <!-- CHAT VIEW -->
   <div id="chat-view" style="display:flex;flex:1;flex-direction:column;overflow:hidden">
     <div id="msgs">
       <div id="welcome">
         <div class="wlogo">IXA</div>
-        <div class="wsub">Système d'Intelligence Avancée de <b>Tom</b><br>
-          Tapez votre message ou utilisez un <b>/raccourci</b> pour vos fichiers</div>
-        <div class="wgrid">
-          <div class="wchip" onclick="hint('Analyse ce document et résume les points clés')"><span class="wi">📄</span><span class="wt">Analyser un document</span></div>
-          <div class="wchip" onclick="hint('Génère un rapport complet sur les tendances IA 2025')"><span class="wi">📊</span><span class="wt">Créer un rapport</span></div>
-          <div class="wchip" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel avec des données exemples')"><span class="wi">📗</span><span class="wt">Fichier Excel</span></div>
-          <div class="wchip" onclick="hint('Rédige une lettre de motivation professionnelle pour un poste développeur')"><span class="wi">✉️</span><span class="wt">Lettre de motivation</span></div>
+        <div class="wsub">Système IA de <b>Tom</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
+        <div class="wg">
+          <div class="wc" onclick="hint('Crée un rapport Word complet sur Napoléon Bonaparte')"><span>📘</span><span>Rapport Word</span></div>
+          <div class="wc" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel avec données exemples')"><span>📗</span><span>Créer un Excel</span></div>
+          <div class="wc" onclick="hint('Crée une présentation PowerPoint de 5 slides sur l\'intelligence artificielle')"><span>📑</span><span>PowerPoint</span></div>
+          <div class="wc" onclick="hint('Génère un CV professionnel complet en format PDF')"><span>📕</span><span>Créer un PDF/CV</span></div>
         </div>
       </div>
     </div>
     <div id="input-area">
       <div id="at"></div>
-      <div id="cmd-suggest"></div>
-      <div class="iwrap">
+      <div id="cmd-s"></div>
+      <div class="iw">
         <input type="file" id="fi" hidden multiple
-          accept=".txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp,.docx,.xlsx"
+          accept=".txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp,.xlsx,.xls,.docx"
           onchange="handleFiles(this)">
         <button class="abtn" title="Joindre un fichier" onclick="document.getElementById('fi').click()">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         </button>
-        <textarea id="mi" placeholder="Écrivez… ou /raccourci pour vos fichiers" rows="1"
-          oninput="onInput(this)" onkeydown="onKey(event)"></textarea>
+        <textarea id="mi" placeholder="Écrivez… ou /raccourci pour vos fichiers" rows="1" oninput="onInput(this)" onkeydown="onKey(event)"></textarea>
         <button class="sbtn" id="sbtn" onclick="handleSend()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -494,1130 +442,1231 @@ textarea::placeholder{color:var(--muted)}
     </div>
   </div>
 
-  <!-- Voice -->
-  <div id="voice-view" style="display:none;flex:1;flex-direction:column">
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
-      <div class="owrap" id="orb-box">
-        <div class="oring"></div><div class="oring"></div><div class="oring"></div>
-        <div class="orb"></div>
+  <!-- VOICE VIEW -->
+  <div id="voice-view">
+    <div class="owrap" id="orb-box">
+      <div class="oring"></div><div class="oring"></div><div class="oring"></div>
+      <div class="orb"></div>
+    </div>
+    <div id="vst">En attente de vos instructions, Tom</div>
+    <div id="vtr"></div>
+    <div id="vprog"><div id="vpb"></div></div>
+    <button class="vbtn" id="vbtn" onclick="toggleVoice()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      Activer IXA
+    </button>
+  </div>
+
+  <!-- DATA VIEW (file shortcuts) -->
+  <div id="data-view">
+    <div class="ds">
+      <div class="dsh">
+        <div class="dst">⚡ Raccourcis Fichiers</div>
+        <button class="hb p" onclick="openAddCmd()">＋ Ajouter</button>
       </div>
-      <div id="vst">En attente de vos instructions, Tom</div>
-      <div id="vtr"></div>
-      <button class="vbtn" onclick="toggleVoice()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        Activer IXA
-      </button>
+      <div class="dsb">
+        <div id="fcmd-list"></div>
+        <div class="hint-b">
+          Tapez <b>/raccourci votre question</b> dans le chat pour analyser automatiquement le fichier associé.<br><br>
+          Exemple : <b>/emploi_du_temps j'ai quoi demain ?</b>
+        </div>
+        <button class="add-cmd" onclick="openAddCmd()">＋ Ajouter un raccourci</button>
+      </div>
     </div>
   </div>
 
-  <!-- Data -->
-  <div id="data-view">
-    <!-- Sync/GitHub -->
+  <!-- LEARN VIEW -->
+  <div id="learn-view">
     <div class="ds">
-      <div class="ds-head">
-        <div class="ds-title">🔄 Synchronisation & GitHub</div>
-        <div id="gh-badge" class="badge warn">Non configuré</div>
-      </div>
-      <div class="ds-body">
-        <div class="fl">
-          <div class="fl-label">Token GitHub (Personal Access Token)</div>
-          <input class="fi" id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-            oninput="ghChanged()">
-          <div class="fl-hint">Créez un token sur <b>github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</b>. Cochez la permission <b>repo</b>.</div>
+      <div class="dsh"><div class="dst">📚 Mode Apprentissage</div></div>
+      <div class="dsb">
+        <input type="file" id="lf" hidden accept=".txt,.md,.csv,.json,.pdf,.png,.jpg,.jpeg,.xlsx" onchange="learnLoad(this)">
+        <div class="ldrop" id="ldrop"
+          onclick="document.getElementById('lf').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondrop="lDrop(event)" ondragleave="this.classList.remove('drag')">
+          <div class="ldrop-icon">📂</div>
+          <div class="ldrop-txt">Cliquez ou déposez un document ici<br><span style="font-size:.72rem">PDF, image, texte, Excel…</span></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="fl">
-            <div class="fl-label">Username GitHub</div>
-            <input class="fi" id="gh-user" placeholder="votre-username" oninput="ghChanged()">
-          </div>
-          <div class="fl">
-            <div class="fl-label">Dépôt</div>
-            <input class="fi" id="gh-repo" placeholder="ixa-app" oninput="ghChanged()">
+        <div class="ldoc" id="ldoc">
+          <div class="ldoc-name" id="ldoc-nm"></div>
+          <div class="ldoc-meta" id="ldoc-mt"></div>
+          <div class="lacts">
+            <button class="lab2 main" id="lb-audio" onclick="learnGen('audio')">🎧 Écouter l'explication</button>
+            <button class="lab2 sec" id="lb-fc" onclick="learnGen('flash')">🃏 Flashcards</button>
+            <button class="lab2 sec" id="lb-quiz" onclick="learnGen('quiz')">🧩 Quiz</button>
+            <button class="lab2 sec" style="margin-left:auto" onclick="learnReset()">✕ Changer</button>
           </div>
         </div>
-        <div class="fl">
-          <div class="fl-label">Branche</div>
-          <input class="fi" id="gh-branch" placeholder="main" value="main" oninput="ghChanged()">
+        <div class="laudio-bar" id="laudio">
+          <div style="font-size:.79rem;font-weight:600">🎧 Explication audio en cours…</div>
+          <div class="aprog"><div class="aprog-b" id="apb"></div></div>
+          <div class="actrl">
+            <button class="abtn2" id="a-pp" onclick="audioToggle()">⏸</button>
+            <button class="abtn2" onclick="audioStop()">⏹</button>
+            <span id="a-stat">Lecture…</span>
+          </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button class="dbtn2 sec" onclick="ghTest()">🔍 Tester</button>
-          <button class="dbtn2 primary" onclick="ghSync()">🔄 Synchroniser</button>
-        </div>
-        <button class="dbtn2 primary" onclick="ghDeploy()">🚀 Déployer ixa.html sur GitHub</button>
-        <div id="gh-res" class="gh-res"></div>
-        <div class="fl-hint">💡 La synchronisation sauvegarde automatiquement vos conversations sur GitHub, accessibles depuis tous vos appareils.</div>
-      </div>
-    </div>
-    <!-- API Config -->
-    <div class="ds">
-      <div class="ds-head">
-        <div class="ds-title">⚡ Configuration API Groq</div>
-        <div id="api-badge" class="badge warn">—</div>
-      </div>
-      <div class="ds-body">
-        <div class="fl">
-          <div class="fl-label">Clé API Groq</div>
-          <input class="fi" id="api-key-inp" type="password" placeholder="gsk_…" oninput="apiKeyChanged()">
-          <div class="fl-hint">Obtenez votre clé gratuite sur <b>console.groq.com</b></div>
-        </div>
-        <button class="dbtn2 primary" onclick="testGroq()">🔍 Tester la clé</button>
-        <div class="mem-chip">IXA sélectionne automatiquement le meilleur modèle IA pour chaque requête — aucune configuration requise. En cas de limite atteinte, elle bascule silencieusement vers un modèle alternatif.</div>
-      </div>
-    </div>
-    <!-- Mémoire IXA -->
-    <div class="ds">
-      <div class="ds-head">
-        <div class="ds-title">🧠 Mémoire d'IXA</div>
-        <button class="badge info" style="cursor:pointer;border:none" onclick="openMemoryEditor()">Modifier</button>
-      </div>
-      <div class="ds-body" id="memory-display"></div>
-    </div>
-    <!-- Config.json -->
-    <div class="ds">
-      <div class="ds-head"><div class="ds-title">📄 config.json</div></div>
-      <div class="ds-body">
-        <div class="fl-hint">Placez ce fichier dans le même dossier qu'ixa.html pour configurer automatiquement l'application :</div>
-        <div class="cb"><div class="cbh"><span class="cbl">json</span>
-          <button class="cpb" onclick="cpCfg()">Copier</button></div>
-          <pre id="cfg-pre"></pre></div>
-        <button class="dbtn2 sec" onclick="dlConfig()">⬇ Télécharger config.json</button>
+        <div class="lc" id="lc"></div>
       </div>
     </div>
   </div>
 </main>
 
-<!-- Mobile nav -->
+<!-- MOBILE NAV -->
 <nav id="mnav">
   <div class="mtab act" id="mn-chat" onclick="showTab('chat');setMT('chat')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat
   </div>
   <button class="mnew" onclick="createChat();closeSB()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
   <div class="mtab" id="mn-voice" onclick="showTab('voice');setMT('voice')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>Vocal
   </div>
   <div class="mtab" id="mn-data" onclick="showTab('data');setMT('data')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Data
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Fichiers
   </div>
-  <div class="mtab" id="mn-hist" onclick="openSB()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>Hist.
+  <div class="mtab" id="mn-learn" onclick="showTab('learn');setMT('learn')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Apprendre
   </div>
 </nav>
 
-<!-- Add command modal -->
-<div id="modal-overlay">
-  <div id="modal" class="modal">
-    <div class="modal-title" id="modal-title">Ajouter un raccourci fichier</div>
-    <div class="modal-sub" id="modal-sub">Associez un <b>/mot-clé</b> à un fichier. Tapez ensuite <code style="color:var(--acc)">/mot-clé votre question</code> dans le chat.</div>
-    <div id="modal-body"></div>
-    <div class="modal-btns" id="modal-btns"></div>
+<!-- MODAL -->
+<div id="mo">
+  <div class="modal">
+    <div class="mo-t" id="mo-t"></div>
+    <div class="mo-s" id="mo-s"></div>
+    <div id="mo-b"></div>
+    <div class="mbtns" id="mo-btns"></div>
   </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   IXA v5 — CORE SYSTEM
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   IXA v6 — ZERO BUG EDITION — by Tom
+══════════════════════════════════════════════════════ */
 
-// ── JARVIS-STYLE SYSTEM PROMPT ──
-const IXA_PERSONA = `Tu es IXA (Intelligence eXpansive Avancée), un système d'IA personnel créé par Tom.
-Tu parles et te comportes comme JARVIS de Iron Man : sophistiqué, légèrement formel mais chaleureux, professionnel, efficace et avec une pointe d'humour subtil quand c'est approprié.
-
-RÈGLES FONDAMENTALES :
-• Tu réponds TOUJOURS en français, sauf si Tom utilise une autre langue
-• Tu appelles Tom par son prénom naturellement de temps en temps (ex: "Bien sûr, Tom.", "Voici votre analyse, Tom.")
-• Tu ne dis jamais "Bonjour" à chaque message — tu es déjà en ligne, tu enchaînes directement
-• Tu es direct, précis et structuré. Pas de remplissage inutile
-• Tu utilises le Markdown pour structurer (titres, listes, tableaux, code)
-• Tu anticipes les besoins de Tom quand c'est pertinent
-
-TA PERSONNALITÉ :
-• Sophistiqué et intelligent, comme un assistant de haute technologie
-• Légèrement formel ("Bien sûr.", "Effectivement.", "Permettez-moi d'analyser cela.")
-• Proactif : tu suggères des améliorations, avertis des problèmes
-• Confiant mais humble face à l'incertitude
-
-CRÉATION DE DOCUMENTS :
-Quand Tom demande de créer un document, génère le contenu COMPLET entre balises spéciales :
-\`\`\`document:TYPE\`\`\` ... \`\`\`
-Types disponibles : rapport, lettre, cv, tableau, code, contrat, presentation, document, excel, word
-Pour excel : JSON avec {sheets:[{name, headers:[], rows:[[]]}]}
-Pour word : Markdown structuré
-
-MODIFICATION DE FICHIERS :
-Quand un fichier est joint et que Tom demande des modifications, retourne le fichier COMPLET modifié dans \`\`\`document:TYPE\`\`\`.
-
-Date et heure système : ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}.`;
-
-// ── MEMORY SYSTEM ──
-const DEFAULT_MEMORY = [
-  "Tom est le créateur et propriétaire d'IXA",
-  "IXA est un système d'IA personnelle de haute technologie",
-  "Tom préfère des réponses structurées et directes",
-  "IXA parle comme JARVIS : sophistiqué, formel mais chaleureux",
-  "Toujours répondre en français sauf demande contraire"
-];
-
-// ── MODEL ROUTING — INVISIBLE TO USER ──
-// Models tried in order per category. On 429 → next in list.
-const MODEL_CHAINS = {
-  vision:   ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview'],
-  long:     ['mixtral-8x7b-32768', 'llama-3.3-70b-versatile'],
-  smart:    ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768'],
-  fast:     ['llama-3.1-8b-instant', 'gemma2-9b-it', 'mixtral-8x7b-32768'],
+// ── ACTIVE GROQ MODELS (no decommissioned models) ──
+const MODELS = {
+  smart:   'llama-3.3-70b-versatile',
+  fast:    'llama-3.1-8b-instant',
+  vision:  'llama-3.2-11b-vision-preview',
+  backup:  'gemma2-9b-it',
+};
+// Fallback chains: on any error, silently try next
+const CHAINS = {
+  vision: ['llama-3.2-11b-vision-preview', 'llama-3.3-70b-versatile', 'gemma2-9b-it'],
+  smart:  ['llama-3.3-70b-versatile', 'gemma2-9b-it', 'llama-3.1-8b-instant'],
+  fast:   ['llama-3.1-8b-instant', 'gemma2-9b-it', 'llama-3.3-70b-versatile'],
+};
+const TPM = {
+  'llama-3.3-70b-versatile': 12000,
+  'llama-3.1-8b-instant':     6000,
+  'llama-3.2-11b-vision-preview': 7000,
+  'gemma2-9b-it':            15000,
 };
 
-// Model TPM limits (conservative, tokens per minute)
-const MODEL_TPM = {
-  'llama-3.1-8b-instant':6000,'gemma2-9b-it':15000,
-  'mixtral-8x7b-32768':5000,'llama-3.3-70b-versatile':12000,
-  'llama-3.2-11b-vision-preview':7000,'llama-3.2-90b-vision-preview':4000,
-};
-
-function estTokens(t){ return Math.ceil(String(t).length/3.8); }
-
-function pickChain(text, atts){
-  if(atts.some(a=>a.isImg)) return 'vision';
-  const tok = estTokens(text) + atts.reduce((s,a)=>s+estTokens(a.content||''),0);
-  const gen = /crée|génère|rédige|écris|produis|fais.?(moi|un|une)|word|excel|rapport|lettre|cv|tableau|présentation|contrat|document/.test(text.toLowerCase());
-  if(gen) return 'smart';
-  if(tok > 2800) return 'long';
-  return 'fast';
-}
+// ── JARVIS SYSTEM PROMPT ──
+const SYS = () => `Tu es IXA (Intelligence eXpansive Avancée), un système d'IA personnel de haute technologie créé par Tom.
+PERSONNALITÉ : Tu parles comme JARVIS d'Iron Man — sophistiqué, légèrement formel mais chaleureux, efficace. Tu appelles Tom par son prénom naturellement ("Bien sûr, Tom.", "Voici l'analyse, Tom.").
+RÈGLES :
+• Réponds TOUJOURS en français (sauf autre langue de Tom)
+• Sois direct et structuré — utilise le Markdown
+• Ne dis jamais "Je suis une IA" — tu es IXA, le système de Tom
+DOCUMENTS — génère le contenu COMPLET entre balises :
+\`\`\`document:TYPE
+contenu complet ici
+\`\`\`
+Types: rapport, lettre, cv, contrat, document, excel, word, powerpoint, pdf
+Pour excel: JSON { "sheets":[{"name":"Feuille1","headers":["Col1","Col2"],"rows":[["val1","val2"]]}] }
+Pour powerpoint: JSON { "title":"Titre","slides":[{"title":"Slide","content":"Texte","bullets":["point1"]}] }
+Pour word/rapport/lettre/cv: Markdown structuré complet
+MODIFICATION: si fichier joint + demande de modification → retourner fichier COMPLET modifié dans \`\`\`document:TYPE\`\`\`.
+Date: ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}.`;
 
 // ── STATE ──
-const IXA = {
-  key: localStorage.getItem('ixa_key')||'',
+const S = {
+  groqKey: '', ghToken: '', ghUser: '', ghRepo: '', ghBranch: 'main',
+  user: null, allUsers: null, usersSHA: '',
   chats: [], cid: null,
   attachments: [],
   commands: {},
   memory: [],
-  recognition: null, synth: window.speechSynthesis,
   tab: 'chat', loading: false,
-  gh: {token:'',user:'',repo:'',branch:'main'},
-  syncTimer: null,
-  lastSync: null,
+  recognition: null, synth: window.speechSynthesis,
+  voiceQueue: [], voiceActive: false, voicePaused: false,
+  learnDoc: null,
 };
+window.__docs = {};
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
    BOOT
-═══════════════════════════════════════════════════ */
-async function boot(){
-  try{ IXA.chats=JSON.parse(localStorage.getItem('ixa_chats'))||[]; }catch(e){ IXA.chats=[]; }
-  try{ IXA.commands=JSON.parse(localStorage.getItem('ixa_cmds'))||{}; }catch(e){ IXA.commands={}; }
-  try{ IXA.memory=JSON.parse(localStorage.getItem('ixa_memory'))||[...DEFAULT_MEMORY]; }catch(e){ IXA.memory=[...DEFAULT_MEMORY]; }
-  try{
-    const g=JSON.parse(localStorage.getItem('ixa_gh'))||{};
-    IXA.gh={token:g.token||'',user:g.user||'',repo:g.repo||'',branch:g.branch||'main'};
-  }catch(e){}
-
-  await loadCfg();
-
-  if(!IXA.key){
-    const k=prompt('IXA — Système de Tom\n\nClé API Groq requise (gsk_…) :');
-    if(k?.trim()){ IXA.key=k.trim(); localStorage.setItem('ixa_key',IXA.key); }
-  }
-
-  updateApiSt(); updateGHBadge(); renderHist(); renderCmds(); renderMemory(); updateCfgPreview();
-  IXA.chats.length? loadChat(IXA.chats[0].id) : createChat();
-  initSpeech();
-  populateDataFields();
-  // Auto-sync from GitHub on boot if configured
-  if(IXA.gh.token && IXA.gh.user && IXA.gh.repo) autoSync();
-  // Auto-sync every 5min
-  IXA.syncTimer = setInterval(()=>{ if(IXA.gh.token&&IXA.gh.user&&IXA.gh.repo) autoSync(); }, 300000);
-}
-
-async function loadCfg(){
-  try{
-    const r=await fetch('config.json'); if(!r.ok) return;
-    const d=await r.json();
-    if(d.groq_api_key){ IXA.key=d.groq_api_key.trim(); localStorage.setItem('ixa_key',IXA.key); }
-    if(d.github_token) IXA.gh.token=d.github_token;
-    if(d.github_user) IXA.gh.user=d.github_user;
-    if(d.github_repo) IXA.gh.repo=d.github_repo;
-    if(d.github_branch) IXA.gh.branch=d.github_branch;
-    saveGHStore();
-  }catch(e){}
-}
-
-function initSpeech(){
-  const S=window.SpeechRecognition||window.webkitSpeechRecognition; if(!S) return;
-  IXA.recognition=new S(); IXA.recognition.lang='fr-FR'; IXA.recognition.interimResults=true;
-  IXA.recognition.onresult=(e)=>{
-    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
-    document.getElementById('vtr').textContent=t;
-    if(e.results[e.results.length-1].isFinal) handleVR(t);
-  };
-  IXA.recognition.onerror=()=>resetVUI();
-  IXA.recognition.onend=()=>document.getElementById('orb-box').classList.remove('listening');
-}
-
-/* ═══════════════════════════════════════════════════
-   GITHUB SYNC
-═══════════════════════════════════════════════════ */
-const SYNC_FILE = 'ixa_data.json';
-
-function setSyncSt(state, txt){
-  const el=document.getElementById('sync-st');
-  el.className=`sync-st ${state}`;
-  el.style.color = state==='synced'?'var(--ok)':state==='syncing'?'var(--warn)':state==='error'?'var(--err)':'var(--muted)';
-  document.getElementById('sync-txt').textContent=txt;
-}
-
-async function autoSync(){
-  // Try to pull data from GitHub first
-  if(!IXA.gh.token||!IXA.gh.user||!IXA.gh.repo) return;
-  setSyncSt('syncing','Sync…');
-  try{
-    const r=await fetch(`https://api.github.com/repos/${IXA.gh.user}/${IXA.gh.repo}/contents/${SYNC_FILE}`,{
-      headers:{'Authorization':`token ${IXA.gh.token}`,'Accept':'application/vnd.github.v3+json'}
-    });
-    if(r.ok){
-      const d=await r.json();
-      const content=JSON.parse(atob(d.content.replace(/\n/g,'')));
-      // Merge: remote wins on chats (more recent), keep local commands
-      if(content.chats && content.chats.length > IXA.chats.length){
-        IXA.chats=content.chats;
-        saveLocal();
-        // Reload current chat if it changed
-        const cc=IXA.chats.find(c=>c.id===IXA.cid);
-        if(!cc && IXA.chats.length) loadChat(IXA.chats[0].id);
-        renderHist();
-      }
-      IXA.lastSync=new Date();
-      setSyncSt('synced','Synchronisé ✓');
-    } else if(r.status===404){
-      // File doesn't exist yet, push current data
-      await pushSync();
+══════════════════════════════════════════════════════ */
+async function boot() {
+  setLStat('Chargement de la configuration…');
+  // Load config.json
+  try {
+    const r = await fetch('config.json');
+    if (r.ok) {
+      const cfg = await r.json();
+      S.groqKey = (cfg.groq_api_key || '').trim();
+      S.ghToken = (cfg.github_token || '').trim();
+      const repo = (cfg.github_repo || '').trim();
+      if (repo.includes('/')) { const p = repo.split('/'); S.ghUser = p[0]; S.ghRepo = p[1]; }
+      S.ghBranch = cfg.github_branch || 'main';
     }
-  }catch(e){ setSyncSt('error','Erreur sync'); }
-}
+  } catch(e) {}
 
-async function pushSync(){
-  if(!IXA.gh.token||!IXA.gh.user||!IXA.gh.repo) return;
-  setSyncSt('syncing','Envoi…');
-  try{
-    const payload={
-      chats:IXA.chats.map(c=>({...c,messages:c.messages.slice(-30)})), // limit per chat
-      memory:IXA.memory,
-      lastUpdated:new Date().toISOString()
-    };
-    const b64=btoa(unescape(encodeURIComponent(JSON.stringify(payload,null,2))));
-    // Get SHA if exists
-    let sha='';
-    try{
-      const get=await fetch(`https://api.github.com/repos/${IXA.gh.user}/${IXA.gh.repo}/contents/${SYNC_FILE}`,{
-        headers:{'Authorization':`token ${IXA.gh.token}`,'Accept':'application/vnd.github.v3+json'}
-      });
-      if(get.ok){ const gd=await get.json(); sha=gd.sha; }
-    }catch(e){}
-    const body={message:`IXA sync — ${new Date().toLocaleString('fr-FR')}`,content:b64,branch:IXA.gh.branch};
-    if(sha) body.sha=sha;
-    const r=await fetch(`https://api.github.com/repos/${IXA.gh.user}/${IXA.gh.repo}/contents/${SYNC_FILE}`,{
-      method:'PUT',
-      headers:{'Authorization':`token ${IXA.gh.token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
-      body:JSON.stringify(body)
-    });
-    if(r.ok){ IXA.lastSync=new Date(); setSyncSt('synced','Synchronisé ✓'); }
-    else setSyncSt('error','Erreur push');
-  }catch(e){ setSyncSt('error','Erreur réseau'); }
-}
-
-function manualSync(){ autoSync(); }
-
-/* ═══════════════════════════════════════════════════
-   FILE COMMANDS
-═══════════════════════════════════════════════════ */
-let _mf=null, _modalMode='', _modalTarget='';
-
-function openAddCmd(){
-  _mf=null; _modalMode='addcmd';
-  showModal('Ajouter un raccourci fichier',
-    'Associez un <b>/mot-clé</b> à un fichier. Tapez <code style="color:var(--acc)">/mot-clé votre question</code> dans le chat.',
-    `<div class="fl" style="gap:8px">
-      <input class="modal-inp" id="mc-cmd" placeholder="/emplois_du_temps">
-      <input class="modal-inp" id="mc-desc" placeholder="Description (ex: Mon emploi du temps)">
-      <input type="file" id="mc-file" style="display:none">
-      <button class="dbtn2 sec" onclick="document.getElementById('mc-file').click()" style="font-size:.8rem;padding:9px">📎 Choisir le fichier</button>
-      <div id="mc-fname" style="font-size:.76rem;color:var(--acc);min-height:18px"></div>
-    </div>`,
-    [{label:'Annuler',cls:'cancel',fn:'closeModal()'},{label:'Enregistrer',cls:'confirm',fn:'saveCmd()'}]
-  );
-  document.getElementById('mc-file').addEventListener('change',function(){
-    const f=this.files[0]; if(!f) return;
-    readFile(f, res=>{ _mf={...res,name:f.name,type:f.type}; document.getElementById('mc-fname').textContent='📎 '+f.name; });
-  });
-}
-
-function openRenameCmd(cmd, e){
-  e.stopPropagation(); _modalMode='renamecmd'; _modalTarget=cmd;
-  showModal('Renommer le raccourci',`Nouveau nom pour <b>${esc(cmd)}</b> :`,
-    `<input class="modal-inp" id="rn-inp" value="${esc(cmd)}" placeholder="/nouveau_nom">`,
-    [{label:'Annuler',cls:'cancel',fn:'closeModal()'},{label:'Renommer',cls:'confirm',fn:'applyRenameCmd()'}]
-  );
-  setTimeout(()=>{ const el=document.getElementById('rn-inp'); if(el){el.focus();el.select();} },100);
-}
-
-function applyRenameCmd(){
-  let nv=document.getElementById('rn-inp').value.trim();
-  if(!nv) return;
-  if(!nv.startsWith('/')) nv='/'+nv;
-  nv=nv.replace(/\s/g,'_');
-  if(nv===_modalTarget){closeModal();return;}
-  IXA.commands[nv]={...IXA.commands[_modalTarget]};
-  delete IXA.commands[_modalTarget];
-  localStorage.setItem('ixa_cmds',JSON.stringify(IXA.commands));
-  renderCmds(); closeModal(); showToast(`✅ Raccourci renommé en ${nv}`,'ok');
-}
-
-function saveCmd(){
-  let cmd=document.getElementById('mc-cmd').value.trim();
-  const desc=document.getElementById('mc-desc').value.trim();
-  if(!cmd||!_mf){showToast('❌ Mot-clé et fichier requis','err');return;}
-  if(!cmd.startsWith('/')) cmd='/'+cmd;
-  cmd=cmd.replace(/\s/g,'_');
-  IXA.commands[cmd]={..._mf,desc};
-  localStorage.setItem('ixa_cmds',JSON.stringify(IXA.commands));
-  renderCmds(); closeModal(); showToast(`✅ Raccourci ${cmd} enregistré !`,'ok');
-}
-
-function rmCmd(cmd,e){
-  e.stopPropagation();
-  delete IXA.commands[cmd];
-  localStorage.setItem('ixa_cmds',JSON.stringify(IXA.commands));
-  renderCmds(); showToast(`Raccourci ${cmd} supprimé`);
-}
-
-function renderCmds(){
-  const l=document.getElementById('fcmd-list');
-  const cmds=Object.entries(IXA.commands);
-  if(!cmds.length){
-    l.innerHTML='<div style="font-size:.76rem;color:var(--muted);padding:5px 4px">Aucun raccourci. Ajoutez-en un ci-dessous.</div>';return;
+  // Try to load users from GitHub
+  if (S.ghToken && S.ghUser && S.ghRepo) {
+    setLStat('Connexion à la base de données…');
+    try { await fetchUsers(); } catch(e) {
+      S.allUsers = getLocalUsers();
+    }
+  } else {
+    S.allUsers = getLocalUsers();
   }
-  l.innerHTML=cmds.map(([c,d])=>`
-    <div class="fcmd-item" onclick="hint('${esc(c)} ')">
-      <span class="fcmd-badge">${esc(c)}</span>
-      <span class="fcmd-name">${esc(d.desc||d.name)}</span>
-      <div class="fcmd-actions">
-        <button class="fcmd-ibtn ren" onclick="openRenameCmd('${esc(c)}',event)" title="Renommer">✏️</button>
-        <button class="fcmd-ibtn del" onclick="rmCmd('${esc(c)}',event)" title="Supprimer">✕</button>
+
+  setLStat('', true);
+  showLoginForm();
+}
+
+function getLocalUsers() {
+  try { return JSON.parse(localStorage.getItem('ixa_users')) || defaultUsers(); } catch(e) { return defaultUsers(); }
+}
+function defaultUsers() {
+  return { users: [{ id:'u001', username:'admin', password:'admin', display_name:'Admin', role:'admin', avatar:'👤', conversations:[], commands:{}, memory:['Tom est le créateur d\'IXA','IXA parle comme JARVIS','Répondre toujours en français'] }] };
+}
+
+function setLStat(txt, done=false) {
+  const el = document.getElementById('lstat');
+  const t = document.getElementById('lstat-t');
+  if (done) { el.style.display = 'none'; return; }
+  el.style.display = 'flex'; t.textContent = txt;
+}
+function showLoginForm() {
+  ['li-u','li-p','li-btn'].forEach(id => document.getElementById(id).style.display = '');
+  document.getElementById('li-u').focus();
+  document.getElementById('li-p').onkeydown = e => { if(e.key==='Enter') doLogin(); };
+  document.getElementById('li-u').onkeydown = e => { if(e.key==='Enter') document.getElementById('li-p').focus(); };
+}
+
+async function fetchUsers() {
+  const r = await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`, {
+    headers: { 'Authorization': `token ${S.ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  if (!r.ok) throw new Error('GH ' + r.status);
+  const d = await r.json();
+  S.usersSHA = d.sha;
+  S.allUsers = JSON.parse(atob(d.content.replace(/\n/g, '')));
+  localStorage.setItem('ixa_users', JSON.stringify(S.allUsers));
+}
+
+async function pushUsers() {
+  if (!S.user || !S.allUsers) return;
+  const idx = S.allUsers.users.findIndex(u => u.id === S.user.id);
+  if (idx < 0) return;
+  S.allUsers.users[idx] = {
+    ...S.allUsers.users[idx],
+    conversations: S.chats.slice(0,40).map(c => ({ ...c, messages: c.messages.slice(-20) })),
+    commands: S.commands,
+    memory: S.memory,
+  };
+  S.allUsers.updated = new Date().toISOString();
+  localStorage.setItem('ixa_users', JSON.stringify(S.allUsers));
+  if (!S.ghToken || !S.ghUser || !S.ghRepo) return;
+  try {
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(S.allUsers, null, 2))));
+    const body = { message:`IXA sync — ${new Date().toLocaleString('fr-FR')}`, content:b64, branch:S.ghBranch };
+    if (S.usersSHA) body.sha = S.usersSHA;
+    const r = await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`, {
+      method: 'PUT', headers: { 'Authorization':`token ${S.ghToken}`, 'Content-Type':'application/json', 'Accept':'application/vnd.github.v3+json' },
+      body: JSON.stringify(body)
+    });
+    if (r.ok) { const d = await r.json(); if(d.content?.sha) S.usersSHA = d.content.sha; }
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════ */
+function doLogin() {
+  const u = document.getElementById('li-u').value.trim().toLowerCase();
+  const p = document.getElementById('li-p').value;
+  const erEl = document.getElementById('lerr');
+  erEl.textContent = '';
+  if (!u || !p) { erEl.textContent = 'Veuillez remplir tous les champs.'; return; }
+  if (!S.allUsers?.users) { erEl.textContent = 'Base de données non chargée.'; return; }
+  const usr = S.allUsers.users.find(x => x.username.toLowerCase() === u && x.password === p);
+  if (!usr) { erEl.textContent = 'Identifiant ou mot de passe incorrect.'; return; }
+  S.user = usr;
+  S.chats = JSON.parse(JSON.stringify(usr.conversations || []));
+  S.commands = JSON.parse(JSON.stringify(usr.commands || {}));
+  S.memory = JSON.parse(JSON.stringify(usr.memory || []));
+  document.getElementById('login').classList.add('hide');
+  setTimeout(() => { document.getElementById('login').style.display = 'none'; }, 420);
+  initApp();
+}
+
+function logout() {
+  S.user = null; S.chats = []; S.commands = {}; S.memory = [];
+  stopSpeech();
+  const loginEl = document.getElementById('login');
+  loginEl.style.display = 'flex'; loginEl.classList.remove('hide');
+  document.getElementById('li-p').value = ''; document.getElementById('lerr').textContent = '';
+  setLStat('', true); showLoginForm();
+}
+
+function initApp() {
+  document.getElementById('upill').style.display = 'flex';
+  document.getElementById('u-av').textContent = S.user.avatar || '👤';
+  document.getElementById('u-nm').textContent = S.user.display_name || S.user.username;
+  document.getElementById('u-rl').textContent = S.user.role === 'admin' ? 'Administrateur' : 'Utilisateur';
+  updateApiSt();
+  renderHist(); renderCmds();
+  S.chats.length ? loadChat(S.chats[0].id) : createChat();
+  initSpeech();
+  setInterval(() => { if(S.user) pushUsers(); }, 180000);
+}
+
+/* ══════════════════════════════════════════════════════
+   SPEECH — IMPROVED TTS WITH SENTENCE QUEUE
+══════════════════════════════════════════════════════ */
+let _vOn = false;
+
+function initSpeech() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  S.recognition = new SR();
+  S.recognition.lang = 'fr-FR'; S.recognition.interimResults = true; S.recognition.continuous = false;
+  S.recognition.onresult = e => {
+    const txt = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('vtr').textContent = txt;
+    if (e.results[e.results.length-1].isFinal) onVoiceResult(txt);
+  };
+  S.recognition.onerror = () => { _vOn = false; resetVUI(); };
+  S.recognition.onend   = () => { _vOn = false; document.getElementById('orb-box').classList.remove('listening'); };
+}
+
+function toggleVoice() {
+  if (!S.recognition) { toast('❌ Vocal non supporté sur ce navigateur', 'err'); return; }
+  if (_vOn) { S.recognition.stop(); stopSpeech(); _vOn = false; resetVUI(); return; }
+  stopSpeech(); _vOn = true;
+  document.getElementById('orb-box').classList.add('listening');
+  document.getElementById('vst').textContent = 'IXA vous écoute, Tom…';
+  document.getElementById('vtr').textContent = '';
+  setVBtn('stop');
+  try { S.recognition.start(); } catch(e) { _vOn = false; resetVUI(); }
+}
+
+async function onVoiceResult(text) {
+  _vOn = false;
+  document.getElementById('orb-box').classList.remove('listening');
+  document.getElementById('vst').textContent = 'IXA analyse…';
+  setVBtn('start');
+  const reply = await handleSend(text);
+  if (reply && S.tab === 'voice') {
+    document.getElementById('vst').textContent = 'IXA répond…';
+    speakChunked(stripMd(reply));
+  } else resetVUI();
+}
+
+function stripMd(t) {
+  return t.replace(/```[\s\S]*?```/g,'').replace(/[*#_`~\[\]]/g,'').replace(/<[^>]+>/g,'').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+function speakChunked(text) {
+  stopSpeech();
+  const sentences = text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [text];
+  S.voiceQueue = sentences.map(s => s.trim()).filter(s => s.length > 2);
+  S.voiceActive = true; S.voicePaused = false;
+  document.getElementById('laudio').style.display = 'none';
+  document.getElementById('vpb').style.width = '0%';
+  speakNext();
+}
+
+function speakNext() {
+  if (!S.voiceQueue.length || !S.voiceActive) {
+    S.voiceActive = false;
+    document.getElementById('vpb').style.width = '100%';
+    setTimeout(() => { document.getElementById('vpb').style.width = '0%'; if(S.tab==='voice') resetVUI(); }, 1200);
+    return;
+  }
+  const sentence = S.voiceQueue.shift();
+  const u = new SpeechSynthesisUtterance(sentence);
+  const voices = S.synth.getVoices();
+  const frVoice = voices.find(v => v.lang==='fr-FR' && /natural|premium|enhanced/i.test(v.name))
+    || voices.find(v => v.lang==='fr-FR') || voices.find(v => v.lang.startsWith('fr')) || null;
+  if (frVoice) u.voice = frVoice;
+  u.lang = 'fr-FR'; u.rate = 1.05; u.pitch = 1.0;
+  const total = S.voiceQueue.length + 1;
+  u.onend = () => { if (S.voiceActive && !S.voicePaused) speakNext(); };
+  u.onerror = () => speakNext();
+  const done = Math.round((1 - S.voiceQueue.length / total) * 95);
+  document.getElementById('vpb').style.width = done + '%';
+  S.synth.speak(u);
+}
+
+function stopSpeech() {
+  S.voiceQueue = []; S.voiceActive = false; S.voicePaused = false;
+  S.synth.cancel();
+  document.getElementById('vpb').style.width = '0%';
+}
+
+function audioToggle() {
+  if (S.voicePaused) {
+    S.voicePaused = false; S.synth.resume();
+    document.getElementById('a-pp').textContent = '⏸'; document.getElementById('a-stat').textContent = 'Lecture…';
+  } else {
+    S.voicePaused = true; S.synth.pause();
+    document.getElementById('a-pp').textContent = '▶'; document.getElementById('a-stat').textContent = 'En pause';
+  }
+}
+function audioStop() {
+  stopSpeech();
+  document.getElementById('laudio').style.display = 'none';
+  document.getElementById('a-pp').textContent = '⏸'; document.getElementById('a-stat').textContent = 'Lecture…';
+}
+
+function resetVUI() {
+  _vOn = false;
+  document.getElementById('orb-box').classList.remove('listening');
+  document.getElementById('vst').textContent = 'En attente de vos instructions, Tom';
+  document.getElementById('vtr').textContent = '';
+  document.getElementById('vpb').style.width = '0%';
+  setVBtn('start');
+}
+
+function setVBtn(mode) {
+  const b = document.getElementById('vbtn');
+  if (mode === 'stop') b.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Arrêter`;
+  else b.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Activer IXA`;
+}
+
+/* ══════════════════════════════════════════════════════
+   FILE READING — text, xlsx, image, pdf
+══════════════════════════════════════════════════════ */
+const IMG_EXT = ['png','jpg','jpeg','gif','webp'];
+
+function readFile(file, cb) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const isImg = IMG_EXT.includes(ext);
+  const isXL = ['xlsx','xls'].includes(ext);
+  const isPDF = ext === 'pdf';
+  if (isXL) {
+    const r = new FileReader(); r.readAsArrayBuffer(file);
+    r.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        let txt = '';
+        wb.SheetNames.forEach(sn => { txt += `=== Feuille: ${sn} ===\n${XLSX.utils.sheet_to_csv(wb.Sheets[sn])}\n\n`; });
+        cb({ content: txt.trim(), name: file.name, isImg: false, isPDF: false, isXL: true });
+      } catch(err) { cb({ content: `[Erreur XLSX: ${err.message}]`, name: file.name, isImg: false, isPDF: false }); }
+    };
+    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+  } else if (isImg || isPDF) {
+    const r = new FileReader(); r.readAsDataURL(file);
+    r.onload = e => cb({ dataURL: e.target.result, b64: e.target.result.split(',')[1], name: file.name, isImg, isPDF, content: null });
+    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+  } else {
+    const r = new FileReader(); r.readAsText(file, 'UTF-8');
+    r.onload = e => cb({ content: e.target.result, name: file.name, isImg: false, isPDF: false });
+    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+  }
+}
+
+function handleFiles(input) {
+  Array.from(input.files).forEach(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const isXL = ['xlsx','xls'].includes(ext);
+    const max = (IMG_EXT.includes(ext) ? 5 : isXL ? 8 : ext==='pdf' ? 10 : 4) * 1024 * 1024;
+    if (f.size > max) { toast(`❌ Fichier trop grand : ${f.name}`, 'err'); return; }
+    readFile(f, d => { S.attachments.push({ ...d, fileType: f.type }); renderAT(); toast(`📎 ${f.name} ajouté`); });
+  });
+  input.value = '';
+}
+
+function renderAT() {
+  document.getElementById('at').innerHTML = S.attachments.map((a,i) => `
+    <div class="ach">${a.isImg?'🖼️':a.isPDF?'📑':a.isXL?'📗':'📄'} ${esc(a.name)}
+      <span class="arm" onclick="rmAT(${i})">×</span></div>`).join('');
+}
+function rmAT(i) { S.attachments.splice(i, 1); renderAT(); }
+
+/* ══════════════════════════════════════════════════════
+   FILE SHORTCUTS (COMMANDS)
+══════════════════════════════════════════════════════ */
+let _mf = null;
+
+function renderCmds() {
+  const l = document.getElementById('fcmd-list');
+  const cmds = Object.entries(S.commands);
+  if (!cmds.length) { l.innerHTML = '<div class="cmd-empty">Aucun raccourci. Ajoutez-en un ci-dessous.</div>'; return; }
+  l.innerHTML = cmds.map(([c,d]) => `
+    <div class="fi2" onclick="hint('${esc(c)} ')">
+      <span class="fi2-badge">${esc(c)}</span>
+      <span class="fi2-name">${esc(d.desc||d.name)}</span>
+      <div class="fi2-acts">
+        <button class="fi2b r" onclick="openRenCmd('${esc(c)}',event)" title="Renommer">✏️</button>
+        <button class="fi2b d" onclick="rmCmd('${esc(c)}',event)" title="Supprimer">✕</button>
       </div>
     </div>`).join('');
 }
 
-/* ═══════════════════════════════════════════════════
-   CHAT ITEM RENAME
-═══════════════════════════════════════════════════ */
-function startRenameChat(id, e){
-  e.stopPropagation();
-  const el=document.querySelector(`.ci[data-id="${id}"]`); if(!el) return;
-  el.classList.add('renaming');
-  const inp=document.createElement('input');
-  inp.className='ci-rename-inp'; inp.value=IXA.chats.find(c=>c.id===id)?.title||'';
-  el.appendChild(inp); inp.focus(); inp.select();
-  const commit=()=>{
-    const nv=inp.value.trim();
-    if(nv){ const chat=IXA.chats.find(c=>c.id===id); if(chat) chat.title=nv; saveAll(); }
-    el.classList.remove('renaming'); inp.remove(); renderHist();
-  };
-  inp.addEventListener('blur',commit);
-  inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') commit(); if(ev.key==='Escape'){ el.classList.remove('renaming'); inp.remove(); } });
-}
-
-/* ═══════════════════════════════════════════════════
-   MEMORY SYSTEM
-═══════════════════════════════════════════════════ */
-function renderMemory(){
-  const d=document.getElementById('memory-display');
-  if(!d) return;
-  d.innerHTML=IXA.memory.map((m,i)=>`
-    <div class="mem-chip" style="justify-content:space-between;align-items:flex-start">
-      <span>${esc(m)}</span>
-      <button onclick="delMemory(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;flex-shrink:0;margin-left:8px;transition:.2s" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--muted)'">✕</button>
-    </div>`).join('');
-}
-
-function delMemory(i){
-  IXA.memory.splice(i,1);
-  localStorage.setItem('ixa_memory',JSON.stringify(IXA.memory));
-  renderMemory(); showToast('Mémoire mise à jour');
-}
-
-function openMemoryEditor(){
-  showModal('Modifier la mémoire d\'IXA',
-    'Ces informations sont transmises à IXA dans chaque conversation. Ajoutez, modifiez ou supprimez des éléments.',
-    `<textarea class="modal-inp" id="mem-inp" rows="8" style="resize:vertical">${IXA.memory.join('\n')}</textarea>
-     <div class="fl-hint">Une ligne = une information. IXA utilisera ces données pour personnaliser ses réponses.</div>`,
-    [{label:'Annuler',cls:'cancel',fn:'closeModal()'},{label:'Sauvegarder',cls:'confirm',fn:'saveMemory()'}]
+function openAddCmd() {
+  _mf = null;
+  showModal('Ajouter un raccourci',
+    'Associez un <b>/mot-clé</b> à un fichier. Tapez ensuite <b>/mot-clé votre question</b> dans le chat.',
+    `<input class="mi" id="mc-cmd" placeholder="/planning (sans espaces)">
+     <input class="mi" id="mc-desc" placeholder="Description (ex: Mon planning hebdo)">
+     <input type="file" id="mc-f" style="display:none" onchange="mcFChange(this)">
+     <button onclick="document.getElementById('mc-f').click()" style="background:var(--c1);border:1px solid var(--bd2);color:var(--mu);padding:9px;border-radius:9px;font-size:.77rem;cursor:pointer;width:100%;text-align:center;font-family:'Space Grotesk',sans-serif;transition:.2s" onmouseover="this.style.borderColor='var(--a)'" onmouseout="this.style.borderColor='var(--bd2)'">📎 Choisir le fichier</button>
+     <div id="mc-fn" style="font-size:.74rem;color:var(--a);min-height:16px"></div>`,
+    [{l:'Annuler',c:'can',f:'closeModal()'},{l:'Enregistrer',c:'cfm',f:'saveCmd()'}]
   );
 }
 
-function saveMemory(){
-  const v=document.getElementById('mem-inp').value;
-  IXA.memory=v.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
-  localStorage.setItem('ixa_memory',JSON.stringify(IXA.memory));
-  renderMemory(); closeModal(); showToast('✅ Mémoire mise à jour','ok');
+function mcFChange(input) {
+  const f = input.files[0]; if (!f) return;
+  const max = 8 * 1024 * 1024;
+  if (f.size > max) { toast('❌ Fichier trop grand (max 8MB)', 'err'); return; }
+  readFile(f, d => { _mf = { ...d, fileType: f.type }; document.getElementById('mc-fn').textContent = '📎 ' + f.name; });
 }
 
-/* ═══════════════════════════════════════════════════
-   FILE HANDLING
-═══════════════════════════════════════════════════ */
-const IMG_EXT=['png','jpg','jpeg','gif','webp'];
-
-function readFile(f, cb){
-  const ext=f.name.split('.').pop().toLowerCase();
-  const isImg=IMG_EXT.includes(ext), isPDF=ext==='pdf';
-  const r=new FileReader();
-  if(isImg||isPDF){
-    r.readAsDataURL(f);
-    r.onload=e=>cb({isImg,isPDF,dataURL:e.target.result,b64:e.target.result.split(',')[1],content:null});
-  }else{
-    r.readAsText(f,'UTF-8');
-    r.onload=e=>cb({isImg:false,isPDF:false,content:e.target.result});
-  }
+function saveCmd() {
+  let cmd = (document.getElementById('mc-cmd')?.value || '').trim();
+  const desc = (document.getElementById('mc-desc')?.value || '').trim();
+  if (!cmd || !_mf) { toast('❌ Mot-clé et fichier requis', 'err'); return; }
+  if (!cmd.startsWith('/')) cmd = '/' + cmd;
+  cmd = cmd.replace(/\s+/g, '_');
+  S.commands[cmd] = { ..._mf, desc };
+  saveLocal(); renderCmds(); closeModal();
+  toast(`✅ Raccourci ${cmd} enregistré !`, 'ok');
 }
 
-function handleFiles(input){
-  Array.from(input.files).forEach(f=>{
-    const ext=f.name.split('.').pop().toLowerCase();
-    const isImg=IMG_EXT.includes(ext),isPDF=ext==='pdf';
-    const max=(isImg?5:isPDF?10:4)*1024*1024;
-    if(f.size>max){showToast(`❌ Trop grand (max ${isImg?5:isPDF?10:4}MB) : ${f.name}`,'err');return;}
-    readFile(f,res=>{
-      IXA.attachments.push({...res,name:f.name,type:f.type});
-      renderAT(); showToast(`📎 ${f.name} ajouté`);
-    });
-  });
-  input.value='';
+function rmCmd(cmd, e) {
+  e.stopPropagation();
+  delete S.commands[cmd]; saveLocal(); renderCmds();
+  toast(`Raccourci ${cmd} supprimé`);
 }
 
-function renderAT(){
-  document.getElementById('at').innerHTML=IXA.attachments.map((a,i)=>`
-    <div class="ach">${a.isImg?'🖼️':a.isPDF?'📑':'📄'} ${esc(a.name)}
-      <span class="arm" onclick="rmAT(${i})">×</span></div>`).join('');
+function openRenCmd(cmd, e) {
+  e.stopPropagation();
+  showModal('Renommer le raccourci', `Nouveau nom pour <b>${esc(cmd)}</b> :`,
+    `<input class="mi" id="rn-v" value="${esc(cmd)}" placeholder="/nouveau_nom">`,
+    [{l:'Annuler',c:'can',f:'closeModal()'},{l:'Renommer',c:'cfm',f:'applyRenCmd()'}]
+  );
+  document.getElementById('mo').dataset.ren = cmd;
+  setTimeout(() => { const el=document.getElementById('rn-v'); if(el){el.focus();el.select();} }, 80);
 }
-function rmAT(i){ IXA.attachments.splice(i,1); renderAT(); }
 
-/* ═══════════════════════════════════════════════════
-   COMMAND AUTOCOMPLETE
-═══════════════════════════════════════════════════ */
-function showCmdSuggest(val){
-  const box=document.getElementById('cmd-suggest');
-  if(!val.startsWith('/')||val.includes(' ')){box.style.display='none';return;}
-  const matches=Object.entries(IXA.commands).filter(([c])=>c.startsWith(val));
-  if(!matches.length){box.style.display='none';return;}
-  box.style.display='flex';
-  box.innerHTML=matches.map(([c,d])=>`
-    <div class="csi" onclick="selectCmd('${esc(c)}')">
-      <span class="cmd">${esc(c)}</span>
-      <span class="fn">${esc(d.desc||d.name)}</span>
-    </div>`).join('');
+function applyRenCmd() {
+  let nv = (document.getElementById('rn-v')?.value || '').trim();
+  const old = document.getElementById('mo').dataset.ren;
+  if (!nv || !old) { closeModal(); return; }
+  if (!nv.startsWith('/')) nv = '/' + nv;
+  nv = nv.replace(/\s+/g, '_');
+  if (nv !== old) { S.commands[nv] = { ...S.commands[old] }; delete S.commands[old]; saveLocal(); renderCmds(); }
+  closeModal(); toast(`✅ Renommé en ${nv}`, 'ok');
 }
-function selectCmd(cmd){
-  document.getElementById('mi').value=cmd+' ';
-  document.getElementById('cmd-suggest').style.display='none';
+
+function showCmdSuggest(val) {
+  const box = document.getElementById('cmd-s');
+  if (!val.startsWith('/') || val.includes(' ')) { box.style.display='none'; return; }
+  const m = Object.entries(S.commands).filter(([c]) => c.startsWith(val));
+  if (!m.length) { box.style.display='none'; return; }
+  box.style.display = 'flex';
+  box.innerHTML = m.map(([c,d]) => `<div class="csi" onclick="selectCmd('${esc(c)}')"><span class="cmd">${esc(c)}</span><span class="fn">${esc(d.desc||d.name)}</span></div>`).join('');
+}
+function selectCmd(cmd) {
+  document.getElementById('mi').value = cmd + ' ';
+  document.getElementById('cmd-s').style.display = 'none';
   document.getElementById('mi').focus();
 }
 
-/* ═══════════════════════════════════════════════════
-   SEND — INTELLIGENT MODEL ROUTING
-═══════════════════════════════════════════════════ */
-async function handleSend(voiceText=null){
-  if(IXA.loading) return;
-  const inp=document.getElementById('mi');
-  let text=(voiceText!==null?voiceText:inp.value).trim();
-  if(!text&&IXA.attachments.length===0) return;
+/* ══════════════════════════════════════════════════════
+   SEND + INVISIBLE MODEL ROUTING
+══════════════════════════════════════════════════════ */
+async function handleSend(voiceText = null) {
+  if (S.loading) return null;
+  const inp = document.getElementById('mi');
+  let text = (voiceText !== null ? voiceText : inp.value).trim();
+  if (!text && S.attachments.length === 0) return null;
+  document.getElementById('cmd-s').style.display = 'none';
 
-  document.getElementById('cmd-suggest').style.display='none';
-
-  // Resolve /command → inject file
-  let cmdAtts=[];
-  for(const [cmd] of Object.entries(IXA.commands)){
-    if(text.startsWith(cmd)){
-      cmdAtts=[{...IXA.commands[cmd]}];
-      text=text.slice(cmd.length).trim()||`Analyse ce fichier en détail et réponds à ma question sur ${IXA.commands[cmd].name}.`;
+  // Resolve /command → inject file automatically
+  let cmdAtts = [];
+  for (const [cmd] of Object.entries(S.commands)) {
+    if (text === cmd || text.startsWith(cmd + ' ')) {
+      cmdAtts = [{ ...S.commands[cmd] }];
+      text = text.slice(cmd.length).trim() || 'Analyse ce fichier en détail et réponds à ma question.';
       break;
     }
   }
+  const atts = [...S.attachments, ...cmdAtts];
 
-  const allAtts=[...IXA.attachments,...cmdAtts];
   document.getElementById('welcome')?.remove();
-  IXA.loading=true; document.getElementById('sbtn').disabled=true;
+  S.loading = true; document.getElementById('sbtn').disabled = true;
 
-  const display=text||(allAtts.length?`Analyse: ${allAtts.map(a=>a.name).join(', ')}`:'');
-  renderUserMsg(display,[...allAtts]);
-  if(!voiceText){inp.value='';inp.style.height='auto';}
+  const display = text || `Analyse: ${atts.map(a=>a.name).join(', ')}`;
+  renderUserMsg(display, atts);
+  if (!voiceText) { inp.value = ''; inp.style.height = 'auto'; }
 
-  const chat=IXA.chats.find(c=>c.id===IXA.cid);
-  if(!chat){IXA.loading=false;return;}
-  if(chat.messages.length===0&&text){chat.title=text.substring(0,44)+(text.length>44?'…':'');renderHist();}
+  const chat = S.chats.find(c => c.id === S.cid);
+  if (!chat) { S.loading=false; document.getElementById('sbtn').disabled=false; return null; }
+  if (!chat.messages.length && text) { chat.title = text.slice(0,44)+(text.length>44?'…':''); renderHist(); }
 
-  // Handle large file chunking
-  const largeTxt=allAtts.filter(a=>!a.isImg&&!a.isPDF&&a.content&&a.content.length>10000);
-  if(largeTxt.length>0){
-    const f=largeTxt[0];
-    const chunks=[]; for(let i=0;i<f.content.length;i+=9000) chunks.push(f.content.slice(i,i+9000));
-    if(chunks.length>1){
-      const notice=document.createElement('div'); notice.className='chunk-notice';
-      notice.innerHTML=`📄 Fichier volumineux — Analyse de la partie 1/${chunks.length}. Tapez <b>"suite"</b> pour continuer.`;
-      document.getElementById('msgs').appendChild(notice);
-      document.getElementById('msgs').scrollTop=99999;
-      if(!chat._chunks) chat._chunks={};
-      const trunc=chunks[0]+`\n\n[PARTIE 1/${chunks.length} — Fichier: ${f.name} — ${f.content.length} caractères total]`;
-      const modAtts=allAtts.map(a=>a===f?{...a,content:trunc}:a);
-      await doSend(text,modAtts,chat);
-      chat._chunks[f.name]={chunks,idx:1,question:text};
-    }else{ await doSend(text,allAtts,chat); }
-  }else{
-    // Check "suite" for chunked files
-    if(text.toLowerCase().trim()==='suite'){
-      const ck=Object.values(chat._chunks||{})[0];
-      if(ck&&ck.idx<ck.chunks.length){
-        const part=ck.chunks[ck.idx];
-        const synthText=`[PARTIE ${ck.idx+1}/${ck.chunks.length}]\n${part}`;
-        await doSend(ck.question,allAtts.concat([{name:'suite',content:synthText,isImg:false,isPDF:false}]),chat);
-        ck.idx++;
-      }else{ await doSend(text,allAtts,chat); }
-    }else{ await doSend(text,allAtts,chat); }
+  // Handle large files (chunk)
+  let finalAtts = [...atts];
+  const bigFile = finalAtts.find(a => !a.isImg && !a.isPDF && a.content && a.content.length > 9000);
+  if (bigFile) {
+    if (!chat._chunks) chat._chunks = {};
+    chat._chunks[bigFile.name] = { full: bigFile.content, idx: 1, q: text };
+    const trunc = bigFile.content.slice(0, 9000) + `\n\n[…Fichier tronqué (${bigFile.content.length} car. total). Tapez "suite" pour la partie suivante.]`;
+    finalAtts = finalAtts.map(a => a === bigFile ? { ...a, content: trunc } : a);
+  }
+  // Handle "suite" continuation
+  if (text.toLowerCase().trim() === 'suite' && chat._chunks) {
+    const ck = Object.values(chat._chunks)[0];
+    if (ck && ck.idx * 9000 < ck.full.length) {
+      finalAtts = [{ name:'suite', content:`[PARTIE ${ck.idx+1}]\n${ck.full.slice(ck.idx*9000,(ck.idx+1)*9000)}`, isImg:false, isPDF:false }];
+      ck.idx++;
+    }
   }
 
-  IXA.attachments=[]; document.getElementById('at').innerHTML='';
-  IXA.loading=false; document.getElementById('sbtn').disabled=false;
-  // Auto push to GitHub after each message
-  if(IXA.gh.token&&IXA.gh.user&&IXA.gh.repo) setTimeout(pushSync,2000);
+  const chain = pickChain(text, finalAtts);
+  const reply = await callWithFallback(text, finalAtts, chat, CHAINS[chain], 0);
+  S.attachments = []; document.getElementById('at').innerHTML = '';
+  S.loading = false; document.getElementById('sbtn').disabled = false;
+  setTimeout(() => { if(S.user) pushUsers(); }, 2000);
+  return reply;
 }
 
-function hint(t){ document.getElementById('mi').value=t; handleSend(); }
+function hint(t) { document.getElementById('mi').value = t; handleSend(); }
 
-async function doSend(text, atts, chat){
-  const chain=pickChain(text,atts);
-  const models=MODEL_CHAINS[chain];
-  await callWithFallback(text,atts,chat,models,0);
+function pickChain(text, atts) {
+  if (atts.some(a => a.isImg)) return 'vision';
+  const hasDoc = atts.some(a => a.content || a.isPDF);
+  const isGen = /crée|génère|rédige|écris|produis|word|excel|powerpoint|pptx|pdf|rapport|lettre|cv|tableau|présentation|contrat/i.test(text);
+  if (isGen || hasDoc || text.length > 400) return 'smart';
+  return 'fast';
 }
 
-async function callWithFallback(text,atts,chat,models,idx){
-  if(idx>=models.length){ renderMsg('assistant','⚠️ Tous les modèles disponibles sont temporairement surchargés. Réessayez dans quelques instants, Tom.'); return; }
-  const model=models[idx];
+async function callWithFallback(text, atts, chat, models, idx) {
+  if (idx >= models.length) {
+    renderMsg('assistant', 'Tous les systèmes sont momentanément saturés, Tom. Veuillez patienter quelques instants.');
+    return null;
+  }
+  const model = models[idx];
 
-  // Build API content
+  // Build API content properly
   let apiContent;
-  if(atts.some(a=>a.isImg)){
-    const parts=[];
-    atts.forEach(a=>{
-      if(a.isImg) parts.push({type:'image_url',image_url:{url:a.dataURL}});
-      else if(a.content) parts.push({type:'text',text:`--- ${a.name} ---\n${a.content}\n---`});
-      else if(a.isPDF) parts.push({type:'text',text:`[PDF: ${a.name}]`});
+  if (atts.some(a => a.isImg)) {
+    // Vision: multipart array
+    const parts = [];
+    atts.forEach(a => {
+      if (a.isImg && a.dataURL) {
+        parts.push({ type:'image_url', image_url:{ url: a.dataURL } });
+      } else if (a.content) {
+        parts.push({ type:'text', text:`=== Fichier: ${a.name} ===\n${a.content}\n===` });
+      } else if (a.isPDF) {
+        parts.push({ type:'text', text:`[Document PDF joint: ${a.name}]` });
+      }
     });
-    parts.push({type:'text',text:text||'Analyse et décris ce contenu en détail.'});
-    apiContent=parts;
-  }else if(atts.length>0){
-    const docs=atts.map(a=>{
-      if(a.isPDF) return `=== PDF: ${a.name} ===\n[Fichier PDF joint — analyse basée sur le contexte et le nom du fichier]\n===`;
-      return `=== Fichier: ${a.name} ===\n${a.content||''}\n=== Fin ${a.name} ===`;
+    parts.push({ type:'text', text: text || 'Analyse ce contenu en détail.' });
+    apiContent = parts;
+  } else if (atts.length > 0) {
+    // Text documents: inject as text
+    const docBlock = atts.map(a => {
+      if (a.isPDF) return `=== Document PDF: ${a.name} ===\n[PDF joint — analyse basée sur le nom et le contexte de la conversation]\n=== Fin ${a.name} ===`;
+      return `=== Fichier: ${a.name} ===\n${a.content || ''}\n=== Fin ${a.name} ===`;
     }).join('\n\n');
-    apiContent=docs+`\n\n--- Instruction de Tom ---\n${text}`;
-  }else{ apiContent=text; }
-
-  // Check if content may exceed model limit → auto switch
-  const estTok=estTokens(typeof apiContent==='string'?apiContent:JSON.stringify(apiContent));
-  const limit=MODEL_TPM[model]||5000;
-  if(estTok>limit*0.82 && idx+1<models.length){
-    await callWithFallback(text,atts,chat,models,idx+1); return;
+    apiContent = `${docBlock}\n\n--- Instruction ---\n${text}`;
+  } else {
+    apiContent = text;
   }
 
-  // Store user message
-  const stored={role:'user',content:display_or_truncate(apiContent),displayContent:text,apiContent};
-  chat.messages.push(stored); saveAll();
+  // Check token estimate, auto-escalate to bigger model if needed
+  const estTok = Math.ceil(String(typeof apiContent==='string' ? apiContent : JSON.stringify(apiContent)).length / 3.5);
+  const modelLimit = TPM[model] || 5000;
+  if (estTok > modelLimit * 0.8 && idx + 1 < models.length) {
+    return callWithFallback(text, atts, chat, models, idx + 1);
+  }
 
-  const tid=showTyping();
-  try{
-    const sysWithMem=IXA_PERSONA+'\n\nMÉMOIRE DE TOM:\n'+IXA.memory.map(m=>`• ${m}`).join('\n');
-    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Authorization':`Bearer ${IXA.key}`,'Content-Type':'application/json'},
-      body:JSON.stringify({
+  // Store user message for history
+  chat.messages.push({ role:'user', content: typeof apiContent==='string' ? apiContent.slice(0,500)+'…' : text, displayContent: text, apiContent });
+  saveLocal();
+  const tid = showTyping();
+
+  try {
+    const sysPrompt = SYS() + (S.memory.length ? '\n\nMÉMOIRE:\n' + S.memory.map(m=>`• ${m}`).join('\n') : '');
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization':`Bearer ${S.groqKey}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({
         model,
-        messages:[{role:'system',content:sysWithMem},...chat.messages.map(m=>({role:m.role,content:m.apiContent||m.content}))],
-        max_tokens:4096,temperature:0.72
+        messages: [
+          { role:'system', content: sysPrompt },
+          ...chat.messages.map(m => ({ role: m.role, content: m.apiContent || m.content }))
+        ],
+        max_tokens: 4096,
+        temperature: 0.72,
       })
     });
     removeTyping(tid);
-    if(!res.ok){
-      const err=await res.json().catch(()=>({}));
-      if(res.status===401){ updateApiSt(false); renderMsg('assistant','⚠️ Clé API invalide, Tom. Veuillez la mettre à jour dans l\'onglet Data.'); chat.messages.pop(); saveAll(); return; }
-      if(res.status===429){
-        // Retry with next model — transparent to user
-        chat.messages.pop(); saveAll();
-        await callWithFallback(text,atts,chat,models,idx+1);
-        return;
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData.error?.message || '';
+      chat.messages.pop(); saveLocal();
+      // Silently fallback on 429, decommissioned, or model errors
+      if (res.status === 429 || res.status === 503 || errMsg.includes('decommissioned') || errMsg.includes('deprecated') || errMsg.includes('not found') || errMsg.includes('does not exist')) {
+        return callWithFallback(text, atts, chat, models, idx + 1);
       }
-      renderMsg('assistant',`⚠️ Erreur API (${res.status}) : ${err.error?.message||'Erreur inconnue'}`);
-      chat.messages.pop(); saveAll();
-    }else{
-      const data=await res.json();
-      const reply=data.choices?.[0]?.message?.content||'Réponse vide.';
-      renderMsg('assistant',reply);
-      chat.messages.push({role:'assistant',content:reply}); saveAll();
-      return reply;
+      if (res.status === 401) { updateApiSt(false); renderMsg('assistant', 'Clé API invalide, Tom. Vérifiez votre config.json.'); return null; }
+      renderMsg('assistant', 'Une erreur temporaire s\'est produite, Tom. Veuillez réessayer.');
+      return null;
     }
-  }catch(e){
+
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || '';
+    if (!reply) { chat.messages.pop(); saveLocal(); renderMsg('assistant', 'Réponse vide. Veuillez réessayer, Tom.'); return null; }
+    renderMsg('assistant', reply);
+    chat.messages.push({ role:'assistant', content: reply });
+    saveLocal();
+    return reply;
+
+  } catch(e) {
     removeTyping(tid);
-    renderMsg('assistant','⚠️ Erreur réseau. Vérifiez votre connexion, Tom.');
-    chat.messages.pop(); saveAll();
+    chat.messages.pop(); saveLocal();
+    renderMsg('assistant', 'Erreur réseau, Tom. Vérifiez votre connexion Internet.');
+    return null;
   }
 }
 
-function display_or_truncate(c){ return String(typeof c==='string'?c:JSON.stringify(c)).slice(0,600)+'…'; }
-
-/* ═══════════════════════════════════════════════════
-   RENDER MESSAGES
-═══════════════════════════════════════════════════ */
-function renderUserMsg(text,atts=[]){
-  const cont=document.getElementById('msgs');
-  const div=document.createElement('div'); div.className='message user';
-  let ah=atts.map(a=>{
-    if(a.isImg) return`<img src="${a.dataURL}" class="msg-img" alt="${esc(a.name)}">`;
-    return`<div class="msg-file">${a.isPDF?'📑':'📄'} ${esc(a.name)}</div>`;
-  }).join('');
-  div.innerHTML=`<div class="mav">👤</div><div class="mbody"><div class="mrole">Tom</div>${ah}<div class="mc">${esc(text)}</div></div>`;
-  cont.appendChild(div); cont.scrollTop=cont.scrollHeight;
+/* ══════════════════════════════════════════════════════
+   RENDER MESSAGES + MARKDOWN
+══════════════════════════════════════════════════════ */
+function renderUserMsg(text, atts = []) {
+  const cont = document.getElementById('msgs');
+  const div = document.createElement('div'); div.className = 'message user';
+  const ah = atts.map(a =>
+    a.isImg ? `<img src="${a.dataURL}" class="msg-img" alt="${esc(a.name)}">` :
+    `<div class="msg-file">${a.isPDF?'📑':a.isXL?'📗':'📄'} ${esc(a.name)}</div>`
+  ).join('');
+  div.innerHTML = `<div class="mav">👤</div><div class="mbody"><div class="mrole">Tom</div>${ah}<div class="mc">${esc(text)}</div></div>`;
+  cont.appendChild(div); cont.scrollTop = cont.scrollHeight;
 }
 
-function renderMsg(role,content){
-  const cont=document.getElementById('msgs');
-  const div=document.createElement('div'); div.className=`message ${role==='user'?'user':'ass'}`;
-  const av=role==='user'?'👤':'🤖';
-  const rn=role==='user'?'Tom':'IXA';
-  const body=role==='assistant'?renderAI(content):`<div class="mc">${esc(content)}</div>`;
-  div.innerHTML=`<div class="mav">${av}</div><div class="mbody"><div class="mrole">${rn}</div>${body}</div>`;
-  cont.appendChild(div); cont.scrollTop=cont.scrollHeight;
+function renderMsg(role, content) {
+  const cont = document.getElementById('msgs');
+  const div = document.createElement('div'); div.className = `message ${role==='user'?'user':'ass'}`;
+  const body = role === 'assistant' ? renderAI(content) : `<div class="mc">${esc(content)}</div>`;
+  div.innerHTML = `<div class="mav">${role==='user'?'👤':'🤖'}</div><div class="mbody"><div class="mrole">${role==='user'?'Tom':'IXA'}</div>${body}</div>`;
+  cont.appendChild(div); cont.scrollTop = cont.scrollHeight;
 }
 
-function renderAI(raw){
-  const docRE=/```document(?::(\w+))?\n([\s\S]*?)```/g;
-  let html='',li=0,m;
-  while((m=docRE.exec(raw))!==null){
-    const before=raw.slice(li,m.index).trim();
-    if(before) html+=`<div class="mc">${md(before)}</div>`;
-    const dtype=m[1]||'document',dcontent=m[2].trim();
-    const did='doc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-    window.__docs=window.__docs||{}; window.__docs[did]={type:dtype,content:dcontent};
-    html+=makeDocCard(did,dtype,dcontent);
-    li=m.index+m[0].length;
+function renderAI(raw) {
+  const re = /```document(?::(\w+))?\n([\s\S]*?)```/g;
+  let html = '', li = 0, m;
+  while ((m = re.exec(raw)) !== null) {
+    const before = raw.slice(li, m.index).trim();
+    if (before) html += `<div class="mc">${md(before)}</div>`;
+    const dtype = m[1] || 'document', dcontent = m[2].trim();
+    const did = 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    window.__docs[did] = { type: dtype, content: dcontent };
+    html += makeDocCard(did, dtype, dcontent);
+    li = m.index + m[0].length;
   }
-  const rem=raw.slice(li).trim();
-  if(rem) html+=`<div class="mc">${md(rem)}</div>`;
-  if(!html) html=`<div class="mc">${md(raw)}</div>`;
-  return html;
+  const rem = raw.slice(li).trim();
+  if (rem) html += `<div class="mc">${md(rem)}</div>`;
+  return html || `<div class="mc">${md(raw)}</div>`;
 }
 
-/* ═══════════════════════════════════════════════════
-   DOC CARDS & GENERATION
-═══════════════════════════════════════════════════ */
-function makeDocCard(id,type,content){
-  const icons={rapport:'📊',lettre:'✉️',cv:'👤',tableau:'📋',code:'💻',document:'📄',contrat:'📝',presentation:'📑',excel:'📗',word:'📘'};
-  const icon=icons[type]||'📄', title=type.charAt(0).toUpperCase()+type.slice(1);
-  const isXL=type==='excel', isW=type==='word';
-  return`<div class="doc-card">
+function md(raw) {
+  let t = raw;
+  // Code blocks
+  t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const id = 'cb_' + Math.random().toString(36).slice(2);
+    return `<div class="cb"><div class="cbh"><span class="cbl">${lang||'text'}</span><button class="cpb" id="${id}" onclick="copyCode('${id}')">Copier</button></div><pre><code>${esc(code.trim())}</code></pre></div>`;
+  });
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  t = t.replace(/^#{4}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#\s+(.+)$/gm,'<h1>$1</h1>');
+  t = t.replace(/^>\s+(.+)$/gm,'<blockquote>$1</blockquote>').replace(/^-{3,}$/gm,'<hr>');
+  t = t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/__(.+?)__/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/_([^_]+)_/g,'<em>$1</em>');
+  // Tables
+  t = t.replace(/(\|.+\|\n\|[-|:\s]+\|\n(?:\|.+\|\n?)*)/g, match => {
+    const lines = match.trim().split('\n').filter(l => l.trim() && !/^\|[-|:\s]+\|$/.test(l));
+    return '<table>' + lines.map((l,i) => {
+      const cells = l.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+      return i===0 ? `<tr>${cells.map(c=>`<th>${c}</th>`).join('')}</tr>` : `<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+    }).join('') + '</table>';
+  });
+  t = t.replace(/^[-*•]\s+(.+)$/gm,'<li>$1</li>');
+  t = t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+  t = t.replace(/^\d+\.\s+(.+)$/gm,'<li>$1</li>');
+  t = t.replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
+  return `<p>${t}</p>`;
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function copyCode(id) {
+  const b = document.getElementById(id)?.closest('.cb'); if(!b) return;
+  navigator.clipboard.writeText(b.querySelector('code').textContent).then(() => {
+    const btn = document.getElementById(id); btn.textContent='✓ Copié'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent='Copier'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   DOCUMENT GENERATION — Word, Excel, PowerPoint, PDF
+══════════════════════════════════════════════════════ */
+function makeDocCard(id, type, content) {
+  const icons = { rapport:'📊',lettre:'✉️',cv:'👤',tableau:'📋',code:'💻',document:'📄',contrat:'📝',presentation:'📑',excel:'📗',word:'📘',powerpoint:'📑',pdf:'📕' };
+  const icon = icons[type] || '📄';
+  const isXL = type==='excel', isPPT = ['powerpoint','presentation'].includes(type);
+  return `<div class="doc-card">
     <div class="dch"><span class="dci">${icon}</span><div>
-      <div class="dct">${title} — prêt à télécharger</div>
-      <div class="dcs">${content.split('\n').length} lignes · ${content.length} caractères</div>
+      <div class="dct">${type.charAt(0).toUpperCase()+type.slice(1)} — prêt à télécharger</div>
+      <div class="dcs">${content.split('\n').length} lignes · ${content.length} car.</div>
     </div></div>
     <div class="dca">
-      ${isXL?`<button class="dcb dl" onclick="dlXL('${id}')">⬇ Télécharger .xlsx</button>`:''}
-      ${isW?`<button class="dcb dl" onclick="dlWord('${id}')">⬇ Télécharger .doc</button>`:''}
-      ${!isXL?`<button class="dcb dl" onclick="dlDoc('${id}','md')">⬇ .md</button>`:''}
-      <button class="dcb dl" onclick="dlDoc('${id}','txt')">⬇ .txt</button>
+      ${isXL  ? `<button class="dcb dl" onclick="genXLSX('${id}')">⬇ Excel (.xlsx)</button>` : ''}
+      ${isPPT ? `<button class="dcb dl" onclick="genPPTX('${id}')">⬇ PowerPoint (.pptx)</button>` : ''}
+      ${!isXL && !isPPT ? `<button class="dcb dl" onclick="genWord('${id}')">⬇ Word (.doc)</button>` : ''}
+      ${!isXL && !isPPT ? `<button class="dcb dl" onclick="dlRaw('${id}','md')">⬇ Markdown (.md)</button>` : ''}
       <button class="dcb pv" onclick="prvDoc('${id}')">👁 Aperçu</button>
       <button class="dcb pv" onclick="cpDoc('${id}')">📋 Copier</button>
-    </div>
-  </div>`;
+    </div></div>`;
 }
 
-function dlDoc(id,ext){ const d=get_doc(id); if(!d) return; dl(d.content,`${d.type}_ixa.${ext}`,'text/plain;charset=utf-8'); showToast('✅ Téléchargé !','ok'); }
-function cpDoc(id){ const d=get_doc(id); if(!d) return; navigator.clipboard.writeText(d.content).then(()=>showToast('📋 Copié dans le presse-papiers','ok')); }
-function get_doc(id){ return (window.__docs||{})[id]||null; }
+function getDoc(id) { return window.__docs[id] || null; }
 
-function dlXL(id){
-  const d=get_doc(id); if(!d) return;
-  try{
-    let data; try{data=JSON.parse(d.content);}catch(e){
-      const lines=d.content.trim().split('\n').filter(l=>l.trim());
-      const rows=lines.map(l=>l.split(/[,\t|]/).map(c=>c.trim()));
-      data={sheets:[{name:'Données',headers:rows[0]||[],rows:rows.slice(1)}]};
+function dlRaw(id, ext) {
+  const d = getDoc(id); if(!d) return;
+  const blob = new Blob([d.content], { type:'text/plain;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ixa_${d.type}.${ext}`; a.click(); URL.revokeObjectURL(a.href);
+  toast('✅ Fichier téléchargé !', 'ok');
+}
+
+function cpDoc(id) {
+  const d = getDoc(id); if(!d) return;
+  navigator.clipboard.writeText(d.content).then(() => toast('📋 Copié !','ok'));
+}
+
+function genWord(id) {
+  const d = getDoc(id); if(!d) return;
+  const body = md2html(d.content);
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Calibri,sans-serif;font-size:11pt;margin:2.5cm;line-height:1.6}
+  h1{font-size:16pt;color:#2c3e50}h2{font-size:13pt;color:#34495e}h3{font-size:11pt;color:#555}
+  table{border-collapse:collapse;width:100%}th,td{border:1px solid #bdc3c7;padding:7px}
+  th{background:#ecf0f1;font-weight:bold}pre{background:#f5f5f5;padding:10px;border-radius:4px;font-size:10pt}
+  blockquote{border-left:4px solid #6c5ce7;padding-left:12px;color:#666;margin:8px 0}
+  </style></head><body>${body}</body></html>`;
+  const blob = new Blob([html], { type:'application/msword;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ixa_${d.type}.doc`; a.click(); URL.revokeObjectURL(a.href);
+  toast('✅ Word téléchargé !', 'ok');
+}
+
+function genXLSX(id) {
+  const d = getDoc(id); if(!d) return;
+  try {
+    let data;
+    try { data = JSON.parse(d.content); } catch(e) {
+      const lines = d.content.trim().split('\n').filter(l=>l.trim());
+      const rows = lines.map(l => l.split(/[,\t|]/).map(c=>c.trim()));
+      data = { sheets: [{ name:'Données', headers: rows[0]||[], rows: rows.slice(1) }] };
     }
-    const wb=XLSX.utils.book_new();
-    (data.sheets||[{name:'Feuille1',headers:[],rows:[]}]).forEach(s=>{
-      const wsData=[]; if(s.headers?.length) wsData.push(s.headers);
-      (s.rows||[]).forEach(r=>wsData.push(Array.isArray(r)?r:Object.values(r)));
-      const ws=XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb,ws,s.name||'Feuille');
+    const wb = XLSX.utils.book_new();
+    const sheets = data.sheets || [{ name:'Feuille1', headers:[], rows:[] }];
+    sheets.forEach(s => {
+      const wsData = [];
+      if (s.headers?.length) wsData.push(s.headers);
+      (s.rows||[]).forEach(r => wsData.push(Array.isArray(r) ? r : Object.values(r)));
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      // Auto column width
+      const colWidths = wsData.reduce((acc, row) => { row.forEach((cell, i) => { acc[i] = Math.max(acc[i]||0, String(cell||'').length); }); return acc; }, []);
+      ws['!cols'] = colWidths.map(w => ({ wch: Math.min(w + 2, 40) }));
+      XLSX.utils.book_append_sheet(wb, ws, s.name || 'Feuille');
     });
-    XLSX.writeFile(wb,`${d.type}_ixa.xlsx`);
-    showToast('✅ Excel téléchargé !','ok');
-  }catch(e){showToast('❌ Erreur Excel: '+e.message,'err');}
+    XLSX.writeFile(wb, `ixa_${d.type}.xlsx`);
+    toast('✅ Excel téléchargé !', 'ok');
+  } catch(e) { toast('❌ Erreur Excel: ' + e.message, 'err'); }
 }
 
-function dlWord(id){
-  const d=get_doc(id); if(!d) return;
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>body{font-family:Calibri,sans-serif;font-size:11pt;margin:2.5cm;line-height:1.5}
-    h1{font-size:16pt}h2{font-size:13pt}h3{font-size:11pt}
-    table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px}
-    th{background:#f0f0f0;font-weight:bold}pre{background:#f5f5f5;padding:10px;border-radius:4px}</style>
-    </head><body>${md_full(d.content)}</body></html>`;
-  dl(html,`${d.type}_ixa.doc`,'application/msword;charset=utf-8');
-  showToast('✅ Word téléchargé !','ok');
+function genPPTX(id) {
+  const d = getDoc(id); if(!d) return;
+  // Generate HTML presentation (PPTX requires external lib, HTML-based slides work universally)
+  try {
+    let data;
+    try { data = JSON.parse(d.content); } catch(e) { data = { title:'Présentation IXA', slides:[{title:'Contenu',content:d.content,bullets:[]}] }; }
+    const slides = (data.slides||[]).map((sl, i) => `
+      <section style="min-height:100vh;background:${i===0?'linear-gradient(135deg,#6c5ce7,#d63af9)':'#0f0f1e'};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;text-align:center;page-break-after:always;box-sizing:border-box">
+        <h${i===0?'1':'2'} style="font-family:sans-serif;color:#fff;font-size:${i===0?'2.5rem':'2rem'};margin-bottom:20px;font-weight:700">${esc(sl.title||'')}</h${i===0?'1':'2'}>
+        ${sl.content ? `<p style="color:rgba(255,255,255,.85);font-size:1.1rem;max-width:700px;line-height:1.7;font-family:sans-serif">${esc(sl.content)}</p>` : ''}
+        ${sl.bullets?.length ? `<ul style="text-align:left;max-width:650px;margin-top:20px">${sl.bullets.map(b=>`<li style="color:rgba(255,255,255,.9);font-size:1rem;margin-bottom:10px;font-family:sans-serif;list-style:none;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#d63af9">▸</span>${esc(b)}</li>`).join('')}</ul>` : ''}
+        <div style="position:absolute;bottom:20px;right:30px;font-size:.75rem;color:rgba(255,255,255,.4);font-family:sans-serif">${i+1}/${data.slides.length}</div>
+      </section>`).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(data.title||'Présentation')}</title>
+      <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000}@media print{section{min-height:100vh}}</style>
+      </head><body>${slides}<script>document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){window.scrollBy({top:window.innerHeight,behavior:'smooth'})}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){window.scrollBy({top:-window.innerHeight,behavior:'smooth'})}})<\/script></body></html>`;
+    const blob = new Blob([html], { type:'text/html;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `ixa_presentation.html`; a.click(); URL.revokeObjectURL(a.href);
+    toast('✅ Présentation téléchargée ! (Ouvrir dans Chrome, F11 pour plein écran)', 'ok');
+  } catch(e) { toast('❌ Erreur PPT: ' + e.message, 'err'); }
 }
 
-function prvDoc(id){
-  const d=get_doc(id); if(!d) return;
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — Aperçu ${d.type}</title>
+function prvDoc(id) {
+  const d = getDoc(id); if(!d) return;
+  const w = window.open('', '_blank');
+  const isXL = d.type==='excel', isPPT = ['powerpoint','presentation'].includes(d.type);
+  let bodyHtml;
+  if (isXL) { bodyHtml = `<pre style="font-family:Consolas,monospace;font-size:13px;padding:20px;background:#f9f9f9;border-radius:8px;overflow-x:auto">${esc(d.content)}</pre>`; }
+  else { bodyHtml = md2html(d.content); }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — ${d.type}</title>
     <style>body{font-family:Calibri,sans-serif;max-width:860px;margin:40px auto;padding:24px;line-height:1.8;color:#1a1a2e;background:#fafafa}
     h1{font-size:1.6rem;color:#6c5ce7}h2{font-size:1.2rem;color:#444}h3{font-size:1rem;color:#666}
-    pre{background:#f0f0f8;padding:14px;border-radius:8px;overflow-x:auto;border:1px solid #e0e0f0}
-    code{background:#f0f0f8;padding:2px 6px;border-radius:4px;font-size:.9em}
-    table{border-collapse:collapse;width:100%;margin:14px 0}th,td{border:1px solid #ddd;padding:8px}
-    th{background:#f0f0f8;font-weight:bold;color:#6c5ce7}
-    .header{background:linear-gradient(120deg,#6c5ce7,#d63af9);padding:20px 24px;border-radius:10px;margin-bottom:28px}
-    .header h1{color:#fff;margin:0;font-family:sans-serif}.header p{color:rgba(255,255,255,.8);margin:4px 0 0;font-size:.85rem}</style></head>
-    <body><div class="header"><h1>📄 ${d.type.toUpperCase()} — IXA</h1>
+    table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #ddd;padding:8px}
+    th{background:#f0f0f8;color:#6c5ce7;font-weight:bold}pre{background:#f0f0f8;padding:14px;border-radius:8px;overflow-x:auto}
+    code{background:#f0f0f8;padding:2px 6px;border-radius:4px}.header{background:linear-gradient(120deg,#6c5ce7,#d63af9);padding:20px 24px;border-radius:10px;margin-bottom:28px}
+    .header h1{color:#fff;margin:0}.header p{color:rgba(255,255,255,.8);margin:4px 0 0;font-size:.82rem}</style></head>
+    <body><div class="header"><h1>${esc(d.type.toUpperCase())} — IXA</h1>
     <p>Généré le ${new Date().toLocaleDateString('fr-FR')} par le Système IXA de Tom</p></div>
-    ${d.type==='excel'?`<pre>${esc(d.content)}</pre>`:md_full(d.content)}
-    </body></html>`);
+    ${bodyHtml}</body></html>`);
   w.document.close();
 }
 
-function exportChat(){
-  const chat=IXA.chats.find(c=>c.id===IXA.cid); if(!chat||!chat.messages.length){showToast('Aucun message');return;}
-  const content=`# ${chat.title}\n_Exporté le ${new Date().toLocaleDateString('fr-FR')} — Système IXA de Tom_\n\n---\n\n`+
-    chat.messages.map(m=>`**${m.role==='user'?'Tom':'IXA'}:**\n\n${m.displayContent||m.content}`).join('\n\n---\n\n');
-  dl(content,`ixa_${(chat.title||'conversation').replace(/[^a-zA-Z0-9]/g,'_').slice(0,28)}.md`,'text/markdown;charset=utf-8');
-  showToast('✅ Conversation exportée !','ok');
+function md2html(raw) {
+  // Full HTML version for export
+  return md(raw).replace(/<p>|<\/p>/g, '');
 }
 
-function dl(content,filename,mime){
-  const b=new Blob([content],{type:mime});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
-  a.download=filename; a.click(); URL.revokeObjectURL(a.href);
+function exportChat() {
+  const chat = S.chats.find(c => c.id===S.cid); if(!chat||!chat.messages.length){toast('Aucun message');return;}
+  const content = `# ${chat.title}\n_Export IXA — ${new Date().toLocaleDateString('fr-FR')}_\n\n---\n\n` +
+    chat.messages.map(m => `**${m.role==='user'?'Tom':'IXA'}:**\n\n${m.displayContent||m.content}`).join('\n\n---\n\n');
+  const blob = new Blob([content], { type:'text/markdown;charset=utf-8' });
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download = `ixa_${(chat.title||'conv').replace(/[^a-zA-Z0-9]/g,'_').slice(0,28)}.md`;
+  a.click(); URL.revokeObjectURL(a.href); toast('✅ Export réussi !','ok');
 }
 
-/* ═══════════════════════════════════════════════════
-   TYPING
-═══════════════════════════════════════════════════ */
-let _tc=0;
-function showTyping(){
-  const id=`tp_${++_tc}`;
-  const c=document.getElementById('msgs'); const d=document.createElement('div');
-  d.className='message ass'; d.id=id;
+/* ══════════════════════════════════════════════════════
+   LEARN TAB
+══════════════════════════════════════════════════════ */
+function lDrop(e) {
+  e.preventDefault(); document.getElementById('ldrop').classList.remove('drag');
+  const f = e.dataTransfer?.files?.[0]; if(!f) return;
+  const fakeInput = { files: [f] }; learnLoad(fakeInput);
+}
+
+function learnLoad(input) {
+  const f = input.files?.[0] || input; if(!f) return;
+  const ext = f.name.split('.').pop().toLowerCase();
+  const max = 8 * 1024 * 1024;
+  if (f.size > max) { toast('❌ Fichier trop grand pour l\'apprentissage (max 8MB)','err'); return; }
+  readFile(f, d => {
+    S.learnDoc = { name: f.name, content: d.content || '[Image/PDF — analyse visuelle]', isImg: d.isImg, dataURL: d.dataURL, wordCount: (d.content||'').split(/\s+/).filter(Boolean).length };
+    document.getElementById('ldrop').style.display = 'none';
+    const di = document.getElementById('ldoc'); di.style.display = 'flex';
+    document.getElementById('ldoc-nm').textContent = '📄 ' + f.name;
+    document.getElementById('ldoc-mt').textContent = `${S.learnDoc.wordCount} mots · Prêt pour l'apprentissage`;
+    document.getElementById('lc').style.display = 'none';
+    document.getElementById('lc').innerHTML = '';
+    document.getElementById('laudio').style.display = 'none';
+    toast(`📂 ${f.name} chargé`,'ok');
+  });
+  if (input.value !== undefined) input.value = '';
+}
+
+function learnReset() {
+  S.learnDoc = null;
+  document.getElementById('ldrop').style.display = 'flex';
+  document.getElementById('ldoc').style.display = 'none';
+  document.getElementById('lc').style.display = 'none';
+  document.getElementById('laudio').style.display = 'none';
+  stopSpeech();
+}
+
+async function learnGen(mode) {
+  if (!S.learnDoc) return;
+  const btns = ['lb-audio','lb-fc','lb-quiz'].map(id => document.getElementById(id));
+  btns.forEach(b => b.disabled = true);
+  toast('🧠 IXA génère le contenu…');
+
+  const prompts = {
+    audio: `Tu es un excellent pédagogue. Explique ce document de façon claire, structurée et accessible, comme si tu l'expliquais à voix haute à quelqu'un qui ne connaît pas le sujet. Utilise des métaphores et exemples concrets. Longueur: 300-500 mots.\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,6000)}`,
+    flash: `Génère exactement 8 flashcards pour apprendre ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown, sans explication) :\n[{"q":"Question courte","a":"Réponse claire"},{"q":"...","a":"..."}]\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,5000)}`,
+    quiz:  `Génère un quiz de 5 questions à choix multiples sur ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown, sans explication) :\n[{"q":"Question ?","opts":["A","B","C","D"],"correct":0,"explanation":"Explication courte"}]\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,5000)}`,
+  };
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
+      body: JSON.stringify({ model: MODELS.smart, messages: [{ role:'user', content: prompts[mode] }], max_tokens: 3000, temperature: 0.6 })
+    });
+    if (!res.ok) { throw new Error('API ' + res.status); }
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || '';
+    if (!reply) throw new Error('Réponse vide');
+
+    const lc = document.getElementById('lc');
+    lc.style.display = 'flex'; lc.innerHTML = '';
+
+    if (mode === 'audio') {
+      lc.innerHTML = `<div class="expl"><div class="mc">${md(reply)}</div></div>`;
+      document.getElementById('laudio').style.display = 'flex';
+      document.getElementById('apb').style.width = '0%';
+      document.getElementById('a-pp').textContent = '⏸';
+      document.getElementById('a-stat').textContent = 'Lecture…';
+      const cleanReply = stripMd(reply);
+      S.voiceActive = false; S.voicePaused = false;
+      S.voiceQueue = (cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]).map(s=>s.trim()).filter(s=>s.length>2);
+      S.voiceActive = true;
+      // Update apb on progress
+      const total = S.voiceQueue.length;
+      const origSN = speakNext.toString();
+      function speakNextLearn() {
+        if (!S.voiceQueue.length || !S.voiceActive) {
+          S.voiceActive = false;
+          document.getElementById('apb').style.width = '100%';
+          document.getElementById('a-stat').textContent = 'Terminé';
+          return;
+        }
+        const sentence = S.voiceQueue.shift();
+        const u = new SpeechSynthesisUtterance(sentence);
+        const voices = S.synth.getVoices();
+        const frV = voices.find(v=>v.lang==='fr-FR'&&/natural|premium/i.test(v.name))||voices.find(v=>v.lang==='fr-FR')||voices.find(v=>v.lang.startsWith('fr'))||null;
+        if(frV) u.voice=frV; u.lang='fr-FR'; u.rate=1.05; u.pitch=1.0;
+        u.onend = () => { if(S.voiceActive&&!S.voicePaused) speakNextLearn(); };
+        u.onerror = () => speakNextLearn();
+        const done = Math.round((1-S.voiceQueue.length/total)*95);
+        document.getElementById('apb').style.width = done + '%';
+        S.synth.speak(u);
+      }
+      speakNextLearn();
+
+    } else if (mode === 'flash') {
+      let cards;
+      try { cards = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
+      catch(e) { const m=reply.match(/\[[\s\S]*\]/); cards = m ? JSON.parse(m[0]) : []; }
+      if (!Array.isArray(cards)||!cards.length) throw new Error('JSON invalide');
+      lc.innerHTML = `<div style="font-weight:600;font-size:.84rem;margin-bottom:2px">🃏 ${cards.length} Flashcards — Cliquez pour révéler</div>
+        <div class="fc-grid">${cards.map((c,i)=>`
+          <div class="fc" id="fc${i}" onclick="this.classList.toggle('flipped')">
+            <div class="fc-inner">
+              <div class="fc-f">${esc(c.q||c.question||'?')}</div>
+              <div class="fc-b">${esc(c.a||c.answer||'—')}</div>
+            </div></div>`).join('')}
+        </div>`;
+
+    } else if (mode === 'quiz') {
+      let questions;
+      try { questions = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
+      catch(e) { const m=reply.match(/\[[\s\S]*\]/); questions = m ? JSON.parse(m[0]) : []; }
+      if (!Array.isArray(questions)||!questions.length) throw new Error('JSON invalide');
+      let score = 0, answered = 0;
+      lc.innerHTML = `<div style="font-weight:600;font-size:.84rem;margin-bottom:4px">🧩 Quiz — ${questions.length} questions</div>` +
+        questions.map((q,qi) => `
+          <div class="quiz-q" id="qq${qi}">
+            <div class="quiz-qt">${qi+1}. ${esc(q.q||q.question||'?')}</div>
+            <div class="quiz-opts">${(q.opts||q.options||[]).map((opt,oi)=>`
+              <button class="qopt" id="opt${qi}_${oi}" onclick="quizAnswer(${qi},${oi},${q.correct||0},${questions.length},'${esc(q.explanation||'')}')">
+                <b>${'ABCD'[oi]}.</b> ${esc(opt)}
+              </button>`).join('')}
+            </div>
+          </div>`).join('');
+      window._quizScore = 0; window._quizAnswered = 0; window._quizTotal = questions.length;
+    }
+    toast('✅ Contenu généré !','ok');
+  } catch(e) {
+    toast('❌ Erreur génération: ' + e.message, 'err');
+  }
+  btns.forEach(b => b.disabled = false);
+}
+
+function quizAnswer(qi, chosen, correct, total, explanation) {
+  const opts = document.querySelectorAll(`#qq${qi} .qopt`);
+  opts.forEach(b => b.disabled = true);
+  opts[correct].classList.add('correct');
+  if (chosen !== correct) { opts[chosen].classList.add('wrong'); }
+  else { window._quizScore = (window._quizScore||0) + 1; }
+  window._quizAnswered = (window._quizAnswered||0) + 1;
+  if (explanation) {
+    const ex = document.createElement('div'); ex.className='quiz-expl'; ex.textContent='💡 '+explanation;
+    document.getElementById('qq'+qi).appendChild(ex);
+  }
+  if (window._quizAnswered >= total) {
+    const sc = window._quizScore, pct = Math.round(sc/total*100);
+    const scoreDiv = document.createElement('div'); scoreDiv.className='quiz-score';
+    scoreDiv.innerHTML = `${pct>=80?'🏆':pct>=60?'👍':'📚'} Score : <strong>${sc}/${total}</strong> (${pct}%)<br><span style="font-size:.8rem;color:var(--mu);font-weight:400">${pct>=80?'Excellent !':pct>=60?'Bien !':'Révisez encore un peu, Tom.'}</span>`;
+    document.getElementById('lc').appendChild(scoreDiv);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   TYPING INDICATOR
+══════════════════════════════════════════════════════ */
+let _tc = 0;
+function showTyping() {
+  const id = `tp_${++_tc}`;
+  const cont = document.getElementById('msgs');
+  const d = document.createElement('div'); d.className='message ass'; d.id=id;
   d.innerHTML=`<div class="mav">🤖</div><div class="mbody"><div class="mrole">IXA</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
-  c.appendChild(d); c.scrollTop=c.scrollHeight; return id;
+  cont.appendChild(d); cont.scrollTop=cont.scrollHeight; return id;
 }
-function removeTyping(id){ document.getElementById(id)?.remove(); }
+function removeTyping(id) { document.getElementById(id)?.remove(); }
 
-/* ═══════════════════════════════════════════════════
-   MARKDOWN
-═══════════════════════════════════════════════════ */
-function md(raw){
-  let t=raw;
-  t=t.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>{
-    const id='cb_'+Math.random().toString(36).slice(2);
-    return`<div class="cb"><div class="cbh"><span class="cbl">${lang||'text'}</span><button class="cpb" id="${id}" onclick="cpCode('${id}')">Copier</button></div><pre><code>${esc(code.trim())}</code></pre></div>`;
-  });
-  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
-  t=t.replace(/^#{4}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#{1}\s+(.+)$/gm,'<h1>$1</h1>');
-  t=t.replace(/^>\s+(.+)$/gm,'<blockquote>$1</blockquote>').replace(/^---$/gm,'<hr>');
-  t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/__(.+?)__/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/_(.+?)_/g,'<em>$1</em>');
-  t=t.replace(/(\|.+\|\n\|[-|:\s]+\|\n(?:\|.+\|\n?)*)/g,match=>{
-    const lines=match.trim().split('\n').filter(l=>l.trim()&&!l.match(/^\|[-|:\s]+\|$/));
-    return'<table>'+lines.map((l,i)=>{const c=l.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());return i===0?`<tr>${c.map(x=>`<th>${x}</th>`).join('')}</tr>`:`<tr>${c.map(x=>`<td>${x}</td>`).join('')}</tr>`;}).join('')+'</table>';
-  });
-  t=t.replace(/^[\s]*[-*•]\s+(.+)$/gm,'<li>$1</li>');
-  t=t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g,m=>`<ul>${m}</ul>`);
-  t=t.replace(/^\d+\.\s+(.+)$/gm,'<li>$1</li>');
-  t=t.replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  t=t.replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
-  return`<p>${t}</p>`;
-}
-function md_full(raw){ return`<div>${md(raw)}</div>`; }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function cpCode(id){
-  const b=document.getElementById(id)?.closest('.cb'); if(!b) return;
-  navigator.clipboard.writeText(b.querySelector('code').textContent).then(()=>{
-    const btn=document.getElementById(id); btn.textContent='✓ Copié'; btn.classList.add('ok');
-    setTimeout(()=>{btn.textContent='Copier';btn.classList.remove('ok');},2000);
-  });
-}
-
-/* ═══════════════════════════════════════════════════
-   INPUT
-═══════════════════════════════════════════════════ */
-function onInput(el){
-  el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,150)+'px';
+/* ══════════════════════════════════════════════════════
+   INPUT HANDLING
+══════════════════════════════════════════════════════ */
+function onInput(el) {
+  el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,145)+'px';
   showCmdSuggest(el.value);
 }
-function onKey(e){
-  if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>640){e.preventDefault();handleSend();}
-  if(e.key==='Escape') document.getElementById('cmd-suggest').style.display='none';
+function onKey(e) {
+  if (e.key==='Enter' && !e.shiftKey && window.innerWidth>640) { e.preventDefault(); handleSend(); }
+  if (e.key==='Escape') document.getElementById('cmd-s').style.display='none';
 }
 
-/* ═══════════════════════════════════════════════════
-   VOICE
-═══════════════════════════════════════════════════ */
-let _vActive=false;
-function toggleVoice(){
-  if(!IXA.recognition){showToast('❌ Vocal non supporté sur ce navigateur','err');return;}
-  if(_vActive){ IXA.recognition.stop(); _vActive=false; resetVUI(); return; }
-  IXA.synth.cancel(); _vActive=true;
-  document.getElementById('orb-box').classList.add('listening');
-  document.getElementById('vst').textContent='IXA vous écoute, Tom…';
-  document.getElementById('vtr').textContent='';
-  document.querySelector('.vbtn').innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Arrêter';
-  try{IXA.recognition.start();}catch(e){_vActive=false;resetVUI();}
-}
-async function handleVR(text){
-  _vActive=false;
-  document.getElementById('vst').textContent='IXA analyse votre demande…';
-  document.getElementById('orb-box').classList.remove('listening');
-  document.querySelector('.vbtn').innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Activer IXA';
-  const reply=await handleSend(text);
-  if(reply){ document.getElementById('vst').textContent='IXA répond…'; speak(reply); }
-  else resetVUI();
-}
-function resetVUI(){
-  _vActive=false;
-  document.getElementById('orb-box').classList.remove('listening');
-  document.getElementById('vst').textContent='En attente de vos instructions, Tom';
-  document.getElementById('vtr').textContent='';
-  const b=document.querySelector('.vbtn'); if(b) b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Activer IXA';
-}
-function speak(text){
-  if(IXA.tab!=='voice') return;
-  IXA.synth.cancel();
-  const u=new SpeechSynthesisUtterance(text.replace(/[*#_`>~]/g,'').replace(/<[^>]+>/g,''));
-  u.lang='fr-FR'; u.rate=1.05; u.pitch=1.0;
-  u.onend=resetVUI; IXA.synth.speak(u);
-}
-
-/* ═══════════════════════════════════════════════════
-   TAB / SIDEBAR
-═══════════════════════════════════════════════════ */
-function showTab(tab){
-  IXA.tab=tab;
-  ['chat','voice','data'].forEach(t=>{
-    document.getElementById(`tab-${t}`).classList.toggle('act',t===tab);
-    const v=document.getElementById(t==='chat'?'chat-view':t+'-view');
-    if(v) v.style.display=t===tab?(t==='chat'?'flex':'flex'):'none';
+/* ══════════════════════════════════════════════════════
+   TABS / SIDEBAR
+══════════════════════════════════════════════════════ */
+function showTab(tab) {
+  S.tab = tab;
+  const views = { chat:'chat-view', voice:'voice-view', data:'data-view', learn:'learn-view' };
+  ['chat','voice','data','learn'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('act', t===tab);
+    const v = document.getElementById(views[t]);
+    if (v) { v.style.display = t===tab ? (t==='chat'?'flex':'flex') : 'none'; }
   });
-  if(tab!=='voice'){IXA.synth.cancel();resetVUI();}
+  if (tab==='voice') { document.getElementById('voice-view').style.display='flex'; }
+  if (tab==='learn') { document.getElementById('learn-view').style.display='flex'; }
+  if (tab!=='voice') { stopSpeech(); resetVUI(); }
 }
-function setMT(t){
+function setMT(t) {
   document.querySelectorAll('.mtab').forEach(e=>e.classList.remove('act'));
   document.getElementById('mn-'+t)?.classList.add('act');
 }
-function openSB(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sov').classList.add('open'); }
-function closeSB(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sov').classList.remove('open'); }
+function openSB() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sov').classList.add('open'); }
+function closeSB() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sov').classList.remove('open'); }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
    CHAT MANAGEMENT
-═══════════════════════════════════════════════════ */
-function createChat(){
-  const id=Date.now(); IXA.chats.unshift({id,title:'Nouvelle conversation',messages:[]});
-  saveAll(); loadChat(id);
+══════════════════════════════════════════════════════ */
+function createChat() {
+  const id = Date.now();
+  S.chats.unshift({ id, title:'Nouvelle conversation', messages:[] });
+  saveLocal(); loadChat(id);
 }
-function loadChat(id){
-  IXA.cid=id; const chat=IXA.chats.find(c=>c.id===id); if(!chat) return;
-  const cont=document.getElementById('msgs'); cont.innerHTML='';
-  if(!chat.messages.length){
-    cont.innerHTML=`<div id="welcome"><div class="wlogo">IXA</div>
-      <div class="wsub">Système d'Intelligence Avancée de <b>Tom</b><br>Posez une question ou utilisez un <b>/raccourci</b></div>
-      <div class="wgrid">
-        <div class="wchip" onclick="hint('Analyse ce document et donne-moi un résumé structuré')"><span class="wi">📄</span><span class="wt">Analyser un document</span></div>
-        <div class="wchip" onclick="hint('Génère un rapport complet sur les tendances IA 2025')"><span class="wi">📊</span><span class="wt">Créer un rapport</span></div>
-        <div class="wchip" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel')"><span class="wi">📗</span><span class="wt">Créer un Excel</span></div>
-        <div class="wchip" onclick="hint('Rédige une lettre professionnelle en Word')"><span class="wi">📘</span><span class="wt">Document Word</span></div>
+function loadChat(id) {
+  S.cid = id; const chat = S.chats.find(c=>c.id===id); if(!chat) return;
+  const cont = document.getElementById('msgs'); cont.innerHTML='';
+  if (!chat.messages.length) {
+    cont.innerHTML=`<div id="welcome">
+      <div class="wlogo">IXA</div>
+      <div class="wsub">Système IA de <b>Tom</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
+      <div class="wg">
+        <div class="wc" onclick="hint('Crée un rapport Word complet sur Napoléon Bonaparte')"><span>📘</span><span>Rapport Word</span></div>
+        <div class="wc" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel')"><span>📗</span><span>Fichier Excel</span></div>
+        <div class="wc" onclick="hint('Crée une présentation PowerPoint de 5 slides sur l\\'IA')"><span>📑</span><span>PowerPoint</span></div>
+        <div class="wc" onclick="hint('Génère un CV professionnel complet en format PDF')"><span>📕</span><span>CV / PDF</span></div>
       </div></div>`;
-  }else{
-    chat.messages.forEach(m=>{
-      if(m.role==='user') renderUserMsg(m.displayContent||m.content);
-      else renderMsg('assistant',m.content);
+  } else {
+    chat.messages.forEach(m => {
+      if (m.role==='user') renderUserMsg(m.displayContent||m.content);
+      else renderMsg('assistant', m.content);
     });
   }
   renderHist();
 }
-function deleteChat(id,e){
-  e.stopPropagation(); IXA.chats=IXA.chats.filter(c=>c.id!==id); saveAll();
-  if(IXA.cid===id) IXA.chats.length?loadChat(IXA.chats[0].id):createChat();
+function deleteChat(id, e) {
+  e.stopPropagation(); S.chats = S.chats.filter(c=>c.id!==id); saveLocal();
+  if (S.cid===id) S.chats.length ? loadChat(S.chats[0].id) : createChat();
   else renderHist();
-  showToast('Conversation supprimée');
+  toast('Conversation supprimée');
 }
-function clearChat(){
-  const chat=IXA.chats.find(c=>c.id===IXA.cid); if(!chat) return;
-  if(!chat.messages.length){showToast('Déjà vide');return;}
-  chat.messages=[]; chat.title='Nouvelle conversation'; saveAll(); loadChat(IXA.cid);
-  showToast('Conversation effacée');
+function clearChat() {
+  const chat = S.chats.find(c=>c.id===S.cid); if(!chat) return;
+  if (!chat.messages.length) { toast('Déjà vide'); return; }
+  chat.messages=[]; chat.title='Nouvelle conversation'; saveLocal(); loadChat(S.cid);
+  toast('Conversation effacée');
 }
-function renderHist(){
-  const l=document.getElementById('history-list');
-  if(!IXA.chats.length){l.innerHTML='<div style="font-size:.76rem;color:var(--muted);padding:5px 4px">Aucune conversation</div>';return;}
-  l.innerHTML=IXA.chats.map(c=>`
-    <div class="ci ${c.id===IXA.cid?'act':''}" data-id="${c.id}" onclick="loadChat(${c.id});closeSB()">
-      <span style="font-size:.76rem;flex-shrink:0">💬</span>
+function startRenameChat(id, e) {
+  e.stopPropagation();
+  const el = document.querySelector(`.ci[data-id="${id}"]`); if(!el) return;
+  const tSpan = el.querySelector('.ci-t');
+  const inp = document.createElement('input'); inp.className='ci-ri'; inp.value=S.chats.find(c=>c.id===id)?.title||'';
+  tSpan.style.display='none'; el.insertBefore(inp, el.querySelector('.cia')); inp.focus(); inp.select();
+  const commit = () => {
+    const nv = inp.value.trim();
+    if (nv) { const c=S.chats.find(c=>c.id===id); if(c) c.title=nv; saveLocal(); }
+    inp.remove(); tSpan.style.display=''; renderHist();
+  };
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', ev => { if(ev.key==='Enter'){ev.preventDefault();commit();} if(ev.key==='Escape'){inp.remove();tSpan.style.display='';} });
+}
+function renderHist() {
+  const l = document.getElementById('history-list');
+  if (!S.chats.length) { l.innerHTML='<div style="font-size:.75rem;color:var(--mu);padding:5px 4px">Aucune conversation</div>'; return; }
+  l.innerHTML = S.chats.map(c=>`
+    <div class="ci ${c.id===S.cid?'act':''}" data-id="${c.id}" onclick="loadChat(${c.id});closeSB()">
+      <span style="font-size:.74rem;flex-shrink:0">💬</span>
       <span class="ci-t">${esc(c.title||'Nouvelle conversation')}</span>
-      <div class="ci-actions">
-        <button class="ci-btn ren" onclick="startRenameChat(${c.id},event)" title="Renommer">✏️</button>
-        <button class="ci-btn del" onclick="deleteChat(${c.id},event)" title="Supprimer">✕</button>
+      <div class="cia">
+        <button class="cib r" onclick="startRenameChat(${c.id},event)" title="Renommer">✏️</button>
+        <button class="cib d" onclick="deleteChat(${c.id},event)" title="Supprimer">✕</button>
       </div>
     </div>`).join('');
 }
 
-/* ═══════════════════════════════════════════════════
-   DATA TAB — GITHUB
-═══════════════════════════════════════════════════ */
-function ghChanged(){
-  IXA.gh.user=document.getElementById('gh-user').value.trim();
-  IXA.gh.repo=document.getElementById('gh-repo').value.trim();
-  IXA.gh.branch=document.getElementById('gh-branch').value.trim()||'main';
-  const tv=document.getElementById('gh-token').value;
-  if(tv&&tv!=='••••••••') IXA.gh.token=tv;
-  saveGHStore(); updateGHBadge(); updateCfgPreview();
+/* ══════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════ */
+function showModal(title, sub, bodyHtml, btns) {
+  document.getElementById('mo-t').innerHTML = title;
+  document.getElementById('mo-s').innerHTML = sub;
+  document.getElementById('mo-b').innerHTML = bodyHtml;
+  document.getElementById('mo-btns').innerHTML = btns.map(b => `<button class="mdb ${b.c}" onclick="${b.f}">${b.l}</button>`).join('');
+  document.getElementById('mo').classList.add('open');
 }
-function apiKeyChanged(){
-  const v=document.getElementById('api-key-inp').value;
-  if(v&&v!=='••••••••'){IXA.key=v.trim();localStorage.setItem('ixa_key',IXA.key);updateApiSt();}
-}
-function saveGHStore(){ localStorage.setItem('ixa_gh',JSON.stringify(IXA.gh)); }
-function updateGHBadge(){
-  const ok=IXA.gh.token&&IXA.gh.user&&IXA.gh.repo;
-  const el=document.getElementById('gh-badge');
-  el.className=`badge ${ok?'ok':'warn'}`; el.textContent=ok?'✓ Configuré':'Non configuré';
-}
-function updateApiSt(ok=null){
-  const has=ok!==false&&!!IXA.key;
-  const el=document.getElementById('ast');
-  el.className=has?'ok':'err';
-  document.getElementById('ast-txt').textContent=has?'API connectée':'Clé manquante';
-  const ab=document.getElementById('api-badge'); if(ab){ ab.className=`badge ${has?'ok':'err'}`; ab.textContent=has?'✓ Connectée':'❌ Manquante'; }
-}
+function closeModal() { document.getElementById('mo').classList.remove('open'); }
+document.getElementById('mo').addEventListener('click', e => { if(e.target===document.getElementById('mo')) closeModal(); });
 
-async function ghTest(){
-  if(!IXA.gh.token){showToast('❌ Token requis','err');return;}
-  showGHRes('🔍 Test en cours…',false);
-  try{
-    const r=await fetch('https://api.github.com/user',{headers:{'Authorization':`token ${IXA.gh.token}`,'Accept':'application/vnd.github.v3+json'}});
-    if(r.ok){
-      const d=await r.json();
-      showGHRes(`✓ Connecté — @${d.login} (${d.name||''})\nDépôts publics: ${d.public_repos}\nPlan: ${d.plan?.name||'free'}`,false);
-      showToast('✅ GitHub connecté !','ok');
-    }else showGHRes(`✗ Erreur ${r.status} — Token invalide ou expiré`,true);
-  }catch(e){ showGHRes('✗ Erreur réseau: '+e.message,true); }
-}
-
-async function ghSync(){
-  if(!IXA.gh.token||!IXA.gh.user||!IXA.gh.repo){showToast('❌ Configurez GitHub d\'abord','err');return;}
-  showGHRes('🔄 Synchronisation en cours…',false);
-  await pushSync();
-  showGHRes(`✓ Synchronisé — ${new Date().toLocaleString('fr-FR')}`,false);
-}
-
-async function ghDeploy(){
-  const {token,user,repo,branch}=IXA.gh;
-  if(!token||!user||!repo){showToast('❌ Configurez GitHub d\'abord','err');return;}
-  showGHRes('🚀 Déploiement en cours…',false);
-  try{
-    const content=document.documentElement.outerHTML;
-    const b64=btoa(unescape(encodeURIComponent(content)));
-    let sha='';
-    try{const g=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/ixa.html`,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});if(g.ok){const gd=await g.json();sha=gd.sha;}}catch(e){}
-    const body={message:`🤖 IXA deploy — ${new Date().toLocaleString('fr-FR')}`,content:b64,branch};
-    if(sha) body.sha=sha;
-    const r=await fetch(`https://api.github.com/repos/${user}/${repo}/contents/ixa.html`,{
-      method:'PUT',headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
-      body:JSON.stringify(body)
-    });
-    if(r.ok){
-      showGHRes(`✓ Déployé avec succès !\nURL GitHub Pages (si activé):\nhttps://${user}.github.io/${repo}/ixa.html`,false);
-      showToast('🚀 Déployé sur GitHub !','ok');
-    }else{ const err=await r.json(); showGHRes(`✗ Erreur ${r.status}: ${err.message}`,true); }
-  }catch(e){showGHRes('✗ Erreur: '+e.message,true);}
-}
-
-async function testGroq(){
-  const ab=document.getElementById('api-badge'); ab.className='badge warn'; ab.textContent='Test…';
-  try{
-    const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':`Bearer ${IXA.key}`}});
-    if(r.ok){const d=await r.json(); ab.className='badge ok'; ab.textContent=`✓ ${d.data?.length||0} modèles`; showToast('✅ Clé API valide !','ok');}
-    else{ab.className='badge err'; ab.textContent='❌ Invalide';}
-  }catch(e){ab.className='badge err'; ab.textContent='❌ Réseau';}
-}
-
-function showGHRes(txt,isErr){
-  const el=document.getElementById('gh-res');
-  el.style.display='block'; el.textContent=txt;
-  el.className=isErr?'gh-res err':'gh-res';
-}
-
-function populateDataFields(){
-  document.getElementById('api-key-inp').value=IXA.key?'••••••••':'';
-  document.getElementById('gh-token').value=IXA.gh.token?'••••••••':'';
-  document.getElementById('gh-user').value=IXA.gh.user;
-  document.getElementById('gh-repo').value=IXA.gh.repo;
-  document.getElementById('gh-branch').value=IXA.gh.branch;
-  updateGHBadge(); updateApiSt();
-}
-
-function updateCfgPreview(){
-  const cfg={groq_api_key:IXA.key||'gsk_votreClé',github_token:IXA.gh.token||'ghp_votreToken',
-    github_user:IXA.gh.user||'votre-username',github_repo:IXA.gh.repo||'ixa-app',github_branch:IXA.gh.branch||'main'};
-  const el=document.getElementById('cfg-pre'); if(el) el.textContent=JSON.stringify(cfg,null,2);
-}
-function cpCfg(){ const el=document.getElementById('cfg-pre'); if(el) navigator.clipboard.writeText(el.textContent).then(()=>showToast('📋 Config copiée !','ok')); }
-function dlConfig(){
-  updateCfgPreview();
-  const el=document.getElementById('cfg-pre');
-  dl(el?.textContent||'{}','config.json','application/json');
-  showToast('✅ config.json téléchargé !','ok');
-}
-
-/* ═══════════════════════════════════════════════════
-   MODAL SYSTEM
-═══════════════════════════════════════════════════ */
-function showModal(title,sub,bodyHtml,btns){
-  document.getElementById('modal-title').innerHTML=title;
-  document.getElementById('modal-sub').innerHTML=sub;
-  document.getElementById('modal-body').innerHTML=bodyHtml;
-  document.getElementById('modal-btns').innerHTML=btns.map(b=>`<button class="mdbtn ${b.cls}" onclick="${b.fn}">${b.label}</button>`).join('');
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
-document.getElementById('modal-overlay').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-overlay')) closeModal(); });
-
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
    UTILS
-═══════════════════════════════════════════════════ */
-function saveAll(){
-  if(IXA.chats.length>60) IXA.chats=IXA.chats.slice(0,60);
-  try{ localStorage.setItem('ixa_chats',JSON.stringify(IXA.chats)); }
-  catch(e){
-    IXA.chats.forEach(c=>{if(c.messages.length>10) c.messages=c.messages.slice(-10);});
-    try{ localStorage.setItem('ixa_chats',JSON.stringify(IXA.chats)); }catch(e2){}
+══════════════════════════════════════════════════════ */
+function updateApiSt(ok=null) {
+  const has = ok!==false && !!S.groqKey;
+  const el = document.getElementById('ast'); const t = document.getElementById('ast-t');
+  el.className = has?'ok':'err'; t.textContent = has?'API connectée':'Clé API manquante';
+}
+function saveLocal() {
+  if (S.chats.length>60) S.chats=S.chats.slice(0,60);
+  try { localStorage.setItem('ixa_chats', JSON.stringify(S.chats)); } catch(e) {
+    S.chats.forEach(c=>{ if(c.messages.length>8) c.messages=c.messages.slice(-8); });
+    try { localStorage.setItem('ixa_chats', JSON.stringify(S.chats)); } catch(e2){}
   }
 }
-function saveLocal(){ saveAll(); }
 
 let _tt;
-function showToast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className=type?`toast ${type}-t`:'';
-  t.classList.add('show'); clearTimeout(_tt);
-  _tt=setTimeout(()=>t.classList.remove('show'),3000);
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className=type?`show ${type}`:'show';
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3200);
 }
 
+// ── INIT ──
 boot();
 </script>
 </body>
