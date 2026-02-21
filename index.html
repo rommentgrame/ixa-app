@@ -1,93 +1,105 @@
 import json
 import os
-import base64
+import requests
 from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-# --- CONFIGURATION AUTOMATIQUE ---
-def load_config():
-    paths = ['config (1).json', 'config.json']
-    for path in paths:
-        if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    return {}
+# --- CHARGEMENT INTELLIGENT DE LA CONFIG ---
+def get_config():
+    # Liste des noms de fichiers possibles
+    possible_files = ['config.json', 'config (1).json', 'config(1).json']
+    for f_name in possible_files:
+        if os.path.exists(f_name):
+            try:
+                with open(f_name, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    # On nettoie la clé au cas où il y aurait des espaces
+                    key = data.get("groq_api_key", "").strip()
+                    model = data.get("groq_model", "llama-3.3-70b-versatile")
+                    if key and key != "ENTREZ_VOTRE_CLE_API_ICI":
+                        return key, model
+            except:
+                continue
+    return None, None
 
-config = load_config()
-API_KEY = config.get("groq_api_key", "")
-MODEL = config.get("groq_model", "llama-3.3-70b-versatile")
+API_KEY, MODEL = get_config()
 
-# --- INTERFACE HTML (Intégrée) ---
-HTML_TEMPLATE = """
+# --- INTERFACE IXA V3 (HTML/CSS/JS) ---
+HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>IXA v3 — Système Intégré</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>IXA V3 — Système Privé</title>
     <style>
-        :root { --bg: #09090b; --sidebar: #0f0f12; --accent: #a8ff3e; --text: #ececec; --border: #27272a; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; height: 100vh; }
-        
-        #sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; }
-        .new-btn { background: var(--accent); color: black; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
-        #history { flex: 1; overflow-y: auto; font-size: 0.8rem; color: #71717a; }
+        :root { --bg: #09090b; --c1: #0f0f12; --accent: #a8ff3e; --text: #ececec; --border: #27272a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        main { flex: 1; display: flex; flex-direction: column; position: relative; }
+        /* Sidebar conversations */
+        #sidebar { width: 280px; background: var(--c1); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+        .btn-new { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+        #hist { flex: 1; overflow-y: auto; font-size: 0.85rem; color: #71717a; }
+        .status { font-size: 0.7rem; color: var(--accent); border-top: 1px solid var(--border); padding-top: 10px; }
+
+        /* Main View */
+        main { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle at top, #1c1c21, #09090b); }
         header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .nav-tabs span { cursor: pointer; margin-right: 20px; font-size: 0.9rem; color: #71717a; }
-        .nav-tabs span.active { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
+        .tabs span { cursor: pointer; margin-right: 20px; font-weight: 500; color: #71717a; transition: 0.3s; }
+        .tabs span.active { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
 
-        #chat-flow { flex: 1; overflow-y: auto; padding: 30px 15%; display: flex; flex-direction: column; gap: 20px; }
-        .msg { max-width: 85%; line-height: 1.6; padding: 12px 18px; border-radius: 15px; }
+        #chat-window { flex: 1; overflow-y: auto; padding: 30px 15%; display: flex; flex-direction: column; gap: 20px; }
+        .m { max-width: 85%; line-height: 1.5; padding: 12px 18px; border-radius: 15px; position: relative; }
         .user { align-self: flex-end; background: #27272a; border: 1px solid var(--border); }
-        .assistant { align-self: flex-start; color: var(--text); }
-        .assistant b { color: var(--accent); display: block; margin-bottom: 5px; font-size: 0.7rem; }
+        .ixa { align-self: flex-start; background: transparent; }
+        .ixa b { color: var(--accent); display: block; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px; }
 
-        #voice-view { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-        .orb { width: 100px; height: 100px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 30px rgba(168, 255, 62, 0.3); }
-        .orb.active { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
+        /* Voice Mode */
+        #voice-mode { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .orb { width: 120px; height: 120px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 50px rgba(168, 255, 62, 0.2); transition: 0.5s; }
+        .orb.active { animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 0.7; } }
 
+        /* Input area */
         #input-area { padding: 20px 15%; }
-        .input-container { background: #18181b; border: 1px solid var(--border); border-radius: 16px; padding: 12px; display: flex; gap: 15px; align-items: center; }
-        input[type="text"] { flex: 1; background: none; border: none; color: white; outline: none; }
-        .file-badge { background: var(--accent); color: black; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+        .tray { display: flex; gap: 10px; margin-bottom: 8px; }
+        .pill { background: #1a1a1e; border: 1px solid var(--accent); color: var(--accent); font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; }
+        .box { background: #18181b; border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; gap: 15px; align-items: center; }
+        input[type="text"] { flex: 1; background: none; border: none; color: #fff; outline: none; font-size: 1rem; }
     </style>
 </head>
 <body>
     <aside id="sidebar">
-        <button class="new-btn" onclick="location.reload()">+ Nouveau Chat</button>
-        <div id="history">Historique chargé...</div>
-        <div style="font-size: 0.7rem; color: var(--accent); margin-top: auto;">IXA CORE ONLINE</div>
+        <button class="btn-new" onclick="location.reload()">+ NOUVEAU CHAT</button>
+        <div id="hist">Conversations récentes...</div>
+        <div class="status">IXA CORE : CONNECTÉ</div>
     </aside>
 
     <main>
         <header>
-            <div class="nav-tabs">
-                <span id="tab-chat" class="active" onclick="setMode('chat')">Assistant</span>
-                <span id="tab-voice" onclick="setMode('voice')">Vocal Direct</span>
+            <div class="tabs">
+                <span id="t-chat" class="active" onclick="setM('chat')">ASSISTANT</span>
+                <span id="t-voice" onclick="setM('voice')">VOCAL</span>
             </div>
-            <div style="font-weight: 600; color: var(--accent);">IXA v3</div>
+            <div style="font-weight: bold; color: var(--accent);">IXA V3.0</div>
         </header>
 
-        <div id="chat-flow"></div>
+        <div id="chat-window"></div>
 
-        <div id="voice-view">
+        <div id="voice-mode">
             <div class="orb" id="orb"></div>
-            <h2 id="v-status" style="margin-top: 30px;">Prêt à vous écouter</h2>
-            <button class="new-btn" style="margin-top: 20px; padding: 10px 30px" onclick="startVoice()">Démarrer</button>
+            <h2 id="v-txt" style="margin-top:40px">Cliquez pour parler</h2>
+            <button class="btn-new" style="margin-top:20px; padding:15px 40px" onclick="startMic()">🎙 PARLER</button>
         </div>
 
         <div id="input-area">
-            <div id="file-list" style="margin-bottom: 5px; display: flex; gap: 5px;"></div>
-            <div class="input-container">
-                <input type="file" id="f-in" hidden onchange="addFile(this)">
-                <button onclick="document.getElementById('f-in').click()" style="background:none; border:none; cursor:pointer; font-size: 1.2rem;">📎</button>
-                <input type="text" id="user-in" placeholder="Un message ou analyse de fichier..." onkeydown="if(event.key==='Enter') send()">
-                <button onclick="send()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-weight:bold;">▲</button>
+            <div id="tray" class="tray"></div>
+            <div class="box">
+                <input type="file" id="f-in" hidden onchange="upFile(this)">
+                <button onclick="document.getElementById('f-in').click()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:#71717a">📎</button>
+                <input type="text" id="query" placeholder="Demandez n'importe quoi..." onkeydown="if(event.key==='Enter') send()">
+                <button onclick="send()" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">ENVOYER</button>
             </div>
         </div>
     </main>
@@ -96,124 +108,144 @@ HTML_TEMPLATE = """
         let _FILES = [];
         const synth = window.speechSynthesis;
 
-        function setMode(m) {
-            document.getElementById('chat-flow').style.display = (m==='chat'?'flex':'none');
+        function setM(m) {
+            document.getElementById('chat-window').style.display = (m==='chat'?'flex':'none');
             document.getElementById('input-area').style.display = (m==='chat'?'block':'none');
-            document.getElementById('voice-view').style.display = (m==='voice'?'flex':'none');
-            document.querySelectorAll('.nav-tabs span').forEach(s => s.classList.remove('active'));
-            document.getElementById('tab-'+m).classList.add('active');
+            document.getElementById('voice-mode').style.display = (m==='voice'?'flex':'none');
+            document.querySelectorAll('.tabs span').forEach(s=>s.classList.remove('active'));
+            document.getElementById('t-'+m).classList.add('active');
         }
 
-        function addFile(input) {
+        function upFile(input) {
             const f = input.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
+            const r = new FileReader();
+            r.onload = (e) => {
                 _FILES.push({name: f.name, content: e.target.result});
-                document.getElementById('file-list').innerHTML += `<div class="file-badge">${f.name}</div>`;
+                document.getElementById('tray').innerHTML += `<div class="pill">📄 ${f.name}</div>`;
             };
-            reader.readAsText(f);
+            r.readAsText(f);
         }
 
-        async function send(textOverride = null) {
-            const input = document.getElementById('user-in');
-            const text = textOverride || input.value.trim();
-            if(!text && _FILES.length === 0) return;
+        async function send(ovr = null) {
+            const i = document.getElementById('query');
+            const val = ovr || i.value.trim();
+            if(!val && _FILES.length === 0) return;
 
-            appendMsg('user', text || "Analyse de document...");
-            input.value = "";
+            addMsg('user', val || "Analyse de document...");
+            i.value = "";
 
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    message: text,
-                    files: _FILES
-                })
-            });
-            
-            const data = await response.json();
-            const reply = data.choices[0].message.content;
-            appendMsg('assistant', reply);
-            _FILES = []; document.getElementById('file-list').innerHTML = "";
-            return reply;
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: val, files: _FILES })
+                });
+                const data = await res.json();
+                if(data.error) throw new Error(data.error);
+                
+                const reply = data.choices[0].message.content;
+                addMsg('ixa', reply);
+                _FILES = []; document.getElementById('tray').innerHTML = "";
+                return reply;
+            } catch(e) {
+                addMsg('ixa', "Erreur : " + e.message);
+            }
         }
 
-        function appendMsg(role, text) {
-            const flow = document.getElementById('chat-flow');
-            const div = document.createElement('div');
-            div.className = 'msg ' + role;
-            div.innerHTML = (role === 'assistant' ? '<b>IXA</b>' : '') + text;
-            flow.appendChild(div);
-            flow.scrollTop = flow.scrollHeight;
+        function addMsg(role, txt) {
+            const w = document.getElementById('chat-window');
+            const d = document.createElement('div');
+            d.className = 'm ' + role;
+            d.innerHTML = (role==='ixa'?'<b>IXA SYSTEM</b>':'') + txt;
+            w.appendChild(d);
+            w.scrollTop = w.scrollHeight;
         }
 
         // --- VOCAL ---
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'fr-FR';
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = Recognition ? new Recognition() : null;
+        if(rec) rec.lang = 'fr-FR';
 
-        function startVoice() {
+        function startMic() {
+            if(!rec) return alert("Micro non supporté");
             document.getElementById('orb').classList.add('active');
-            document.getElementById('v-status').textContent = "Écoute en cours...";
-            recognition.start();
-            recognition.onresult = async (e) => {
-                const transcript = e.results[0][0].transcript;
-                const reply = await send(transcript);
-                speak(reply);
+            document.getElementById('v-txt').textContent = "Je vous écoute...";
+            rec.start();
+            rec.onresult = async (e) => {
+                const t = e.results[0][0].transcript;
+                document.getElementById('v-txt').textContent = "IXA réfléchit...";
+                const rep = await send(t);
+                if(rep) speak(rep);
             };
+            rec.onend = () => document.getElementById('orb').classList.remove('active');
         }
 
-        function speak(text) {
-            const u = new SpeechSynthesisUtterance(text);
+        function speak(t) {
+            const u = new SpeechSynthesisUtterance(t);
             u.lang = 'fr-FR';
             u.onstart = () => {
-                document.getElementById('v-status').textContent = "IXA parle...";
+                document.getElementById('v-txt').textContent = "IXA parle...";
                 document.getElementById('orb').classList.add('active');
             };
             u.onend = () => {
-                document.getElementById('v-status').textContent = "Prêt à écouter";
+                document.getElementById('v-txt').textContent = "Prêt à écouter";
                 document.getElementById('orb').classList.remove('active');
             };
             synth.speak(u);
         }
+
+        addMsg('ixa', "Système IXA V3 prêt. Clé API chargée en mémoire.");
     </script>
 </body>
 </html>
 """
 
-# --- ROUTES SERVEUR ---
 @app.route('/')
-def home():
-    return render_template_string(HTML_TEMPLATE)
+def index():
+    return render_template_string(HTML_PAGE)
 
 @app.route('/api/chat', methods=['POST'])
-def chat_api():
+def chat():
+    if not API_KEY:
+        return jsonify({"error": "Clé API absente. Assure-toi que ton fichier config.json est présent et contient groq_api_key."}), 400
+    
     data = request.json
-    user_msg = data.get("message", "")
+    msg = data.get("message", "")
     files = data.get("files", [])
     
-    # Intégration des fichiers dans le prompt
-    full_prompt = user_msg
+    # Construction du prompt avec fichiers
+    full_prompt = msg
     if files:
-        full_prompt += "\\n\\nCONCEPTS DOCUMENTS FOURNIS :\\n"
+        full_prompt += "\n\n--- ANALYSE DOCUMENTS JOINTS ---\n"
         for f in files:
-            full_prompt += f"--- Fichier: {f['name']} ---\\n{f['content']}\\n"
+            full_prompt += f"\nContenu du fichier {f['name']} :\n{f['content']}\n"
 
-    # Appel Groq direct depuis le serveur (Clé masquée pour l'utilisateur)
-    import requests
-    url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
-    payload = {
-        "model": MODEL,
-        "messages": [
-            {"role": "system", "content": "Tu es IXA. Analyse les documents si présents. Réponds avec précision."},
-            {"role": "user", "content": full_prompt}
-        ]
-    }
-    
-    res = requests.post(url, headers=headers, json=payload)
-    return jsonify(res.json())
+    # Logique génération image
+    if "dessine" in msg.lower() or "génère une image" in msg.lower():
+        img_url = f"https://pollinations.ai/p/{msg.replace(' ', '%20')}?width=1024&height=1024&nologo=true"
+        return jsonify({"choices": [{"message": {"content": f'<img src="{img_url}" style="width:100%; border-radius:10px; margin-top:10px;">'}}]})
+
+    # Appel Groq
+    try:
+        r = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": MODEL,
+                "messages": [
+                    {"role": "system", "content": "Tu es IXA. Si l'utilisateur fournit des documents, analyse-les pour répondre."},
+                    {"role": "user", "content": full_prompt}
+                ]
+            }
+        )
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    print(f"Lancement de IXA v3 sur http://127.0.0.1:5000")
-    print(f"Clé API chargée : {'OK' if API_KEY else 'NON TROUVÉE'}")
+    print("--- IXA V3 SERVER ---")
+    if API_KEY:
+        print(f"[*] Config chargée avec succès (Clé : {API_KEY[:10]}...)")
+    else:
+        print("[!] ATTENTION : Aucune clé API trouvée dans config.json !")
     app.run(debug=False, port=5000)
