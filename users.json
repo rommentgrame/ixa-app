@@ -8,7 +8,8 @@
       "password": "admin",
       "display_name": "Tom",
       "role": "admin",
-      "avatar": "👤",
+      "avatar": "👑",
+      "avatarImg": null,
       "conversations": [],
       "commands": {},
       "memory": [
@@ -17,7 +18,12 @@
         "Tom préfère des réponses structurées, directes et efficaces",
         "Toujours répondre en français sauf demande contraire",
         "Tom est développeur et apprécie l'innovation technologique"
-      ]
+      ],
+      "permissions": {
+        "canSearch": true,
+        "canCreateDocs": true,
+        "canManageUsers": true
+      }
     }
   ]
 }
