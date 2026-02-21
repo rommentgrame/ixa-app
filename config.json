@@ -1,0 +1,7 @@
+{
+  "groq_key": "gsk_TON_API_KEY",
+  "groq_model": "llama-2-7b",
+  "github_repo": "UTILISATEUR/TON_DEPOT",
+  "github_path": "database",
+  "github_token": "ghp_VOTRE_TOKEN_GITHUB"
+}
