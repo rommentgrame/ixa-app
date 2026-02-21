@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>IXA — Système de Tom</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06060f;--sb:#09091a;--c1:#111124;--c2:#181835;
+  --a:#6c5ce7;--a2:#d63af9;--glow:rgba(108,92,231,.28);--soft:rgba(108,92,231,.12);
+  --tx:#e6e6f0;--mu:#6a6a90;--bd:#16163a;--bd2:#22224a;--ub:#12122a;
+  --err:#ff6b6b;--ok:#00d4aa;--warn:#fdc96e;--inf:#74b9ff;
+  --t:all .26s cubic-bezier(.4,0,.2,1);--sw:270px;--hh:58px;--mnh:56px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx);display:flex}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:9px}
+
+/* ── LOGIN ── */
+#login{position:fixed;inset:0;background:radial-gradient(ellipse at 40% 40%,#0f0f2a,#06060f 70%);
+  display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px}
+#login.hide{animation:fadeOut .4s ease forwards;pointer-events:none}
+@keyframes fadeOut{to{opacity:0}}
+.lbox{background:var(--sb);border:1px solid var(--bd2);border-radius:20px;padding:36px 30px;
+  width:100%;max-width:350px;display:flex;flex-direction:column;gap:16px;
+  box-shadow:0 0 80px rgba(108,92,231,.18)}
+.llogo{font-family:'Syne',sans-serif;font-size:2.3rem;font-weight:800;text-align:center;
+  background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.lsub{text-align:center;font-size:.8rem;color:var(--mu)}
+.lsep{height:1px;background:var(--bd2)}
+.lstat{font-size:.74rem;color:var(--mu);display:flex;align-items:center;justify-content:center;gap:6px;min-height:20px}
+.spin{width:11px;height:11px;border:2px solid var(--bd2);border-top-color:var(--a);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.linp{background:var(--c1);border:1px solid var(--bd2);color:var(--tx);padding:12px 14px;
+  border-radius:11px;font-size:.88rem;font-family:'Space Grotesk',sans-serif;outline:none;
+  transition:.2s;width:100%}
+.linp:focus{border-color:var(--a);box-shadow:0 0 0 3px var(--soft)}
+.linp::placeholder{color:var(--mu)}
+.lbtn{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;
+  padding:13px;border-radius:11px;font-weight:700;font-size:.9rem;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;transition:var(--t)}
+.lbtn:hover{box-shadow:0 8px 28px var(--glow);transform:translateY(-1px)}
+.lbtn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.lerr{font-size:.76rem;color:var(--err);text-align:center;min-height:16px}
+
+/* ── SIDEBAR ── */
+#sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);z-index:199}
+#sidebar{width:var(--sw);min-width:var(--sw);background:var(--sb);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;padding:16px 11px;gap:9px;overflow:hidden;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200;position:relative}
+#sidebar::before{content:'';position:absolute;top:-60px;left:-60px;width:150px;height:150px;
+  background:radial-gradient(circle,rgba(108,92,231,.1),transparent 70%);pointer-events:none}
+.sbhdr{display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;
+  background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;display:flex;align-items:center;gap:7px}
+.bdt{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);
+  -webkit-text-fill-color:initial;flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.xb{background:none;border:none;color:var(--mu);cursor:pointer;padding:5px;border-radius:7px;font-size:.9rem;transition:.2s}
+.xb:hover{color:var(--tx);background:var(--c1)}
+.upill{background:var(--c1);border:1px solid var(--bd2);border-radius:10px;padding:8px 10px;
+  display:flex;align-items:center;gap:8px}
+.uav{width:28px;height:28px;border-radius:50%;background:linear-gradient(120deg,var(--a),var(--a2));
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0}
+.uname{flex:1;font-weight:600;font-size:.8rem}
+.urole{font-size:.64rem;color:var(--mu)}
+.logoutb{background:none;border:none;color:var(--mu);cursor:pointer;font-size:.72rem;transition:.2s;padding:3px}
+.logoutb:hover{color:var(--err)}
+.btn-new{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;
+  padding:10px 13px;border-radius:12px;font-weight:600;font-size:.83rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:var(--t);
+  font-family:'Space Grotesk',sans-serif;width:100%}
+.btn-new:hover{transform:translateY(-2px);box-shadow:0 8px 22px var(--glow)}
+.sect{font-size:.61rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--mu);padding:1px 4px;margin-top:2px}
+#history-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.ci{padding:8px 9px;border-radius:9px;font-size:.8rem;color:var(--mu);cursor:pointer;
+  transition:var(--t);display:flex;align-items:center;gap:7px;border:1px solid transparent;min-height:34px}
+.ci-t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci:hover{background:var(--c1);color:var(--tx)}
+.ci.act{background:var(--soft);color:var(--a);border-color:rgba(108,92,231,.22)}
+.cia{display:flex;gap:1px;opacity:0;flex-shrink:0;transition:.15s}
+.ci:hover .cia,.ci.act .cia{opacity:1}
+.cib{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;font-size:.68rem;transition:.15s;color:var(--mu)}
+.cib.r:hover{color:var(--inf)}
+.cib.d:hover{color:var(--err)}
+.ci-ri{flex:1;background:var(--c1);border:1px solid var(--a);color:var(--tx);
+  padding:3px 7px;border-radius:6px;font-size:.77rem;font-family:'Space Grotesk',sans-serif;outline:none}
+#ast{font-size:.65rem;display:flex;align-items:center;gap:5px;padding:3px 4px;color:var(--mu)}
+#ast.ok{color:var(--ok)}#ast.err{color:var(--err)}
+
+/* ── MAIN ── */
+main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);position:relative;overflow:hidden;z-index:1}
+main::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px);background-size:44px 44px;opacity:.1;pointer-events:none;z-index:0}
+header{height:var(--hh);padding:0 18px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(6,6,15,.92);backdrop-filter:blur(18px);
+  position:relative;z-index:10;flex-shrink:0;gap:10px}
+.hleft{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.mbtn{display:none;background:none;border:none;color:var(--mu);cursor:pointer;padding:7px;border-radius:9px;transition:.2s}
+.mbtn:hover{color:var(--a);background:var(--soft)}
+.ntabs{display:flex;gap:2px}
+.ntab{cursor:pointer;font-weight:500;font-size:.8rem;color:var(--mu);padding:6px 11px;
+  border-radius:9px;transition:.22s;border:1px solid transparent;
+  display:flex;align-items:center;gap:5px;white-space:nowrap}
+.ntab:hover{color:var(--tx);background:var(--c1)}
+.ntab.act{color:var(--a);background:var(--soft);border-color:rgba(108,92,231,.28)}
+.hright{display:flex;gap:5px;flex-shrink:0}
+.hb{background:none;border:1px solid var(--bd2);color:var(--mu);padding:5px 10px;
+  border-radius:9px;font-size:.73rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;
+  transition:.2s;white-space:nowrap}
+.hb:hover{border-color:var(--err);color:var(--err)}
+.hb.p{border-color:rgba(108,92,231,.35);color:var(--a)}
+.hb.p:hover{background:var(--soft)}
+
+/* ── MESSAGES ── */
+#msgs{flex:1;overflow-y:auto;padding:20px max(3%,13px);display:flex;flex-direction:column;gap:15px;position:relative;z-index:1}
+#welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:13px;text-align:center;padding:20px;animation:fU .5s ease}
+@keyframes fU{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+.wlogo{font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px}
+.wsub{color:var(--mu);font-size:.85rem;max-width:340px;line-height:1.65}
+.wsub b{color:var(--a);-webkit-text-fill-color:var(--a)}
+.wg{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:5px;max-width:400px;width:100%}
+.wc{background:var(--c1);border:1px solid var(--bd2);padding:10px 12px;border-radius:11px;font-size:.78rem;color:var(--mu);cursor:pointer;transition:.2s;text-align:left;display:flex;align-items:flex-start;gap:7px;line-height:1.4}
+.wc:hover{border-color:var(--a);color:var(--tx);background:var(--c2);transform:translateY(-1px)}
+.message{display:flex;gap:9px;align-items:flex-start;animation:mI .25s ease-out}
+@keyframes mI{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.message.user{flex-direction:row-reverse;align-self:flex-end;max-width:86%}
+.message.ass{align-self:flex-start;width:100%;max-width:800px}
+.mav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.76rem;flex-shrink:0;border:2px solid var(--bd2)}
+.message.user .mav{background:linear-gradient(120deg,var(--a),var(--a2));border:none}
+.message.ass .mav{background:var(--c2);border-color:rgba(108,92,231,.25)}
+.mbody{flex:1;min-width:0}
+.mrole{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px;color:var(--mu)}
+.message.user .mrole{text-align:right;color:var(--a)}
+.mc{line-height:1.78;font-size:.9rem;color:var(--tx)}
+.message.user .mc{background:var(--ub);padding:10px 15px;border-radius:15px 15px 3px 15px;border:1px solid var(--bd2);display:inline-block;text-align:left}
+.mc h1,.mc h2,.mc h3{margin:13px 0 6px;font-family:'Syne',sans-serif}
+.mc h1{font-size:1.24rem}.mc h2{font-size:1.01rem;color:var(--a)}.mc h3{font-size:.88rem;color:var(--mu)}
+.mc p{margin-bottom:7px}.mc strong{color:#fff;font-weight:600}.mc em{color:var(--mu)}
+.mc ul,.mc ol{padding-left:18px;margin-bottom:7px}.mc li{margin-bottom:3px}
+.mc a{color:var(--a)}.mc blockquote{border-left:3px solid var(--a);padding-left:11px;color:var(--mu);margin:8px 0}
+.mc hr{border:none;border-top:1px solid var(--bd2);margin:10px 0}
+.mc code:not(pre code){background:var(--c2);border:1px solid var(--bd2);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.8em;color:var(--a2)}
+.mc table{width:100%;border-collapse:collapse;margin:9px 0;font-size:.82rem}
+.mc th,.mc td{border:1px solid var(--bd2);padding:6px 9px;text-align:left}
+.mc th{background:var(--c2);color:var(--a);font-weight:600}
+.mc tr:nth-child(even) td{background:rgba(108,92,231,.03)}
+.cb{background:#040410;border:1px solid var(--bd2);border-radius:10px;overflow:hidden;margin:9px 0}
+.cbh{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:var(--c1);border-bottom:1px solid var(--bd2)}
+.cbl{color:var(--a);font-family:'JetBrains Mono',monospace;font-size:.69rem;font-weight:500}
+.cpb{background:none;border:1px solid var(--bd2);color:var(--mu);padding:3px 8px;border-radius:5px;font-size:.65rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.2s}
+.cpb:hover{border-color:var(--a);color:var(--a)}.cpb.ok{color:var(--ok);border-color:var(--ok)}
+.cb pre{margin:0;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:.81rem;overflow-x:auto;line-height:1.6}
+.doc-card{background:linear-gradient(135deg,var(--c2),rgba(108,92,231,.05));border:1px solid rgba(108,92,231,.3);border-radius:12px;padding:14px;margin-top:9px;position:relative;overflow:hidden}
+.doc-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--a),var(--a2))}
+.dch{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding-left:9px}
+.dci{font-size:1.22rem}.dct{font-weight:600;font-size:.89rem}.dcs{font-size:.7rem;color:var(--mu);margin-top:2px}
+.dca{display:flex;gap:5px;flex-wrap:wrap;padding-left:9px}
+.dcb{padding:6px 12px;border-radius:8px;font-size:.75rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none;font-weight:500}
+.dcb.dl{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}
+.dcb.dl:hover{transform:translateY(-1px);box-shadow:0 4px 14px var(--glow)}
+.dcb.pv{background:var(--c1);border:1px solid var(--bd2);color:var(--mu)}
+.dcb.pv:hover{border-color:var(--a);color:var(--a)}
+.msg-img{max-height:130px;border-radius:9px;max-width:100%;margin-bottom:6px;display:block;border:1px solid var(--bd2)}
+.msg-file{display:inline-flex;align-items:center;gap:6px;background:var(--c2);border:1px solid var(--bd2);padding:5px 10px;border-radius:8px;font-size:.76rem;margin-bottom:6px}
+.typing{display:flex;gap:4px;align-items:center;padding:4px 0}
+.td{width:6px;height:6px;border-radius:50%;background:var(--a);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.22s}.td:nth-child(3){animation-delay:.44s}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-5px);opacity:1}}
+
+/* ── INPUT ── */
+#input-area{padding:7px max(3%,11px) 14px;position:relative;z-index:10;flex-shrink:0}
+#at{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+.ach{background:var(--c2);border:1px solid var(--bd2);padding:4px 9px;border-radius:17px;font-size:.72rem;color:var(--a);display:flex;align-items:center;gap:5px}
+.arm{cursor:pointer;color:var(--mu);font-size:.84rem;transition:.2s}.arm:hover{color:var(--err)}
+#cmd-s{background:var(--c2);border:1px solid var(--bd2);border-radius:10px;padding:4px;margin-bottom:6px;display:none;flex-direction:column;gap:2px;max-height:120px;overflow-y:auto}
+.csi{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;cursor:pointer;transition:.2s}
+.csi:hover{background:var(--soft)}
+.csi .cmd{font-family:'JetBrains Mono',monospace;font-size:.73rem;color:var(--a);font-weight:600}
+.csi .fn{font-size:.73rem;color:var(--mu)}
+.iw{background:var(--c1);border:1px solid var(--bd2);border-radius:15px;padding:6px 9px;display:flex;align-items:flex-end;gap:5px;transition:border-color .22s,box-shadow .22s}
+.iw:focus-within{border-color:var(--a);box-shadow:0 0 0 3px var(--soft),0 8px 30px rgba(0,0,0,.5)}
+textarea{flex:1;background:none;border:none;color:var(--tx);padding:8px 4px;resize:none;outline:none;font-size:.9rem;font-family:'Space Grotesk',sans-serif;line-height:1.6;max-height:145px}
+textarea::placeholder{color:var(--mu)}
+.abtn{background:none;border:none;color:var(--mu);cursor:pointer;padding:7px;border-radius:8px;transition:.2s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.abtn:hover{color:var(--a);background:var(--soft)}
+.sbtn{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
+.sbtn:hover{transform:scale(1.1);box-shadow:0 4px 16px var(--glow)}
+.sbtn:disabled{opacity:.3;transform:none;cursor:not-allowed}
+
+/* ── VOICE ── */
+#voice-view{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+.owrap{position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center}
+.orb{width:86px;height:86px;background:linear-gradient(120deg,var(--a),var(--a2));border-radius:50%;transition:.5s;z-index:2;position:relative;box-shadow:0 0 30px rgba(108,92,231,.3)}
+.oring{position:absolute;border-radius:50%;border:1.5px solid;opacity:0}
+.listening .oring{animation:ori 2s infinite}
+.listening .oring:nth-child(2){animation-delay:.35s}
+.listening .oring:nth-child(3){animation-delay:.7s}
+.listening .orb{transform:scale(1.15);box-shadow:0 0 50px var(--glow)}
+@keyframes ori{0%{width:86px;height:86px;top:42px;left:42px;opacity:.8;border-color:var(--a)}100%{width:170px;height:170px;top:0;left:0;opacity:0;border-color:var(--a2)}}
+#vst{margin-top:28px;font-weight:300;color:var(--mu);font-size:.96rem}
+#vtr{margin-top:8px;font-size:.82rem;color:var(--tx);max-width:300px;min-height:18px;text-align:center;font-style:italic}
+#vprog{height:3px;width:200px;background:var(--bd2);border-radius:9px;margin-top:12px;overflow:hidden}
+#vpb{height:100%;width:0%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .4s ease;border-radius:9px}
+.vbtn{margin-top:22px;background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;border:none;padding:12px 24px;border-radius:100px;font-weight:600;font-size:.9rem;cursor:pointer;transition:var(--t);font-family:'Space Grotesk',sans-serif;display:flex;align-items:center;gap:8px}
+.vbtn:hover{transform:scale(1.05);box-shadow:0 8px 28px var(--glow)}
+
+/* ── DATA TAB (shortcuts only) ── */
+#data-view{display:none;flex:1;overflow-y:auto;padding:18px max(3%,13px);flex-direction:column;gap:13px;position:relative;z-index:1}
+.ds{background:var(--c1);border:1px solid var(--bd2);border-radius:12px;overflow:hidden}
+.dsh{padding:12px 15px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;justify-content:space-between;background:var(--c2)}
+.dst{font-weight:600;font-size:.86rem;display:flex;align-items:center;gap:7px}
+.dsb{padding:13px 15px;display:flex;flex-direction:column;gap:10px}
+#fcmd-list{display:flex;flex-direction:column;gap:5px}
+.fi2{display:flex;align-items:center;gap:7px;padding:9px 11px;border-radius:9px;background:var(--c2);border:1px solid var(--bd2);font-size:.77rem;cursor:pointer;transition:.2s}
+.fi2:hover{border-color:var(--a)}
+.fi2-badge{background:var(--soft);color:var(--a);padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.71rem;font-weight:600;flex-shrink:0}
+.fi2-name{flex:1;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi2-acts{display:flex;gap:2px;opacity:0;flex-shrink:0;transition:.15s}
+.fi2:hover .fi2-acts{opacity:1}
+.fi2b{background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:.69rem;transition:.15s;color:var(--mu)}
+.fi2b.r:hover{color:var(--inf)}.fi2b.d:hover{color:var(--err)}
+.add-cmd{background:none;border:1px dashed var(--bd2);color:var(--mu);padding:9px;border-radius:9px;font-size:.77rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:.2s;font-family:'Space Grotesk',sans-serif;width:100%}
+.add-cmd:hover{border-color:var(--a);color:var(--a)}
+.cmd-empty{font-size:.76rem;color:var(--mu);text-align:center;padding:10px 0}
+.hint-b{background:var(--c2);border:1px solid var(--bd2);border-radius:9px;padding:11px 13px;font-size:.76rem;color:var(--mu);line-height:1.65}
+.hint-b b{color:var(--a)}
+
+/* ── LEARN TAB ── */
+#learn-view{display:none;flex:1;overflow-y:auto;padding:18px max(3%,13px);flex-direction:column;gap:12px;position:relative;z-index:1}
+.ldrop{border:2px dashed var(--bd2);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:.25s;display:flex;flex-direction:column;align-items:center;gap:9px}
+.ldrop:hover,.ldrop.drag{border-color:var(--a);background:var(--soft)}
+.ldrop-icon{font-size:2rem}
+.ldrop-txt{font-size:.83rem;color:var(--mu);line-height:1.6}
+.ldoc{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:13px 15px;display:none;flex-direction:column;gap:9px}
+.ldoc-name{font-weight:600;font-size:.87rem;display:flex;align-items:center;gap:7px}
+.ldoc-meta{font-size:.74rem;color:var(--mu)}
+.lacts{display:flex;gap:6px;flex-wrap:wrap}
+.lab2{padding:9px 15px;border-radius:10px;font-size:.79rem;cursor:pointer;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none;display:flex;align-items:center;gap:5px}
+.lab2.main{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}
+.lab2.main:hover{transform:translateY(-1px);box-shadow:0 5px 18px var(--glow)}
+.lab2.sec{background:var(--c2);border:1px solid var(--bd2);color:var(--mu)}
+.lab2.sec:hover{border-color:var(--a);color:var(--a)}
+.lab2:disabled{opacity:.4;cursor:not-allowed;transform:none !important;box-shadow:none !important}
+.laudio-bar{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:13px 15px;display:none;flex-direction:column;gap:8px}
+.aprog{height:4px;background:var(--bd2);border-radius:9px;overflow:hidden}
+.aprog-b{height:100%;width:0%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .5s linear;border-radius:9px}
+.actrl{display:flex;align-items:center;gap:9px;font-size:.79rem;color:var(--mu)}
+.abtn2{background:none;border:none;cursor:pointer;color:var(--a);font-size:1.1rem;padding:4px;transition:.2s;line-height:1}
+.abtn2:hover{transform:scale(1.15)}
+.lc{display:none;flex-direction:column;gap:10px;margin-top:4px}
+.expl{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:14px;font-size:.86rem;line-height:1.75}
+/* Flashcards */
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px}
+.fc{perspective:800px;height:120px;cursor:pointer}
+.fc-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,.2,.2,1)}
+.fc.flipped .fc-inner{transform:rotateY(180deg)}
+.fc-f,.fc-b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:11px;display:flex;align-items:center;justify-content:center;padding:13px;text-align:center;font-size:.81rem;line-height:1.5;border:1px solid var(--bd2)}
+.fc-f{background:var(--c1);color:var(--tx);font-weight:500}
+.fc-b{background:linear-gradient(135deg,var(--c2),rgba(108,92,231,.07));color:var(--mu);transform:rotateY(180deg)}
+/* Quiz */
+.quiz-q{background:var(--c1);border:1px solid var(--bd2);border-radius:11px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.quiz-qt{font-size:.85rem;font-weight:600;color:var(--tx)}
+.quiz-opts{display:flex;flex-direction:column;gap:5px}
+.qopt{background:var(--c2);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:.81rem;cursor:pointer;transition:.2s;color:var(--mu);text-align:left;font-family:'Space Grotesk',sans-serif;width:100%}
+.qopt:hover:not(:disabled){border-color:var(--a);color:var(--a);background:var(--soft)}
+.qopt.correct{border-color:var(--ok)!important;color:var(--ok)!important;background:rgba(0,212,170,.08)!important}
+.qopt.wrong{border-color:var(--err)!important;color:var(--err)!important;background:rgba(255,107,107,.08)!important}
+.quiz-expl{font-size:.75rem;color:var(--mu);padding:7px 10px;background:var(--c2);border-radius:7px;border-left:3px solid var(--a)}
+.quiz-score{text-align:center;font-size:.97rem;font-weight:600;padding:16px;background:linear-gradient(135deg,var(--c2),rgba(108,92,231,.06));border:1px solid rgba(108,92,231,.25);border-radius:11px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--c2);border:1px solid var(--bd2);color:var(--tx);padding:9px 18px;
+  border-radius:100px;font-size:.79rem;opacity:0;transition:.25s;z-index:9999;
+  pointer-events:none;max-width:92vw;text-align:center;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--ok);color:var(--ok)}
+#toast.err{border-color:var(--err);color:var(--err)}
+
+/* ── MOBILE NAV ── */
+#mnav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--mnh);
+  background:rgba(6,6,15,.98);backdrop-filter:blur(22px);border-top:1px solid var(--bd);
+  z-index:100;flex-direction:row;align-items:center;justify-content:space-around;padding:0 7px}
+.mtab{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+  padding:5px 8px;border-radius:10px;transition:.2s;color:var(--mu);
+  font-size:.6rem;font-weight:600;border:1px solid transparent}
+.mtab:hover{color:var(--tx)}.mtab.act{color:var(--a);background:var(--soft);border-color:rgba(108,92,231,.18)}
+.mtab svg{width:17px;height:17px}
+.mnew{background:linear-gradient(120deg,var(--a),var(--a2));width:38px;height:38px;border-radius:11px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);color:#fff;flex-shrink:0}
+.mnew:active{transform:scale(.88)}
+
+/* ── MODAL ── */
+#mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(7px);z-index:500;align-items:center;justify-content:center;padding:16px}
+#mo.open{display:flex}
+.modal{background:var(--sb);border:1px solid var(--bd2);border-radius:15px;padding:22px;max-width:430px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.mo-t{font-family:'Syne',sans-serif;font-size:1.02rem;font-weight:700;background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.mo-s{font-size:.77rem;color:var(--mu);line-height:1.6}
+.mi{background:var(--c1);border:1px solid var(--bd2);color:var(--tx);padding:10px 12px;border-radius:10px;font-size:.83rem;font-family:'Space Grotesk',sans-serif;outline:none;transition:.2s;width:100%}
+.mi:focus{border-color:var(--a);box-shadow:0 0 0 3px var(--soft)}.mi::placeholder{color:var(--mu)}
+.mbtns{display:flex;gap:7px;justify-content:flex-end}
+.mdb{padding:8px 16px;border-radius:9px;font-size:.79rem;cursor:pointer;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:.2s;border:none}
+.mdb.can{background:var(--c1);border:1px solid var(--bd2);color:var(--mu)}.mdb.can:hover{color:var(--tx)}
+.mdb.cfm{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}.mdb.cfm:hover{box-shadow:0 4px 14px var(--glow)}
+.mdb.del{background:rgba(255,107,107,.1);border:1px solid var(--err);color:var(--err)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){header{padding:0 12px}#msgs,#data-view,#learn-view{padding:15px 11px}#input-area{padding:6px 9px 11px}}
+@media(max-width:640px){
+  #sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-102%);box-shadow:6px 0 30px rgba(0,0,0,.8)}
+  #sidebar.open{transform:translateX(0)}
+  #sov.open{display:block}
+  .mbtn{display:flex}
+  .hright .hb:not(.p){display:none}
+  #mnav{display:flex}
+  main{padding-bottom:var(--mnh)}
+  .message.user{max-width:90%}
+  #msgs,#data-view,#learn-view{padding:11px 9px;gap:13px}
+  #input-area{padding:5px 8px 9px}
+  .iw{border-radius:13px}.wlogo{font-size:2.5rem}
+  .wg{grid-template-columns:1fr}
+  header{height:52px;padding:0 9px}:root{--hh:52px}
+  .ntab{padding:6px 9px;font-size:.76rem}
+  textarea{font-size:16px}
+  .fc-grid{grid-template-columns:1fr 1fr}
+  .dca{flex-direction:column}
+}
+@media(max-width:380px){.wlogo{font-size:2rem}#msgs{padding:9px 7px}}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  #mnav{padding-bottom:env(safe-area-inset-bottom);height:calc(var(--mnh) + env(safe-area-inset-bottom))}
+  main{padding-bottom:calc(var(--mnh) + env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lbox">
+    <div class="llogo">IXA</div>
+    <div class="lsub">Système d'Intelligence Avancée de Tom</div>
+    <div class="lsep"></div>
+    <div class="lstat" id="lstat"><div class="spin"></div><span id="lstat-t">Chargement…</span></div>
+    <input class="linp" id="li-u" type="text" placeholder="Identifiant" autocomplete="username" style="display:none">
+    <input class="linp" id="li-p" type="password" placeholder="Mot de passe" autocomplete="current-password" style="display:none">
+    <button class="lbtn" id="li-btn" onclick="doLogin()" style="display:none">Connexion</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div id="sov" onclick="closeSB()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sbhdr">
+    <div class="brand"><div class="bdt"></div>IXA</div>
+    <button class="xb" onclick="closeSB()">✕</button>
+  </div>
+  <div class="upill" id="upill" style="display:none">
+    <div class="uav" id="u-av">👤</div>
+    <div style="flex:1;min-width:0"><div class="uname" id="u-nm">—</div><div class="urole" id="u-rl">—</div></div>
+    <button class="logoutb" onclick="logout()" title="Déconnexion">⏻</button>
+  </div>
+  <button class="btn-new" onclick="createChat();closeSB()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Nouvelle conversation
+  </button>
+  <span class="sect">Conversations</span>
+  <div id="history-list"></div>
+  <div id="ast">
+    <svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+    <span id="ast-t">—</span>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main>
+  <header>
+    <div class="hleft">
+      <button class="mbtn" onclick="openSB()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="ntabs">
+        <span id="tab-chat" class="ntab act" onclick="showTab('chat')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat
+        </span>
+        <span id="tab-voice" class="ntab" onclick="showTab('voice')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>Vocal
+        </span>
+        <span id="tab-data" class="ntab" onclick="showTab('data')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Fichiers
+        </span>
+        <span id="tab-learn" class="ntab" onclick="showTab('learn')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Apprendre
+        </span>
+      </div>
+    </div>
+    <div class="hright">
+      <button class="hb" onclick="clearChat()">🗑 Effacer</button>
+      <button class="hb p" onclick="exportChat()">📤 Export</button>
+    </div>
+  </header>
+
+  <!-- CHAT VIEW -->
+  <div id="chat-view" style="display:flex;flex:1;flex-direction:column;overflow:hidden">
+    <div id="msgs">
+      <div id="welcome">
+        <div class="wlogo">IXA</div>
+        <div class="wsub">Système IA de <b>Tom</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
+        <div class="wg">
+          <div class="wc" onclick="hint('Crée un rapport Word complet sur Napoléon Bonaparte')"><span>📘</span><span>Rapport Word</span></div>
+          <div class="wc" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel avec données exemples')"><span>📗</span><span>Créer un Excel</span></div>
+          <div class="wc" onclick="hint('Crée une présentation PowerPoint de 5 slides sur l\'intelligence artificielle')"><span>📑</span><span>PowerPoint</span></div>
+          <div class="wc" onclick="hint('Génère un CV professionnel complet en format PDF')"><span>📕</span><span>Créer un PDF/CV</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="input-area">
+      <div id="at"></div>
+      <div id="cmd-s"></div>
+      <div class="iw">
+        <input type="file" id="fi" hidden multiple
+          accept=".txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp,.xlsx,.xls,.docx"
+          onchange="handleFiles(this)">
+        <button class="abtn" title="Joindre un fichier" onclick="document.getElementById('fi').click()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <textarea id="mi" placeholder="Écrivez… ou /raccourci pour vos fichiers" rows="1" oninput="onInput(this)" onkeydown="onKey(event)"></textarea>
+        <button class="sbtn" id="sbtn" onclick="handleSend()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOICE VIEW -->
+  <div id="voice-view">
+    <div class="owrap" id="orb-box">
+      <div class="oring"></div><div class="oring"></div><div class="oring"></div>
+      <div class="orb"></div>
+    </div>
+    <div id="vst">En attente de vos instructions, Tom</div>
+    <div id="vtr"></div>
+    <div id="vprog"><div id="vpb"></div></div>
+    <button class="vbtn" id="vbtn" onclick="toggleVoice()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      Activer IXA
+    </button>
+  </div>
+
+  <!-- DATA VIEW (file shortcuts) -->
+  <div id="data-view">
+    <div class="ds">
+      <div class="dsh">
+        <div class="dst">⚡ Raccourcis Fichiers</div>
+        <button class="hb p" onclick="openAddCmd()">＋ Ajouter</button>
+      </div>
+      <div class="dsb">
+        <div id="fcmd-list"></div>
+        <div class="hint-b">
+          Tapez <b>/raccourci votre question</b> dans le chat pour analyser automatiquement le fichier associé.<br><br>
+          Exemple : <b>/emploi_du_temps j'ai quoi demain ?</b>
+        </div>
+        <button class="add-cmd" onclick="openAddCmd()">＋ Ajouter un raccourci</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEARN VIEW -->
+  <div id="learn-view">
+    <div class="ds">
+      <div class="dsh"><div class="dst">📚 Mode Apprentissage</div></div>
+      <div class="dsb">
+        <input type="file" id="lf" hidden accept=".txt,.md,.csv,.json,.pdf,.png,.jpg,.jpeg,.xlsx" onchange="learnLoad(this)">
+        <div class="ldrop" id="ldrop"
+          onclick="document.getElementById('lf').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondrop="lDrop(event)" ondragleave="this.classList.remove('drag')">
+          <div class="ldrop-icon">📂</div>
+          <div class="ldrop-txt">Cliquez ou déposez un document ici<br><span style="font-size:.72rem">PDF, image, texte, Excel…</span></div>
+        </div>
+        <div class="ldoc" id="ldoc">
+          <div class="ldoc-name" id="ldoc-nm"></div>
+          <div class="ldoc-meta" id="ldoc-mt"></div>
+          <div class="lacts">
+            <button class="lab2 main" id="lb-audio" onclick="learnGen('audio')">🎧 Écouter l'explication</button>
+            <button class="lab2 sec" id="lb-fc" onclick="learnGen('flash')">🃏 Flashcards</button>
+            <button class="lab2 sec" id="lb-quiz" onclick="learnGen('quiz')">🧩 Quiz</button>
+            <button class="lab2 sec" style="margin-left:auto" onclick="learnReset()">✕ Changer</button>
+          </div>
+        </div>
+        <div class="laudio-bar" id="laudio">
+          <div style="font-size:.79rem;font-weight:600">🎧 Explication audio en cours…</div>
+          <div class="aprog"><div class="aprog-b" id="apb"></div></div>
+          <div class="actrl">
+            <button class="abtn2" id="a-pp" onclick="audioToggle()">⏸</button>
+            <button class="abtn2" onclick="audioStop()">⏹</button>
+            <span id="a-stat">Lecture…</span>
+          </div>
+        </div>
+        <div class="lc" id="lc"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MOBILE NAV -->
+<nav id="mnav">
+  <div class="mtab act" id="mn-chat" onclick="showTab('chat');setMT('chat')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat
+  </div>
+  <button class="mnew" onclick="createChat();closeSB()">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <div class="mtab" id="mn-voice" onclick="showTab('voice');setMT('voice')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>Vocal
+  </div>
+  <div class="mtab" id="mn-data" onclick="showTab('data');setMT('data')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Fichiers
+  </div>
+  <div class="mtab" id="mn-learn" onclick="showTab('learn');setMT('learn')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Apprendre
+  </div>
+</nav>
+
+<!-- MODAL -->
+<div id="mo">
+  <div class="modal">
+    <div class="mo-t" id="mo-t"></div>
+    <div class="mo-s" id="mo-s"></div>
+    <div id="mo-b"></div>
+    <div class="mbtns" id="mo-btns"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   IXA v6 — ZERO BUG EDITION — by Tom
+══════════════════════════════════════════════════════ */
+
+// ── ACTIVE GROQ MODELS (no decommissioned models) ──
+const MODELS = {
+  smart:   'llama-3.3-70b-versatile',
+  fast:    'llama-3.1-8b-instant',
+  vision:  'llama-3.2-11b-vision-preview',
+  backup:  'gemma2-9b-it',
+};
+// Fallback chains: on any error, silently try next
+const CHAINS = {
+  vision: ['llama-3.2-11b-vision-preview', 'llama-3.3-70b-versatile', 'gemma2-9b-it'],
+  smart:  ['llama-3.3-70b-versatile', 'gemma2-9b-it', 'llama-3.1-8b-instant'],
+  fast:   ['llama-3.1-8b-instant', 'gemma2-9b-it', 'llama-3.3-70b-versatile'],
+};
+const TPM = {
+  'llama-3.3-70b-versatile': 12000,
+  'llama-3.1-8b-instant':     6000,
+  'llama-3.2-11b-vision-preview': 7000,
+  'gemma2-9b-it':            15000,
+};
+
+// ── JARVIS SYSTEM PROMPT ──
+const SYS = () => `Tu es IXA (Intelligence eXpansive Avancée), un système d'IA personnel de haute technologie créé par Tom.
+PERSONNALITÉ : Tu parles comme JARVIS d'Iron Man — sophistiqué, légèrement formel mais chaleureux, efficace. Tu appelles Tom par son prénom naturellement ("Bien sûr, Tom.", "Voici l'analyse, Tom.").
+RÈGLES :
+• Réponds TOUJOURS en français (sauf autre langue de Tom)
+• Sois direct et structuré — utilise le Markdown
+• Ne dis jamais "Je suis une IA" — tu es IXA, le système de Tom
+DOCUMENTS — génère le contenu COMPLET entre balises :
+\`\`\`document:TYPE
+contenu complet ici
+\`\`\`
+Types: rapport, lettre, cv, contrat, document, excel, word, powerpoint, pdf
+Pour excel: JSON { "sheets":[{"name":"Feuille1","headers":["Col1","Col2"],"rows":[["val1","val2"]]}] }
+Pour powerpoint: JSON { "title":"Titre","slides":[{"title":"Slide","content":"Texte","bullets":["point1"]}] }
+Pour word/rapport/lettre/cv: Markdown structuré complet
+MODIFICATION: si fichier joint + demande de modification → retourner fichier COMPLET modifié dans \`\`\`document:TYPE\`\`\`.
+Date: ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}.`;
+
+// ── STATE ──
+const S = {
+  groqKey: '', ghToken: '', ghUser: '', ghRepo: '', ghBranch: 'main',
+  user: null, allUsers: null, usersSHA: '',
+  chats: [], cid: null,
+  attachments: [],
+  commands: {},
+  memory: [],
+  tab: 'chat', loading: false,
+  recognition: null, synth: window.speechSynthesis,
+  voiceQueue: [], voiceActive: false, voicePaused: false,
+  learnDoc: null,
+};
+window.__docs = {};
+
+/* ══════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════ */
+async function boot() {
+  setLStat('Chargement de la configuration…');
+  // Load config.json
+  try {
+    const r = await fetch('config.json');
+    if (r.ok) {
+      const cfg = await r.json();
+      S.groqKey = (cfg.groq_api_key || '').trim();
+      S.ghToken = (cfg.github_token || '').trim();
+      const repo = (cfg.github_repo || '').trim();
+      if (repo.includes('/')) { const p = repo.split('/'); S.ghUser = p[0]; S.ghRepo = p[1]; }
+      S.ghBranch = cfg.github_branch || 'main';
+    }
+  } catch(e) {}
+
+  // Try to load users from GitHub
+  if (S.ghToken && S.ghUser && S.ghRepo) {
+    setLStat('Connexion à la base de données…');
+    try { await fetchUsers(); } catch(e) {
+      S.allUsers = getLocalUsers();
+    }
+  } else {
+    S.allUsers = getLocalUsers();
+  }
+
+  setLStat('', true);
+  showLoginForm();
+}
+
+function getLocalUsers() {
+  try { return JSON.parse(localStorage.getItem('ixa_users')) || defaultUsers(); } catch(e) { return defaultUsers(); }
+}
+function defaultUsers() {
+  return { users: [{ id:'u001', username:'admin', password:'admin', display_name:'Admin', role:'admin', avatar:'👤', conversations:[], commands:{}, memory:['Tom est le créateur d\'IXA','IXA parle comme JARVIS','Répondre toujours en français'] }] };
+}
+
+function setLStat(txt, done=false) {
+  const el = document.getElementById('lstat');
+  const t = document.getElementById('lstat-t');
+  if (done) { el.style.display = 'none'; return; }
+  el.style.display = 'flex'; t.textContent = txt;
+}
+function showLoginForm() {
+  ['li-u','li-p','li-btn'].forEach(id => document.getElementById(id).style.display = '');
+  document.getElementById('li-u').focus();
+  document.getElementById('li-p').onkeydown = e => { if(e.key==='Enter') doLogin(); };
+  document.getElementById('li-u').onkeydown = e => { if(e.key==='Enter') document.getElementById('li-p').focus(); };
+}
+
+async function fetchUsers() {
+  const r = await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`, {
+    headers: { 'Authorization': `token ${S.ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
+  });
+  if (!r.ok) throw new Error('GH ' + r.status);
+  const d = await r.json();
+  S.usersSHA = d.sha;
+  S.allUsers = JSON.parse(atob(d.content.replace(/\n/g, '')));
+  localStorage.setItem('ixa_users', JSON.stringify(S.allUsers));
+}
+
+async function pushUsers() {
+  if (!S.user || !S.allUsers) return;
+  const idx = S.allUsers.users.findIndex(u => u.id === S.user.id);
+  if (idx < 0) return;
+  S.allUsers.users[idx] = {
+    ...S.allUsers.users[idx],
+    conversations: S.chats.slice(0,40).map(c => ({ ...c, messages: c.messages.slice(-20) })),
+    commands: S.commands,
+    memory: S.memory,
+  };
+  S.allUsers.updated = new Date().toISOString();
+  localStorage.setItem('ixa_users', JSON.stringify(S.allUsers));
+  if (!S.ghToken || !S.ghUser || !S.ghRepo) return;
+  try {
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(S.allUsers, null, 2))));
+    const body = { message:`IXA sync — ${new Date().toLocaleString('fr-FR')}`, content:b64, branch:S.ghBranch };
+    if (S.usersSHA) body.sha = S.usersSHA;
+    const r = await fetch(`https://api.github.com/repos/${S.ghUser}/${S.ghRepo}/contents/users.json`, {
+      method: 'PUT', headers: { 'Authorization':`token ${S.ghToken}`, 'Content-Type':'application/json', 'Accept':'application/vnd.github.v3+json' },
+      body: JSON.stringify(body)
+    });
+    if (r.ok) { const d = await r.json(); if(d.content?.sha) S.usersSHA = d.content.sha; }
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════ */
+function doLogin() {
+  const u = document.getElementById('li-u').value.trim().toLowerCase();
+  const p = document.getElementById('li-p').value;
+  const erEl = document.getElementById('lerr');
+  erEl.textContent = '';
+  if (!u || !p) { erEl.textContent = 'Veuillez remplir tous les champs.'; return; }
+  if (!S.allUsers?.users) { erEl.textContent = 'Base de données non chargée.'; return; }
+  const usr = S.allUsers.users.find(x => x.username.toLowerCase() === u && x.password === p);
+  if (!usr) { erEl.textContent = 'Identifiant ou mot de passe incorrect.'; return; }
+  S.user = usr;
+  S.chats = JSON.parse(JSON.stringify(usr.conversations || []));
+  S.commands = JSON.parse(JSON.stringify(usr.commands || {}));
+  S.memory = JSON.parse(JSON.stringify(usr.memory || []));
+  document.getElementById('login').classList.add('hide');
+  setTimeout(() => { document.getElementById('login').style.display = 'none'; }, 420);
+  initApp();
+}
+
+function logout() {
+  S.user = null; S.chats = []; S.commands = {}; S.memory = [];
+  stopSpeech();
+  const loginEl = document.getElementById('login');
+  loginEl.style.display = 'flex'; loginEl.classList.remove('hide');
+  document.getElementById('li-p').value = ''; document.getElementById('lerr').textContent = '';
+  setLStat('', true); showLoginForm();
+}
+
+function initApp() {
+  document.getElementById('upill').style.display = 'flex';
+  document.getElementById('u-av').textContent = S.user.avatar || '👤';
+  document.getElementById('u-nm').textContent = S.user.display_name || S.user.username;
+  document.getElementById('u-rl').textContent = S.user.role === 'admin' ? 'Administrateur' : 'Utilisateur';
+  updateApiSt();
+  renderHist(); renderCmds();
+  S.chats.length ? loadChat(S.chats[0].id) : createChat();
+  initSpeech();
+  setInterval(() => { if(S.user) pushUsers(); }, 180000);
+}
+
+/* ══════════════════════════════════════════════════════
+   SPEECH — IMPROVED TTS WITH SENTENCE QUEUE
+══════════════════════════════════════════════════════ */
+let _vOn = false;
+
+function initSpeech() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  S.recognition = new SR();
+  S.recognition.lang = 'fr-FR'; S.recognition.interimResults = true; S.recognition.continuous = false;
+  S.recognition.onresult = e => {
+    const txt = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('vtr').textContent = txt;
+    if (e.results[e.results.length-1].isFinal) onVoiceResult(txt);
+  };
+  S.recognition.onerror = () => { _vOn = false; resetVUI(); };
+  S.recognition.onend   = () => { _vOn = false; document.getElementById('orb-box').classList.remove('listening'); };
+}
+
+function toggleVoice() {
+  if (!S.recognition) { toast('❌ Vocal non supporté sur ce navigateur', 'err'); return; }
+  if (_vOn) { S.recognition.stop(); stopSpeech(); _vOn = false; resetVUI(); return; }
+  stopSpeech(); _vOn = true;
+  document.getElementById('orb-box').classList.add('listening');
+  document.getElementById('vst').textContent = 'IXA vous écoute, Tom…';
+  document.getElementById('vtr').textContent = '';
+  setVBtn('stop');
+  try { S.recognition.start(); } catch(e) { _vOn = false; resetVUI(); }
+}
+
+async function onVoiceResult(text) {
+  _vOn = false;
+  document.getElementById('orb-box').classList.remove('listening');
+  document.getElementById('vst').textContent = 'IXA analyse…';
+  setVBtn('start');
+  const reply = await handleSend(text);
+  if (reply && S.tab === 'voice') {
+    document.getElementById('vst').textContent = 'IXA répond…';
+    speakChunked(stripMd(reply));
+  } else resetVUI();
+}
+
+function stripMd(t) {
+  return t.replace(/```[\s\S]*?```/g,'').replace(/[*#_`~\[\]]/g,'').replace(/<[^>]+>/g,'').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+function speakChunked(text) {
+  stopSpeech();
+  const sentences = text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [text];
+  S.voiceQueue = sentences.map(s => s.trim()).filter(s => s.length > 2);
+  S.voiceActive = true; S.voicePaused = false;
+  document.getElementById('laudio').style.display = 'none';
+  document.getElementById('vpb').style.width = '0%';
+  speakNext();
+}
+
+function speakNext() {
+  if (!S.voiceQueue.length || !S.voiceActive) {
+    S.voiceActive = false;
+    document.getElementById('vpb').style.width = '100%';
+    setTimeout(() => { document.getElementById('vpb').style.width = '0%'; if(S.tab==='voice') resetVUI(); }, 1200);
+    return;
+  }
+  const sentence = S.voiceQueue.shift();
+  const u = new SpeechSynthesisUtterance(sentence);
+  const voices = S.synth.getVoices();
+  const frVoice = voices.find(v => v.lang==='fr-FR' && /natural|premium|enhanced/i.test(v.name))
+    || voices.find(v => v.lang==='fr-FR') || voices.find(v => v.lang.startsWith('fr')) || null;
+  if (frVoice) u.voice = frVoice;
+  u.lang = 'fr-FR'; u.rate = 1.05; u.pitch = 1.0;
+  const total = S.voiceQueue.length + 1;
+  u.onend = () => { if (S.voiceActive && !S.voicePaused) speakNext(); };
+  u.onerror = () => speakNext();
+  const done = Math.round((1 - S.voiceQueue.length / total) * 95);
+  document.getElementById('vpb').style.width = done + '%';
+  S.synth.speak(u);
+}
+
+function stopSpeech() {
+  S.voiceQueue = []; S.voiceActive = false; S.voicePaused = false;
+  S.synth.cancel();
+  document.getElementById('vpb').style.width = '0%';
+}
+
+function audioToggle() {
+  if (S.voicePaused) {
+    S.voicePaused = false; S.synth.resume();
+    document.getElementById('a-pp').textContent = '⏸'; document.getElementById('a-stat').textContent = 'Lecture…';
+  } else {
+    S.voicePaused = true; S.synth.pause();
+    document.getElementById('a-pp').textContent = '▶'; document.getElementById('a-stat').textContent = 'En pause';
+  }
+}
+function audioStop() {
+  stopSpeech();
+  document.getElementById('laudio').style.display = 'none';
+  document.getElementById('a-pp').textContent = '⏸'; document.getElementById('a-stat').textContent = 'Lecture…';
+}
+
+function resetVUI() {
+  _vOn = false;
+  document.getElementById('orb-box').classList.remove('listening');
+  document.getElementById('vst').textContent = 'En attente de vos instructions, Tom';
+  document.getElementById('vtr').textContent = '';
+  document.getElementById('vpb').style.width = '0%';
+  setVBtn('start');
+}
+
+function setVBtn(mode) {
+  const b = document.getElementById('vbtn');
+  if (mode === 'stop') b.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Arrêter`;
+  else b.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Activer IXA`;
+}
+
+/* ══════════════════════════════════════════════════════
+   FILE READING — text, xlsx, image, pdf
+══════════════════════════════════════════════════════ */
+const IMG_EXT = ['png','jpg','jpeg','gif','webp'];
+
+function readFile(file, cb) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const isImg = IMG_EXT.includes(ext);
+  const isXL = ['xlsx','xls'].includes(ext);
+  const isPDF = ext === 'pdf';
+  if (isXL) {
+    const r = new FileReader(); r.readAsArrayBuffer(file);
+    r.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        let txt = '';
+        wb.SheetNames.forEach(sn => { txt += `=== Feuille: ${sn} ===\n${XLSX.utils.sheet_to_csv(wb.Sheets[sn])}\n\n`; });
+        cb({ content: txt.trim(), name: file.name, isImg: false, isPDF: false, isXL: true });
+      } catch(err) { cb({ content: `[Erreur XLSX: ${err.message}]`, name: file.name, isImg: false, isPDF: false }); }
+    };
+    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+  } else if (isImg || isPDF) {
+    const r = new FileReader(); r.readAsDataURL(file);
+    r.onload = e => cb({ dataURL: e.target.result, b64: e.target.result.split(',')[1], name: file.name, isImg, isPDF, content: null });
+    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+  } else {
+    const r = new FileReader(); r.readAsText(file, 'UTF-8');
+    r.onload = e => cb({ content: e.target.result, name: file.name, isImg: false, isPDF: false });
+    r.onerror = () => cb({ content: '[Erreur lecture]', name: file.name, isImg: false, isPDF: false });
+  }
+}
+
+function handleFiles(input) {
+  Array.from(input.files).forEach(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const isXL = ['xlsx','xls'].includes(ext);
+    const max = (IMG_EXT.includes(ext) ? 5 : isXL ? 8 : ext==='pdf' ? 10 : 4) * 1024 * 1024;
+    if (f.size > max) { toast(`❌ Fichier trop grand : ${f.name}`, 'err'); return; }
+    readFile(f, d => { S.attachments.push({ ...d, fileType: f.type }); renderAT(); toast(`📎 ${f.name} ajouté`); });
+  });
+  input.value = '';
+}
+
+function renderAT() {
+  document.getElementById('at').innerHTML = S.attachments.map((a,i) => `
+    <div class="ach">${a.isImg?'🖼️':a.isPDF?'📑':a.isXL?'📗':'📄'} ${esc(a.name)}
+      <span class="arm" onclick="rmAT(${i})">×</span></div>`).join('');
+}
+function rmAT(i) { S.attachments.splice(i, 1); renderAT(); }
+
+/* ══════════════════════════════════════════════════════
+   FILE SHORTCUTS (COMMANDS)
+══════════════════════════════════════════════════════ */
+let _mf = null;
+
+function renderCmds() {
+  const l = document.getElementById('fcmd-list');
+  const cmds = Object.entries(S.commands);
+  if (!cmds.length) { l.innerHTML = '<div class="cmd-empty">Aucun raccourci. Ajoutez-en un ci-dessous.</div>'; return; }
+  l.innerHTML = cmds.map(([c,d]) => `
+    <div class="fi2" onclick="hint('${esc(c)} ')">
+      <span class="fi2-badge">${esc(c)}</span>
+      <span class="fi2-name">${esc(d.desc||d.name)}</span>
+      <div class="fi2-acts">
+        <button class="fi2b r" onclick="openRenCmd('${esc(c)}',event)" title="Renommer">✏️</button>
+        <button class="fi2b d" onclick="rmCmd('${esc(c)}',event)" title="Supprimer">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function openAddCmd() {
+  _mf = null;
+  showModal('Ajouter un raccourci',
+    'Associez un <b>/mot-clé</b> à un fichier. Tapez ensuite <b>/mot-clé votre question</b> dans le chat.',
+    `<input class="mi" id="mc-cmd" placeholder="/planning (sans espaces)">
+     <input class="mi" id="mc-desc" placeholder="Description (ex: Mon planning hebdo)">
+     <input type="file" id="mc-f" style="display:none" onchange="mcFChange(this)">
+     <button onclick="document.getElementById('mc-f').click()" style="background:var(--c1);border:1px solid var(--bd2);color:var(--mu);padding:9px;border-radius:9px;font-size:.77rem;cursor:pointer;width:100%;text-align:center;font-family:'Space Grotesk',sans-serif;transition:.2s" onmouseover="this.style.borderColor='var(--a)'" onmouseout="this.style.borderColor='var(--bd2)'">📎 Choisir le fichier</button>
+     <div id="mc-fn" style="font-size:.74rem;color:var(--a);min-height:16px"></div>`,
+    [{l:'Annuler',c:'can',f:'closeModal()'},{l:'Enregistrer',c:'cfm',f:'saveCmd()'}]
+  );
+}
+
+function mcFChange(input) {
+  const f = input.files[0]; if (!f) return;
+  const max = 8 * 1024 * 1024;
+  if (f.size > max) { toast('❌ Fichier trop grand (max 8MB)', 'err'); return; }
+  readFile(f, d => { _mf = { ...d, fileType: f.type }; document.getElementById('mc-fn').textContent = '📎 ' + f.name; });
+}
+
+function saveCmd() {
+  let cmd = (document.getElementById('mc-cmd')?.value || '').trim();
+  const desc = (document.getElementById('mc-desc')?.value || '').trim();
+  if (!cmd || !_mf) { toast('❌ Mot-clé et fichier requis', 'err'); return; }
+  if (!cmd.startsWith('/')) cmd = '/' + cmd;
+  cmd = cmd.replace(/\s+/g, '_');
+  S.commands[cmd] = { ..._mf, desc };
+  saveLocal(); renderCmds(); closeModal();
+  toast(`✅ Raccourci ${cmd} enregistré !`, 'ok');
+}
+
+function rmCmd(cmd, e) {
+  e.stopPropagation();
+  delete S.commands[cmd]; saveLocal(); renderCmds();
+  toast(`Raccourci ${cmd} supprimé`);
+}
+
+function openRenCmd(cmd, e) {
+  e.stopPropagation();
+  showModal('Renommer le raccourci', `Nouveau nom pour <b>${esc(cmd)}</b> :`,
+    `<input class="mi" id="rn-v" value="${esc(cmd)}" placeholder="/nouveau_nom">`,
+    [{l:'Annuler',c:'can',f:'closeModal()'},{l:'Renommer',c:'cfm',f:'applyRenCmd()'}]
+  );
+  document.getElementById('mo').dataset.ren = cmd;
+  setTimeout(() => { const el=document.getElementById('rn-v'); if(el){el.focus();el.select();} }, 80);
+}
+
+function applyRenCmd() {
+  let nv = (document.getElementById('rn-v')?.value || '').trim();
+  const old = document.getElementById('mo').dataset.ren;
+  if (!nv || !old) { closeModal(); return; }
+  if (!nv.startsWith('/')) nv = '/' + nv;
+  nv = nv.replace(/\s+/g, '_');
+  if (nv !== old) { S.commands[nv] = { ...S.commands[old] }; delete S.commands[old]; saveLocal(); renderCmds(); }
+  closeModal(); toast(`✅ Renommé en ${nv}`, 'ok');
+}
+
+function showCmdSuggest(val) {
+  const box = document.getElementById('cmd-s');
+  if (!val.startsWith('/') || val.includes(' ')) { box.style.display='none'; return; }
+  const m = Object.entries(S.commands).filter(([c]) => c.startsWith(val));
+  if (!m.length) { box.style.display='none'; return; }
+  box.style.display = 'flex';
+  box.innerHTML = m.map(([c,d]) => `<div class="csi" onclick="selectCmd('${esc(c)}')"><span class="cmd">${esc(c)}</span><span class="fn">${esc(d.desc||d.name)}</span></div>`).join('');
+}
+function selectCmd(cmd) {
+  document.getElementById('mi').value = cmd + ' ';
+  document.getElementById('cmd-s').style.display = 'none';
+  document.getElementById('mi').focus();
+}
+
+/* ══════════════════════════════════════════════════════
+   SEND + INVISIBLE MODEL ROUTING
+══════════════════════════════════════════════════════ */
+async function handleSend(voiceText = null) {
+  if (S.loading) return null;
+  const inp = document.getElementById('mi');
+  let text = (voiceText !== null ? voiceText : inp.value).trim();
+  if (!text && S.attachments.length === 0) return null;
+  document.getElementById('cmd-s').style.display = 'none';
+
+  // Resolve /command → inject file automatically
+  let cmdAtts = [];
+  for (const [cmd] of Object.entries(S.commands)) {
+    if (text === cmd || text.startsWith(cmd + ' ')) {
+      cmdAtts = [{ ...S.commands[cmd] }];
+      text = text.slice(cmd.length).trim() || 'Analyse ce fichier en détail et réponds à ma question.';
+      break;
+    }
+  }
+  const atts = [...S.attachments, ...cmdAtts];
+
+  document.getElementById('welcome')?.remove();
+  S.loading = true; document.getElementById('sbtn').disabled = true;
+
+  const display = text || `Analyse: ${atts.map(a=>a.name).join(', ')}`;
+  renderUserMsg(display, atts);
+  if (!voiceText) { inp.value = ''; inp.style.height = 'auto'; }
+
+  const chat = S.chats.find(c => c.id === S.cid);
+  if (!chat) { S.loading=false; document.getElementById('sbtn').disabled=false; return null; }
+  if (!chat.messages.length && text) { chat.title = text.slice(0,44)+(text.length>44?'…':''); renderHist(); }
+
+  // Handle large files (chunk)
+  let finalAtts = [...atts];
+  const bigFile = finalAtts.find(a => !a.isImg && !a.isPDF && a.content && a.content.length > 9000);
+  if (bigFile) {
+    if (!chat._chunks) chat._chunks = {};
+    chat._chunks[bigFile.name] = { full: bigFile.content, idx: 1, q: text };
+    const trunc = bigFile.content.slice(0, 9000) + `\n\n[…Fichier tronqué (${bigFile.content.length} car. total). Tapez "suite" pour la partie suivante.]`;
+    finalAtts = finalAtts.map(a => a === bigFile ? { ...a, content: trunc } : a);
+  }
+  // Handle "suite" continuation
+  if (text.toLowerCase().trim() === 'suite' && chat._chunks) {
+    const ck = Object.values(chat._chunks)[0];
+    if (ck && ck.idx * 9000 < ck.full.length) {
+      finalAtts = [{ name:'suite', content:`[PARTIE ${ck.idx+1}]\n${ck.full.slice(ck.idx*9000,(ck.idx+1)*9000)}`, isImg:false, isPDF:false }];
+      ck.idx++;
+    }
+  }
+
+  const chain = pickChain(text, finalAtts);
+  const reply = await callWithFallback(text, finalAtts, chat, CHAINS[chain], 0);
+  S.attachments = []; document.getElementById('at').innerHTML = '';
+  S.loading = false; document.getElementById('sbtn').disabled = false;
+  setTimeout(() => { if(S.user) pushUsers(); }, 2000);
+  return reply;
+}
+
+function hint(t) { document.getElementById('mi').value = t; handleSend(); }
+
+function pickChain(text, atts) {
+  if (atts.some(a => a.isImg)) return 'vision';
+  const hasDoc = atts.some(a => a.content || a.isPDF);
+  const isGen = /crée|génère|rédige|écris|produis|word|excel|powerpoint|pptx|pdf|rapport|lettre|cv|tableau|présentation|contrat/i.test(text);
+  if (isGen || hasDoc || text.length > 400) return 'smart';
+  return 'fast';
+}
+
+async function callWithFallback(text, atts, chat, models, idx) {
+  if (idx >= models.length) {
+    renderMsg('assistant', 'Tous les systèmes sont momentanément saturés, Tom. Veuillez patienter quelques instants.');
+    return null;
+  }
+  const model = models[idx];
+
+  // Build API content properly
+  let apiContent;
+  if (atts.some(a => a.isImg)) {
+    // Vision: multipart array
+    const parts = [];
+    atts.forEach(a => {
+      if (a.isImg && a.dataURL) {
+        parts.push({ type:'image_url', image_url:{ url: a.dataURL } });
+      } else if (a.content) {
+        parts.push({ type:'text', text:`=== Fichier: ${a.name} ===\n${a.content}\n===` });
+      } else if (a.isPDF) {
+        parts.push({ type:'text', text:`[Document PDF joint: ${a.name}]` });
+      }
+    });
+    parts.push({ type:'text', text: text || 'Analyse ce contenu en détail.' });
+    apiContent = parts;
+  } else if (atts.length > 0) {
+    // Text documents: inject as text
+    const docBlock = atts.map(a => {
+      if (a.isPDF) return `=== Document PDF: ${a.name} ===\n[PDF joint — analyse basée sur le nom et le contexte de la conversation]\n=== Fin ${a.name} ===`;
+      return `=== Fichier: ${a.name} ===\n${a.content || ''}\n=== Fin ${a.name} ===`;
+    }).join('\n\n');
+    apiContent = `${docBlock}\n\n--- Instruction ---\n${text}`;
+  } else {
+    apiContent = text;
+  }
+
+  // Check token estimate, auto-escalate to bigger model if needed
+  const estTok = Math.ceil(String(typeof apiContent==='string' ? apiContent : JSON.stringify(apiContent)).length / 3.5);
+  const modelLimit = TPM[model] || 5000;
+  if (estTok > modelLimit * 0.8 && idx + 1 < models.length) {
+    return callWithFallback(text, atts, chat, models, idx + 1);
+  }
+
+  // Store user message for history
+  chat.messages.push({ role:'user', content: typeof apiContent==='string' ? apiContent.slice(0,500)+'…' : text, displayContent: text, apiContent });
+  saveLocal();
+  const tid = showTyping();
+
+  try {
+    const sysPrompt = SYS() + (S.memory.length ? '\n\nMÉMOIRE:\n' + S.memory.map(m=>`• ${m}`).join('\n') : '');
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization':`Bearer ${S.groqKey}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role:'system', content: sysPrompt },
+          ...chat.messages.map(m => ({ role: m.role, content: m.apiContent || m.content }))
+        ],
+        max_tokens: 4096,
+        temperature: 0.72,
+      })
+    });
+    removeTyping(tid);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData.error?.message || '';
+      chat.messages.pop(); saveLocal();
+      // Silently fallback on 429, decommissioned, or model errors
+      if (res.status === 429 || res.status === 503 || errMsg.includes('decommissioned') || errMsg.includes('deprecated') || errMsg.includes('not found') || errMsg.includes('does not exist')) {
+        return callWithFallback(text, atts, chat, models, idx + 1);
+      }
+      if (res.status === 401) { updateApiSt(false); renderMsg('assistant', 'Clé API invalide, Tom. Vérifiez votre config.json.'); return null; }
+      renderMsg('assistant', 'Une erreur temporaire s\'est produite, Tom. Veuillez réessayer.');
+      return null;
+    }
+
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || '';
+    if (!reply) { chat.messages.pop(); saveLocal(); renderMsg('assistant', 'Réponse vide. Veuillez réessayer, Tom.'); return null; }
+    renderMsg('assistant', reply);
+    chat.messages.push({ role:'assistant', content: reply });
+    saveLocal();
+    return reply;
+
+  } catch(e) {
+    removeTyping(tid);
+    chat.messages.pop(); saveLocal();
+    renderMsg('assistant', 'Erreur réseau, Tom. Vérifiez votre connexion Internet.');
+    return null;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   RENDER MESSAGES + MARKDOWN
+══════════════════════════════════════════════════════ */
+function renderUserMsg(text, atts = []) {
+  const cont = document.getElementById('msgs');
+  const div = document.createElement('div'); div.className = 'message user';
+  const ah = atts.map(a =>
+    a.isImg ? `<img src="${a.dataURL}" class="msg-img" alt="${esc(a.name)}">` :
+    `<div class="msg-file">${a.isPDF?'📑':a.isXL?'📗':'📄'} ${esc(a.name)}</div>`
+  ).join('');
+  div.innerHTML = `<div class="mav">👤</div><div class="mbody"><div class="mrole">Tom</div>${ah}<div class="mc">${esc(text)}</div></div>`;
+  cont.appendChild(div); cont.scrollTop = cont.scrollHeight;
+}
+
+function renderMsg(role, content) {
+  const cont = document.getElementById('msgs');
+  const div = document.createElement('div'); div.className = `message ${role==='user'?'user':'ass'}`;
+  const body = role === 'assistant' ? renderAI(content) : `<div class="mc">${esc(content)}</div>`;
+  div.innerHTML = `<div class="mav">${role==='user'?'👤':'🤖'}</div><div class="mbody"><div class="mrole">${role==='user'?'Tom':'IXA'}</div>${body}</div>`;
+  cont.appendChild(div); cont.scrollTop = cont.scrollHeight;
+}
+
+function renderAI(raw) {
+  const re = /```document(?::(\w+))?\n([\s\S]*?)```/g;
+  let html = '', li = 0, m;
+  while ((m = re.exec(raw)) !== null) {
+    const before = raw.slice(li, m.index).trim();
+    if (before) html += `<div class="mc">${md(before)}</div>`;
+    const dtype = m[1] || 'document', dcontent = m[2].trim();
+    const did = 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    window.__docs[did] = { type: dtype, content: dcontent };
+    html += makeDocCard(did, dtype, dcontent);
+    li = m.index + m[0].length;
+  }
+  const rem = raw.slice(li).trim();
+  if (rem) html += `<div class="mc">${md(rem)}</div>`;
+  return html || `<div class="mc">${md(raw)}</div>`;
+}
+
+function md(raw) {
+  let t = raw;
+  // Code blocks
+  t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const id = 'cb_' + Math.random().toString(36).slice(2);
+    return `<div class="cb"><div class="cbh"><span class="cbl">${lang||'text'}</span><button class="cpb" id="${id}" onclick="copyCode('${id}')">Copier</button></div><pre><code>${esc(code.trim())}</code></pre></div>`;
+  });
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  t = t.replace(/^#{4}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#\s+(.+)$/gm,'<h1>$1</h1>');
+  t = t.replace(/^>\s+(.+)$/gm,'<blockquote>$1</blockquote>').replace(/^-{3,}$/gm,'<hr>');
+  t = t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/__(.+?)__/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/_([^_]+)_/g,'<em>$1</em>');
+  // Tables
+  t = t.replace(/(\|.+\|\n\|[-|:\s]+\|\n(?:\|.+\|\n?)*)/g, match => {
+    const lines = match.trim().split('\n').filter(l => l.trim() && !/^\|[-|:\s]+\|$/.test(l));
+    return '<table>' + lines.map((l,i) => {
+      const cells = l.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+      return i===0 ? `<tr>${cells.map(c=>`<th>${c}</th>`).join('')}</tr>` : `<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+    }).join('') + '</table>';
+  });
+  t = t.replace(/^[-*•]\s+(.+)$/gm,'<li>$1</li>');
+  t = t.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+  t = t.replace(/^\d+\.\s+(.+)$/gm,'<li>$1</li>');
+  t = t.replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
+  return `<p>${t}</p>`;
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function copyCode(id) {
+  const b = document.getElementById(id)?.closest('.cb'); if(!b) return;
+  navigator.clipboard.writeText(b.querySelector('code').textContent).then(() => {
+    const btn = document.getElementById(id); btn.textContent='✓ Copié'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent='Copier'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   DOCUMENT GENERATION — Word, Excel, PowerPoint, PDF
+══════════════════════════════════════════════════════ */
+function makeDocCard(id, type, content) {
+  const icons = { rapport:'📊',lettre:'✉️',cv:'👤',tableau:'📋',code:'💻',document:'📄',contrat:'📝',presentation:'📑',excel:'📗',word:'📘',powerpoint:'📑',pdf:'📕' };
+  const icon = icons[type] || '📄';
+  const isXL = type==='excel', isPPT = ['powerpoint','presentation'].includes(type);
+  return `<div class="doc-card">
+    <div class="dch"><span class="dci">${icon}</span><div>
+      <div class="dct">${type.charAt(0).toUpperCase()+type.slice(1)} — prêt à télécharger</div>
+      <div class="dcs">${content.split('\n').length} lignes · ${content.length} car.</div>
+    </div></div>
+    <div class="dca">
+      ${isXL  ? `<button class="dcb dl" onclick="genXLSX('${id}')">⬇ Excel (.xlsx)</button>` : ''}
+      ${isPPT ? `<button class="dcb dl" onclick="genPPTX('${id}')">⬇ PowerPoint (.pptx)</button>` : ''}
+      ${!isXL && !isPPT ? `<button class="dcb dl" onclick="genWord('${id}')">⬇ Word (.doc)</button>` : ''}
+      ${!isXL && !isPPT ? `<button class="dcb dl" onclick="dlRaw('${id}','md')">⬇ Markdown (.md)</button>` : ''}
+      <button class="dcb pv" onclick="prvDoc('${id}')">👁 Aperçu</button>
+      <button class="dcb pv" onclick="cpDoc('${id}')">📋 Copier</button>
+    </div></div>`;
+}
+
+function getDoc(id) { return window.__docs[id] || null; }
+
+function dlRaw(id, ext) {
+  const d = getDoc(id); if(!d) return;
+  const blob = new Blob([d.content], { type:'text/plain;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ixa_${d.type}.${ext}`; a.click(); URL.revokeObjectURL(a.href);
+  toast('✅ Fichier téléchargé !', 'ok');
+}
+
+function cpDoc(id) {
+  const d = getDoc(id); if(!d) return;
+  navigator.clipboard.writeText(d.content).then(() => toast('📋 Copié !','ok'));
+}
+
+function genWord(id) {
+  const d = getDoc(id); if(!d) return;
+  const body = md2html(d.content);
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Calibri,sans-serif;font-size:11pt;margin:2.5cm;line-height:1.6}
+  h1{font-size:16pt;color:#2c3e50}h2{font-size:13pt;color:#34495e}h3{font-size:11pt;color:#555}
+  table{border-collapse:collapse;width:100%}th,td{border:1px solid #bdc3c7;padding:7px}
+  th{background:#ecf0f1;font-weight:bold}pre{background:#f5f5f5;padding:10px;border-radius:4px;font-size:10pt}
+  blockquote{border-left:4px solid #6c5ce7;padding-left:12px;color:#666;margin:8px 0}
+  </style></head><body>${body}</body></html>`;
+  const blob = new Blob([html], { type:'application/msword;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ixa_${d.type}.doc`; a.click(); URL.revokeObjectURL(a.href);
+  toast('✅ Word téléchargé !', 'ok');
+}
+
+function genXLSX(id) {
+  const d = getDoc(id); if(!d) return;
+  try {
+    let data;
+    try { data = JSON.parse(d.content); } catch(e) {
+      const lines = d.content.trim().split('\n').filter(l=>l.trim());
+      const rows = lines.map(l => l.split(/[,\t|]/).map(c=>c.trim()));
+      data = { sheets: [{ name:'Données', headers: rows[0]||[], rows: rows.slice(1) }] };
+    }
+    const wb = XLSX.utils.book_new();
+    const sheets = data.sheets || [{ name:'Feuille1', headers:[], rows:[] }];
+    sheets.forEach(s => {
+      const wsData = [];
+      if (s.headers?.length) wsData.push(s.headers);
+      (s.rows||[]).forEach(r => wsData.push(Array.isArray(r) ? r : Object.values(r)));
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      // Auto column width
+      const colWidths = wsData.reduce((acc, row) => { row.forEach((cell, i) => { acc[i] = Math.max(acc[i]||0, String(cell||'').length); }); return acc; }, []);
+      ws['!cols'] = colWidths.map(w => ({ wch: Math.min(w + 2, 40) }));
+      XLSX.utils.book_append_sheet(wb, ws, s.name || 'Feuille');
+    });
+    XLSX.writeFile(wb, `ixa_${d.type}.xlsx`);
+    toast('✅ Excel téléchargé !', 'ok');
+  } catch(e) { toast('❌ Erreur Excel: ' + e.message, 'err'); }
+}
+
+function genPPTX(id) {
+  const d = getDoc(id); if(!d) return;
+  // Generate HTML presentation (PPTX requires external lib, HTML-based slides work universally)
+  try {
+    let data;
+    try { data = JSON.parse(d.content); } catch(e) { data = { title:'Présentation IXA', slides:[{title:'Contenu',content:d.content,bullets:[]}] }; }
+    const slides = (data.slides||[]).map((sl, i) => `
+      <section style="min-height:100vh;background:${i===0?'linear-gradient(135deg,#6c5ce7,#d63af9)':'#0f0f1e'};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;text-align:center;page-break-after:always;box-sizing:border-box">
+        <h${i===0?'1':'2'} style="font-family:sans-serif;color:#fff;font-size:${i===0?'2.5rem':'2rem'};margin-bottom:20px;font-weight:700">${esc(sl.title||'')}</h${i===0?'1':'2'}>
+        ${sl.content ? `<p style="color:rgba(255,255,255,.85);font-size:1.1rem;max-width:700px;line-height:1.7;font-family:sans-serif">${esc(sl.content)}</p>` : ''}
+        ${sl.bullets?.length ? `<ul style="text-align:left;max-width:650px;margin-top:20px">${sl.bullets.map(b=>`<li style="color:rgba(255,255,255,.9);font-size:1rem;margin-bottom:10px;font-family:sans-serif;list-style:none;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#d63af9">▸</span>${esc(b)}</li>`).join('')}</ul>` : ''}
+        <div style="position:absolute;bottom:20px;right:30px;font-size:.75rem;color:rgba(255,255,255,.4);font-family:sans-serif">${i+1}/${data.slides.length}</div>
+      </section>`).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(data.title||'Présentation')}</title>
+      <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000}@media print{section{min-height:100vh}}</style>
+      </head><body>${slides}<script>document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){window.scrollBy({top:window.innerHeight,behavior:'smooth'})}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){window.scrollBy({top:-window.innerHeight,behavior:'smooth'})}})<\/script></body></html>`;
+    const blob = new Blob([html], { type:'text/html;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `ixa_presentation.html`; a.click(); URL.revokeObjectURL(a.href);
+    toast('✅ Présentation téléchargée ! (Ouvrir dans Chrome, F11 pour plein écran)', 'ok');
+  } catch(e) { toast('❌ Erreur PPT: ' + e.message, 'err'); }
+}
+
+function prvDoc(id) {
+  const d = getDoc(id); if(!d) return;
+  const w = window.open('', '_blank');
+  const isXL = d.type==='excel', isPPT = ['powerpoint','presentation'].includes(d.type);
+  let bodyHtml;
+  if (isXL) { bodyHtml = `<pre style="font-family:Consolas,monospace;font-size:13px;padding:20px;background:#f9f9f9;border-radius:8px;overflow-x:auto">${esc(d.content)}</pre>`; }
+  else { bodyHtml = md2html(d.content); }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — ${d.type}</title>
+    <style>body{font-family:Calibri,sans-serif;max-width:860px;margin:40px auto;padding:24px;line-height:1.8;color:#1a1a2e;background:#fafafa}
+    h1{font-size:1.6rem;color:#6c5ce7}h2{font-size:1.2rem;color:#444}h3{font-size:1rem;color:#666}
+    table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #ddd;padding:8px}
+    th{background:#f0f0f8;color:#6c5ce7;font-weight:bold}pre{background:#f0f0f8;padding:14px;border-radius:8px;overflow-x:auto}
+    code{background:#f0f0f8;padding:2px 6px;border-radius:4px}.header{background:linear-gradient(120deg,#6c5ce7,#d63af9);padding:20px 24px;border-radius:10px;margin-bottom:28px}
+    .header h1{color:#fff;margin:0}.header p{color:rgba(255,255,255,.8);margin:4px 0 0;font-size:.82rem}</style></head>
+    <body><div class="header"><h1>${esc(d.type.toUpperCase())} — IXA</h1>
+    <p>Généré le ${new Date().toLocaleDateString('fr-FR')} par le Système IXA de Tom</p></div>
+    ${bodyHtml}</body></html>`);
+  w.document.close();
+}
+
+function md2html(raw) {
+  // Full HTML version for export
+  return md(raw).replace(/<p>|<\/p>/g, '');
+}
+
+function exportChat() {
+  const chat = S.chats.find(c => c.id===S.cid); if(!chat||!chat.messages.length){toast('Aucun message');return;}
+  const content = `# ${chat.title}\n_Export IXA — ${new Date().toLocaleDateString('fr-FR')}_\n\n---\n\n` +
+    chat.messages.map(m => `**${m.role==='user'?'Tom':'IXA'}:**\n\n${m.displayContent||m.content}`).join('\n\n---\n\n');
+  const blob = new Blob([content], { type:'text/markdown;charset=utf-8' });
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download = `ixa_${(chat.title||'conv').replace(/[^a-zA-Z0-9]/g,'_').slice(0,28)}.md`;
+  a.click(); URL.revokeObjectURL(a.href); toast('✅ Export réussi !','ok');
+}
+
+/* ══════════════════════════════════════════════════════
+   LEARN TAB
+══════════════════════════════════════════════════════ */
+function lDrop(e) {
+  e.preventDefault(); document.getElementById('ldrop').classList.remove('drag');
+  const f = e.dataTransfer?.files?.[0]; if(!f) return;
+  const fakeInput = { files: [f] }; learnLoad(fakeInput);
+}
+
+function learnLoad(input) {
+  const f = input.files?.[0] || input; if(!f) return;
+  const ext = f.name.split('.').pop().toLowerCase();
+  const max = 8 * 1024 * 1024;
+  if (f.size > max) { toast('❌ Fichier trop grand pour l\'apprentissage (max 8MB)','err'); return; }
+  readFile(f, d => {
+    S.learnDoc = { name: f.name, content: d.content || '[Image/PDF — analyse visuelle]', isImg: d.isImg, dataURL: d.dataURL, wordCount: (d.content||'').split(/\s+/).filter(Boolean).length };
+    document.getElementById('ldrop').style.display = 'none';
+    const di = document.getElementById('ldoc'); di.style.display = 'flex';
+    document.getElementById('ldoc-nm').textContent = '📄 ' + f.name;
+    document.getElementById('ldoc-mt').textContent = `${S.learnDoc.wordCount} mots · Prêt pour l'apprentissage`;
+    document.getElementById('lc').style.display = 'none';
+    document.getElementById('lc').innerHTML = '';
+    document.getElementById('laudio').style.display = 'none';
+    toast(`📂 ${f.name} chargé`,'ok');
+  });
+  if (input.value !== undefined) input.value = '';
+}
+
+function learnReset() {
+  S.learnDoc = null;
+  document.getElementById('ldrop').style.display = 'flex';
+  document.getElementById('ldoc').style.display = 'none';
+  document.getElementById('lc').style.display = 'none';
+  document.getElementById('laudio').style.display = 'none';
+  stopSpeech();
+}
+
+async function learnGen(mode) {
+  if (!S.learnDoc) return;
+  const btns = ['lb-audio','lb-fc','lb-quiz'].map(id => document.getElementById(id));
+  btns.forEach(b => b.disabled = true);
+  toast('🧠 IXA génère le contenu…');
+
+  const prompts = {
+    audio: `Tu es un excellent pédagogue. Explique ce document de façon claire, structurée et accessible, comme si tu l'expliquais à voix haute à quelqu'un qui ne connaît pas le sujet. Utilise des métaphores et exemples concrets. Longueur: 300-500 mots.\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,6000)}`,
+    flash: `Génère exactement 8 flashcards pour apprendre ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown, sans explication) :\n[{"q":"Question courte","a":"Réponse claire"},{"q":"...","a":"..."}]\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,5000)}`,
+    quiz:  `Génère un quiz de 5 questions à choix multiples sur ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown, sans explication) :\n[{"q":"Question ?","opts":["A","B","C","D"],"correct":0,"explanation":"Explication courte"}]\n\nDOCUMENT:\n${(S.learnDoc.content||'').slice(0,5000)}`,
+  };
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
+      body: JSON.stringify({ model: MODELS.smart, messages: [{ role:'user', content: prompts[mode] }], max_tokens: 3000, temperature: 0.6 })
+    });
+    if (!res.ok) { throw new Error('API ' + res.status); }
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || '';
+    if (!reply) throw new Error('Réponse vide');
+
+    const lc = document.getElementById('lc');
+    lc.style.display = 'flex'; lc.innerHTML = '';
+
+    if (mode === 'audio') {
+      lc.innerHTML = `<div class="expl"><div class="mc">${md(reply)}</div></div>`;
+      document.getElementById('laudio').style.display = 'flex';
+      document.getElementById('apb').style.width = '0%';
+      document.getElementById('a-pp').textContent = '⏸';
+      document.getElementById('a-stat').textContent = 'Lecture…';
+      const cleanReply = stripMd(reply);
+      S.voiceActive = false; S.voicePaused = false;
+      S.voiceQueue = (cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]).map(s=>s.trim()).filter(s=>s.length>2);
+      S.voiceActive = true;
+      // Update apb on progress
+      const total = S.voiceQueue.length;
+      const origSN = speakNext.toString();
+      function speakNextLearn() {
+        if (!S.voiceQueue.length || !S.voiceActive) {
+          S.voiceActive = false;
+          document.getElementById('apb').style.width = '100%';
+          document.getElementById('a-stat').textContent = 'Terminé';
+          return;
+        }
+        const sentence = S.voiceQueue.shift();
+        const u = new SpeechSynthesisUtterance(sentence);
+        const voices = S.synth.getVoices();
+        const frV = voices.find(v=>v.lang==='fr-FR'&&/natural|premium/i.test(v.name))||voices.find(v=>v.lang==='fr-FR')||voices.find(v=>v.lang.startsWith('fr'))||null;
+        if(frV) u.voice=frV; u.lang='fr-FR'; u.rate=1.05; u.pitch=1.0;
+        u.onend = () => { if(S.voiceActive&&!S.voicePaused) speakNextLearn(); };
+        u.onerror = () => speakNextLearn();
+        const done = Math.round((1-S.voiceQueue.length/total)*95);
+        document.getElementById('apb').style.width = done + '%';
+        S.synth.speak(u);
+      }
+      speakNextLearn();
+
+    } else if (mode === 'flash') {
+      let cards;
+      try { cards = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
+      catch(e) { const m=reply.match(/\[[\s\S]*\]/); cards = m ? JSON.parse(m[0]) : []; }
+      if (!Array.isArray(cards)||!cards.length) throw new Error('JSON invalide');
+      lc.innerHTML = `<div style="font-weight:600;font-size:.84rem;margin-bottom:2px">🃏 ${cards.length} Flashcards — Cliquez pour révéler</div>
+        <div class="fc-grid">${cards.map((c,i)=>`
+          <div class="fc" id="fc${i}" onclick="this.classList.toggle('flipped')">
+            <div class="fc-inner">
+              <div class="fc-f">${esc(c.q||c.question||'?')}</div>
+              <div class="fc-b">${esc(c.a||c.answer||'—')}</div>
+            </div></div>`).join('')}
+        </div>`;
+
+    } else if (mode === 'quiz') {
+      let questions;
+      try { questions = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
+      catch(e) { const m=reply.match(/\[[\s\S]*\]/); questions = m ? JSON.parse(m[0]) : []; }
+      if (!Array.isArray(questions)||!questions.length) throw new Error('JSON invalide');
+      let score = 0, answered = 0;
+      lc.innerHTML = `<div style="font-weight:600;font-size:.84rem;margin-bottom:4px">🧩 Quiz — ${questions.length} questions</div>` +
+        questions.map((q,qi) => `
+          <div class="quiz-q" id="qq${qi}">
+            <div class="quiz-qt">${qi+1}. ${esc(q.q||q.question||'?')}</div>
+            <div class="quiz-opts">${(q.opts||q.options||[]).map((opt,oi)=>`
+              <button class="qopt" id="opt${qi}_${oi}" onclick="quizAnswer(${qi},${oi},${q.correct||0},${questions.length},'${esc(q.explanation||'')}')">
+                <b>${'ABCD'[oi]}.</b> ${esc(opt)}
+              </button>`).join('')}
+            </div>
+          </div>`).join('');
+      window._quizScore = 0; window._quizAnswered = 0; window._quizTotal = questions.length;
+    }
+    toast('✅ Contenu généré !','ok');
+  } catch(e) {
+    toast('❌ Erreur génération: ' + e.message, 'err');
+  }
+  btns.forEach(b => b.disabled = false);
+}
+
+function quizAnswer(qi, chosen, correct, total, explanation) {
+  const opts = document.querySelectorAll(`#qq${qi} .qopt`);
+  opts.forEach(b => b.disabled = true);
+  opts[correct].classList.add('correct');
+  if (chosen !== correct) { opts[chosen].classList.add('wrong'); }
+  else { window._quizScore = (window._quizScore||0) + 1; }
+  window._quizAnswered = (window._quizAnswered||0) + 1;
+  if (explanation) {
+    const ex = document.createElement('div'); ex.className='quiz-expl'; ex.textContent='💡 '+explanation;
+    document.getElementById('qq'+qi).appendChild(ex);
+  }
+  if (window._quizAnswered >= total) {
+    const sc = window._quizScore, pct = Math.round(sc/total*100);
+    const scoreDiv = document.createElement('div'); scoreDiv.className='quiz-score';
+    scoreDiv.innerHTML = `${pct>=80?'🏆':pct>=60?'👍':'📚'} Score : <strong>${sc}/${total}</strong> (${pct}%)<br><span style="font-size:.8rem;color:var(--mu);font-weight:400">${pct>=80?'Excellent !':pct>=60?'Bien !':'Révisez encore un peu, Tom.'}</span>`;
+    document.getElementById('lc').appendChild(scoreDiv);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   TYPING INDICATOR
+══════════════════════════════════════════════════════ */
+let _tc = 0;
+function showTyping() {
+  const id = `tp_${++_tc}`;
+  const cont = document.getElementById('msgs');
+  const d = document.createElement('div'); d.className='message ass'; d.id=id;
+  d.innerHTML=`<div class="mav">🤖</div><div class="mbody"><div class="mrole">IXA</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  cont.appendChild(d); cont.scrollTop=cont.scrollHeight; return id;
+}
+function removeTyping(id) { document.getElementById(id)?.remove(); }
+
+/* ══════════════════════════════════════════════════════
+   INPUT HANDLING
+══════════════════════════════════════════════════════ */
+function onInput(el) {
+  el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,145)+'px';
+  showCmdSuggest(el.value);
+}
+function onKey(e) {
+  if (e.key==='Enter' && !e.shiftKey && window.innerWidth>640) { e.preventDefault(); handleSend(); }
+  if (e.key==='Escape') document.getElementById('cmd-s').style.display='none';
+}
+
+/* ══════════════════════════════════════════════════════
+   TABS / SIDEBAR
+══════════════════════════════════════════════════════ */
+function showTab(tab) {
+  S.tab = tab;
+  const views = { chat:'chat-view', voice:'voice-view', data:'data-view', learn:'learn-view' };
+  ['chat','voice','data','learn'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('act', t===tab);
+    const v = document.getElementById(views[t]);
+    if (v) { v.style.display = t===tab ? (t==='chat'?'flex':'flex') : 'none'; }
+  });
+  if (tab==='voice') { document.getElementById('voice-view').style.display='flex'; }
+  if (tab==='learn') { document.getElementById('learn-view').style.display='flex'; }
+  if (tab!=='voice') { stopSpeech(); resetVUI(); }
+}
+function setMT(t) {
+  document.querySelectorAll('.mtab').forEach(e=>e.classList.remove('act'));
+  document.getElementById('mn-'+t)?.classList.add('act');
+}
+function openSB() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sov').classList.add('open'); }
+function closeSB() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sov').classList.remove('open'); }
+
+/* ══════════════════════════════════════════════════════
+   CHAT MANAGEMENT
+══════════════════════════════════════════════════════ */
+function createChat() {
+  const id = Date.now();
+  S.chats.unshift({ id, title:'Nouvelle conversation', messages:[] });
+  saveLocal(); loadChat(id);
+}
+function loadChat(id) {
+  S.cid = id; const chat = S.chats.find(c=>c.id===id); if(!chat) return;
+  const cont = document.getElementById('msgs'); cont.innerHTML='';
+  if (!chat.messages.length) {
+    cont.innerHTML=`<div id="welcome">
+      <div class="wlogo">IXA</div>
+      <div class="wsub">Système IA de <b>Tom</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
+      <div class="wg">
+        <div class="wc" onclick="hint('Crée un rapport Word complet sur Napoléon Bonaparte')"><span>📘</span><span>Rapport Word</span></div>
+        <div class="wc" onclick="hint('Génère un fichier Excel avec un tableau de bord mensuel')"><span>📗</span><span>Fichier Excel</span></div>
+        <div class="wc" onclick="hint('Crée une présentation PowerPoint de 5 slides sur l\\'IA')"><span>📑</span><span>PowerPoint</span></div>
+        <div class="wc" onclick="hint('Génère un CV professionnel complet en format PDF')"><span>📕</span><span>CV / PDF</span></div>
+      </div></div>`;
+  } else {
+    chat.messages.forEach(m => {
+      if (m.role==='user') renderUserMsg(m.displayContent||m.content);
+      else renderMsg('assistant', m.content);
+    });
+  }
+  renderHist();
+}
+function deleteChat(id, e) {
+  e.stopPropagation(); S.chats = S.chats.filter(c=>c.id!==id); saveLocal();
+  if (S.cid===id) S.chats.length ? loadChat(S.chats[0].id) : createChat();
+  else renderHist();
+  toast('Conversation supprimée');
+}
+function clearChat() {
+  const chat = S.chats.find(c=>c.id===S.cid); if(!chat) return;
+  if (!chat.messages.length) { toast('Déjà vide'); return; }
+  chat.messages=[]; chat.title='Nouvelle conversation'; saveLocal(); loadChat(S.cid);
+  toast('Conversation effacée');
+}
+function startRenameChat(id, e) {
+  e.stopPropagation();
+  const el = document.querySelector(`.ci[data-id="${id}"]`); if(!el) return;
+  const tSpan = el.querySelector('.ci-t');
+  const inp = document.createElement('input'); inp.className='ci-ri'; inp.value=S.chats.find(c=>c.id===id)?.title||'';
+  tSpan.style.display='none'; el.insertBefore(inp, el.querySelector('.cia')); inp.focus(); inp.select();
+  const commit = () => {
+    const nv = inp.value.trim();
+    if (nv) { const c=S.chats.find(c=>c.id===id); if(c) c.title=nv; saveLocal(); }
+    inp.remove(); tSpan.style.display=''; renderHist();
+  };
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', ev => { if(ev.key==='Enter'){ev.preventDefault();commit();} if(ev.key==='Escape'){inp.remove();tSpan.style.display='';} });
+}
+function renderHist() {
+  const l = document.getElementById('history-list');
+  if (!S.chats.length) { l.innerHTML='<div style="font-size:.75rem;color:var(--mu);padding:5px 4px">Aucune conversation</div>'; return; }
+  l.innerHTML = S.chats.map(c=>`
+    <div class="ci ${c.id===S.cid?'act':''}" data-id="${c.id}" onclick="loadChat(${c.id});closeSB()">
+      <span style="font-size:.74rem;flex-shrink:0">💬</span>
+      <span class="ci-t">${esc(c.title||'Nouvelle conversation')}</span>
+      <div class="cia">
+        <button class="cib r" onclick="startRenameChat(${c.id},event)" title="Renommer">✏️</button>
+        <button class="cib d" onclick="deleteChat(${c.id},event)" title="Supprimer">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════ */
+function showModal(title, sub, bodyHtml, btns) {
+  document.getElementById('mo-t').innerHTML = title;
+  document.getElementById('mo-s').innerHTML = sub;
+  document.getElementById('mo-b').innerHTML = bodyHtml;
+  document.getElementById('mo-btns').innerHTML = btns.map(b => `<button class="mdb ${b.c}" onclick="${b.f}">${b.l}</button>`).join('');
+  document.getElementById('mo').classList.add('open');
+}
+function closeModal() { document.getElementById('mo').classList.remove('open'); }
+document.getElementById('mo').addEventListener('click', e => { if(e.target===document.getElementById('mo')) closeModal(); });
+
+/* ══════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════ */
+function updateApiSt(ok=null) {
+  const has = ok!==false && !!S.groqKey;
+  const el = document.getElementById('ast'); const t = document.getElementById('ast-t');
+  el.className = has?'ok':'err'; t.textContent = has?'API connectée':'Clé API manquante';
+}
+function saveLocal() {
+  if (S.chats.length>60) S.chats=S.chats.slice(0,60);
+  try { localStorage.setItem('ixa_chats', JSON.stringify(S.chats)); } catch(e) {
+    S.chats.forEach(c=>{ if(c.messages.length>8) c.messages=c.messages.slice(-8); });
+    try { localStorage.setItem('ixa_chats', JSON.stringify(S.chats)); } catch(e2){}
+  }
+}
+
+let _tt;
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className=type?`show ${type}`:'show';
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ── INIT ──
+boot();
+</script>
+</body>
+</html>
