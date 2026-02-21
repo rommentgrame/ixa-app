@@ -436,11 +436,6 @@ textarea::placeholder{color:var(--mu)}
     <div class="lsub">Système d'Intelligence Avancée de Tom</div>
     <div class="lsep"></div>
     <div class="lstat" id="lstat"><div class="spin"></div><span id="lstat-t">Chargement…</span></div>
-    <div id="li-api-block" style="display:none;flex-direction:column;gap:6px">
-      <div style="font-size:.72rem;color:var(--mu)">🔑 Clé API Groq (<a href="https://console.groq.com" target="_blank" style="color:var(--a)">console.groq.com</a>)</div>
-      <input class="linp" id="li-api" type="password" placeholder="gsk_…" autocomplete="off" oninput="onApiKeyInput(this)">
-      <div id="li-api-ok" style="font-size:.7rem;color:var(--ok);display:none">✅ Clé sauvegardée</div>
-    </div>
     <input class="linp" id="li-u" type="text" placeholder="Identifiant" autocomplete="username" style="display:none">
     <input class="linp" id="li-p" type="password" placeholder="Mot de passe" autocomplete="current-password" style="display:none">
     <button class="lbtn" id="li-btn" onclick="doLogin()" style="display:none">Connexion</button>
@@ -770,62 +765,45 @@ window.__docs = {};
 ══════════════════════════════════════════════════════ */
 async function boot() {
   setLStat('Chargement de la configuration…');
-
-  // 1. Try to load config.json (works when served via HTTP/HTTPS)
   try {
     const r = await fetch('config.json');
     if (r.ok) {
       const cfg = await r.json();
-      const rawKey = (cfg.groq_api_key||'').trim();
-      // Only use if it's a real key (not placeholder)
-      if (rawKey && !rawKey.includes('ENTREZ') && !rawKey.includes('YOUR') && rawKey.startsWith('gsk_')) {
-        S.groqKey = rawKey;
-        localStorage.setItem('ixa_groq_key', rawKey);
+      S.groqKey   = (cfg.groq_api_key    || '').trim();
+      S.ghToken   = (cfg.github_token    || '').trim();
+      S.serperKey = (cfg.serper_key      || '').trim();
+      const repo  = (cfg.github_repo     || '').trim();
+      if (repo.includes('/')) { const p=repo.split('/'); S.ghUser=p[0]; S.ghRepo=p[1]; }
+      S.ghBranch  = cfg.github_branch || 'main';
+      // Save valid key to localStorage for file:// fallback
+      if (S.groqKey && S.groqKey.startsWith('gsk_')) {
+        localStorage.setItem('ixa_groq_key', S.groqKey);
       }
-      const rawGh = (cfg.github_token||'').trim();
-      if (rawGh && !rawGh.includes('ENTREZ') && !rawGh.includes('YOUR')) {
-        S.ghToken = rawGh;
-      }
-      S.serperKey = (cfg.serper_key||'').trim();
-      if (S.serperKey.includes('OPTIONNEL') || S.serperKey.includes('CLE')) S.serperKey = '';
-      const repo = (cfg.github_repo||'').trim();
-      if (repo.includes('/') && !repo.includes('votre')) {
-        const p=repo.split('/'); S.ghUser=p[0]; S.ghRepo=p[1];
-      }
-      S.ghBranch = cfg.github_branch||'main';
     }
-  } catch(e) {
-    // file:// protocol or config.json missing — not an error, use localStorage fallback
-  }
+  } catch(e) {}
 
-  // 2. If no key from config.json, try localStorage (previously entered key)
-  if (!S.groqKey) {
+  // Fallback: if config.json wasn't readable (file:// protocol), try localStorage
+  if (!S.groqKey || !S.groqKey.startsWith('gsk_')) {
     const saved = localStorage.getItem('ixa_groq_key');
-    if (saved && saved.startsWith('gsk_')) {
-      S.groqKey = saved;
-    }
+    if (saved && saved.startsWith('gsk_')) S.groqKey = saved;
   }
 
-  // 3. Load users
   if (S.ghToken && S.ghUser && S.ghRepo) {
     setLStat('Connexion à la base de données…');
     try { await fetchUsers(); } catch(e) { S.allUsers = getLocalUsers(); }
   } else {
     S.allUsers = getLocalUsers();
   }
-
-  setLStat('',true);
+  setLStat('', true);
   showLoginForm();
 }
 
-// Called when user types their API key manually
+// Called when user types their API key manually in the settings
 function onApiKeyInput(el) {
   const val = el.value.trim();
   if (val.startsWith('gsk_') && val.length > 20) {
     S.groqKey = val;
     localStorage.setItem('ixa_groq_key', val);
-    const ok = document.getElementById('li-api-ok');
-    if (ok) { ok.style.display='block'; setTimeout(()=>ok.style.display='none', 2500); }
     updateApiSt();
   }
 }
@@ -849,16 +827,6 @@ function setLStat(txt, done=false) {
 }
 function showLoginForm() {
   ['li-u','li-p','li-btn'].forEach(id=>document.getElementById(id).style.display='');
-  // Show API key input if key is missing
-  const apiBlock = document.getElementById('li-api-block');
-  if (apiBlock) {
-    apiBlock.style.display = 'flex';
-    if (S.groqKey) {
-      // Show masked key as confirmation
-      const apiInp = document.getElementById('li-api');
-      if (apiInp && !apiInp.value) apiInp.placeholder = '✅ Clé chargée depuis config.json';
-    }
-  }
   document.getElementById('li-u').focus();
   document.getElementById('li-p').onkeydown=e=>{if(e.key==='Enter')doLogin();};
   document.getElementById('li-u').onkeydown=e=>{if(e.key==='Enter')document.getElementById('li-p').focus();};
