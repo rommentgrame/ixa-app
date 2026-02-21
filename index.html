@@ -3,251 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IXA v6 — Elite</title>
+    <title>IXA v7 — Titan</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #09090b; --sidebar: #0f0f12; --card: #18181b;
-            --accent: #a8ff3e; --text: #ececec; --text-muted: #71717a;
-            --border: #27272a; --user-msg: #27272a;
-        }
+        :root { --bg: #09090b; --sidebar: #0f0f12; --card: #18181b; --accent: #a8ff3e; --text: #ececec; --muted: #71717a; --border: #27272a; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
-
+        
         /* SIDEBAR */
-        #sidebar { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
-        .new-btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; margin-bottom: 25px; }
-        #history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        .hist-item { padding: 10px; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: space-between; }
-        .hist-item:hover, .hist-item.active { background: var(--card); color: var(--text); }
-        .del-chat { color: #ff4444; opacity: 0; margin-left: 10px; }
-        .hist-item:hover .del-chat { opacity: 1; }
+        #side { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 15px; }
+        .btn-new { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+        #hist { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .item { padding: 10px; border-radius: 8px; font-size: 0.85rem; color: var(--muted); cursor: pointer; transition: 0.2s; position: relative; }
+        .item:hover, .item.active { background: var(--card); color: var(--text); }
+        .del { position: absolute; right: 10px; color: #ff4444; opacity: 0; }
+        .item:hover .del { opacity: 1; }
 
         /* MAIN */
         main { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle at top, #1c1c21, #09090b); }
         header { padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .tabs { display: flex; gap: 20px; }
-        .tabs span { cursor: pointer; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+        .tabs span { cursor: pointer; font-size: 0.9rem; color: var(--muted); margin-right: 20px; }
         .tabs span.active { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
 
-        /* CHAT WINDOW */
-        #chat-window { flex: 1; overflow-y: auto; padding: 30px 15%; display: flex; flex-direction: column; gap: 25px; }
+        #chat { flex: 1; overflow-y: auto; padding: 30px 15%; display: flex; flex-direction: column; gap: 20px; }
         .msg { max-width: 85%; line-height: 1.6; font-size: 0.95rem; }
-        .msg.user { align-self: flex-end; background: var(--user-msg); padding: 12px 18px; border-radius: 18px 18px 2px 18px; border: 1px solid var(--border); }
-        .msg.assistant { align-self: flex-start; }
-        .msg b { color: var(--accent); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px; letter-spacing: 1px; }
+        .msg.user { align-self: flex-end; background: #27272a; padding: 12px 18px; border-radius: 18px 18px 2px 18px; }
+        .msg b { color: var(--accent); font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 5px; }
 
-        /* CLAUDE FILE BOX */
-        .file-box { display: inline-flex; align-items: center; gap: 10px; background: #111115; border: 1px solid var(--border); padding: 8px 15px; border-radius: 10px; margin-top: 10px; }
-        .file-box .name { font-size: 0.8rem; font-weight: 500; }
+        /* CLAUDE STYLE FILE */
+        .f-box { display: inline-flex; align-items: center; gap: 10px; background: #111115; border: 1px solid var(--border); padding: 10px 15px; border-radius: 10px; margin-top: 10px; }
+        .f-box::before { content: '📄'; }
 
-        /* INPUT AREA */
-        #bottom-bar { padding: 20px 15%; }
-        #tray { display: flex; gap: 10px; margin-bottom: 10px; }
+        #input-zone { padding: 20px 15%; }
+        .tray { display: flex; gap: 10px; margin-bottom: 10px; }
         .pill { background: var(--card); border: 1px solid var(--accent); color: var(--accent); padding: 4px 12px; border-radius: 15px; font-size: 0.75rem; }
-        .box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; align-items: center; gap: 15px; }
-        .box input { flex: 1; background: none; border: none; color: #fff; outline: none; font-size: 1rem; }
+        .box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; display: flex; gap: 15px; align-items: center; }
+        input[type="text"] { flex: 1; background: none; border: none; color: #fff; outline: none; }
 
-        /* VOCAL */
-        #voice-mode { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-        .orb { width: 100px; height: 100px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 40px rgba(168, 255, 62, 0.4); }
-        .orb.anim { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.6; } }
+        /* ORB */
+        #v-view { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .orb { width: 90px; height: 90px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 30px var(--accent); transition: 0.3s; }
+        .orb.pulse { animation: p 1.5s infinite; }
+        @keyframes p { 0% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.6; } }
     </style>
 </head>
 <body>
 
-<aside id="sidebar">
-    <button class="new-btn" onclick="startNewChat()">+ Nouveau Chat</button>
-    <div id="history-list"></div>
-    <div id="status-api" style="font-size: 0.7rem; color: var(--text-muted); margin-top: auto;">IXA v6 CORE</div>
+<aside id="side">
+    <button class="btn-new" onclick="newChat()">+ Nouveau Chat</button>
+    <div id="hist"></div>
+    <div id="api-st" style="font-size: 0.7rem; color: var(--muted); margin-top: auto;">IXA CORE v7</div>
 </aside>
 
 <main>
     <header>
         <div class="tabs">
-            <span id="tab-chat" class="active" onclick="setView('chat')">Assistant</span>
-            <span id="tab-voice" onclick="setView('voice')">Vocal</span>
+            <span id="t-chat" class="active" onclick="setV('chat')">Assistant</span>
+            <span id="t-voice" onclick="setV('voice')">Vocal</span>
         </div>
-        <div style="font-weight: bold; color: var(--accent);">STABLE_MODE</div>
+        <div style="font-weight: bold; color: var(--accent);">IXA TITAN</div>
     </header>
 
-    <div id="chat-window"></div>
+    <div id="chat"></div>
 
-    <div id="voice-mode">
+    <div id="v-view">
         <div class="orb" id="orb"></div>
-        <h2 id="v-txt" style="margin-top: 40px;">Prêt à écouter</h2>
-        <button class="new-btn" style="margin-top: 20px; padding: 12px 40px;" onclick="vocalTrigger()">Lancer le micro</button>
+        <h2 id="v-st" style="margin-top: 30px;">Système prêt</h2>
+        <button class="btn-new" style="margin-top: 20px; padding: 10px 40px" onclick="vocal()">Parler</button>
     </div>
 
-    <div id="bottom-bar">
-        <div id="tray"></div>
+    <div id="input-zone">
+        <div id="tray" class="tray"></div>
         <div class="box">
-            <input type="file" id="f-hidden" hidden multiple onchange="handleFiles(this)">
-            <button onclick="document.getElementById('f-hidden').click()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted)">📎</button>
-            <input type="text" id="query" placeholder="Demandez n'importe quoi..." onkeydown="if(event.key==='Enter') execute()">
-            <button onclick="execute()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-weight:bold;">▲</button>
+            <input type="file" id="f-up" hidden multiple onchange="up(this)">
+            <button onclick="document.getElementById('f-up').click()" style="background:none; border:none; cursor:pointer; color:var(--muted); font-size:1.2rem">📎</button>
+            <input type="text" id="q" placeholder="Posez une question ou analysez un document..." onkeydown="if(event.key==='Enter') run()">
+            <button onclick="run()" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">▲</button>
         </div>
     </div>
 </main>
 
 <script>
-    // --- SECURITE ABSOLUE DE LA CLE ---
-    window.IXA_KEY = localStorage.getItem('ixa_v6_key') || "";
-    let _MODEL = "llama-3.3-70b-versatile";
-    let _FILES = [];
-    let _HISTORY = JSON.parse(localStorage.getItem('ixa_v6_hist')) || [];
-    let _ACTIVE_ID = null;
+    let _K = localStorage.getItem('ixa_k') || "";
+    let _M = "llama-3.3-70b-versatile";
+    let _F = [];
+    let _H = JSON.parse(localStorage.getItem('ixa_h_v7')) || [];
+    let _ID = null;
 
     async function init() {
-        if (!window.IXA_KEY) {
-            const files = ['config.json', 'config (1).json'];
-            for (let f of files) {
-                try {
-                    const r = await fetch(f);
-                    const d = await r.json();
-                    window.IXA_KEY = d.groq_api_key;
-                    localStorage.setItem('ixa_v6_key', window.IXA_KEY);
-                    break;
-                } catch(e) {}
-            }
+        if (!_K) {
+            try {
+                const r = await fetch('config.json');
+                const d = await r.json();
+                _K = d.groq_api_key;
+                localStorage.setItem('ixa_k', _K);
+            } catch(e) {}
         }
-        document.getElementById('status-api').textContent = window.IXA_KEY ? "API : OK" : "API : MANQUANTE";
-        if (_HISTORY.length > 0) loadChat(_HISTORY[0].id); else startNewChat();
-        renderHistory();
+        document.getElementById('api-st').textContent = _K ? "API : OK" : "API : ERREUR CONFIG.JSON";
+        if (_H.length > 0) load(_H[0].id); else newChat();
     }
 
-    async function execute(ovr = null) {
-        const input = document.getElementById('query');
-        const text = ovr || input.value.trim();
-        if (!text && _FILES.length === 0) return;
-
-        // Visuel (Claude style)
-        let display = text;
-        if (_FILES.length > 0) {
-            display = (text ? text + "<br>" : "") + _FILES.map(f => `<div class="file-box"><span class="name">📄 ${f.name}</span></div>`).join('');
-        }
-        addMsg('user', display);
-        input.value = "";
-
-        // API Context
-        let apiContent = text;
-        if (_FILES.length > 0) {
-            apiContent = "[FICHIERS]\n" + _FILES.map(f => f.name + ": " + f.content).join("\n") + "\n\nMESSAGE: " + text;
-        }
-
-        const chat = _HISTORY.find(c => c.id === _ACTIVE_ID);
-        if (chat.messages.length === 0) chat.title = text.substring(0, 30);
-
-        try {
-            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: { 
-                    'Authorization': 'Bearer ' + window.IXA_KEY,
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({
-                    model: _MODEL,
-                    messages: [
-                        {role: "system", content: "Tu es IXA. Ton style est calqué sur Claude (Anthropic) : intelligent, sobre, précis. Analyse les documents si fournis."},
-                        ...chat.messages.slice(-8).map(m => ({role: m.role, content: m.raw || m.content})),
-                        {role: "user", content: apiContent}
-                    ]
-                })
-            });
-            const d = await res.json();
-            const reply = d.choices[0].message.content;
-            addMsg('assistant', reply, true, apiContent);
-            _FILES = []; document.getElementById('tray').innerHTML = "";
-            save(); renderHistory();
-            return reply;
-        } catch(e) {
-            addMsg('assistant', "Erreur de connexion. Vérifiez votre clé API.");
-        }
-    }
-
-    // --- SYSTEME HISTORIQUE ---
-    function startNewChat() {
-        _ACTIVE_ID = Date.now();
-        _HISTORY.unshift({ id: _ACTIVE_ID, title: "Nouvelle discussion", messages: [] });
-        save(); loadChat(_ACTIVE_ID);
-    }
-
-    function loadChat(id) {
-        _ACTIVE_ID = id;
-        const chat = _HISTORY.find(c => c.id === id);
-        document.getElementById('chat-window').innerHTML = "";
-        chat.messages.forEach(m => addMsg(m.role, m.content, false));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('history-list');
-        list.innerHTML = _HISTORY.map(c => `
-            <div class="hist-item ${c.id === _ACTIVE_ID ? 'active' : ''}" onclick="loadChat(${c.id})">
-                ${c.title}
-                <span class="del-chat" onclick="deleteChat(event, ${c.id})">✕</span>
-            </div>
-        `).join('');
-    }
-
-    function deleteChat(e, id) {
-        e.stopPropagation();
-        _HISTORY = _HISTORY.filter(c => c.id !== id);
-        save(); if (_HISTORY.length > 0) loadChat(_HISTORY[0].id); else startNewChat();
-    }
-
-    function save() { localStorage.setItem('ixa_v6_hist', JSON.stringify(_HISTORY)); }
-
-    function addMsg(role, content, saveMsg = true, raw = null) {
-        const win = document.getElementById('chat-window');
-        const d = document.createElement('div');
-        d.className = 'msg ' + role;
-        d.innerHTML = `<b>${role === 'user' ? 'Vous' : 'IXA'}</b><div>${content}</div>`;
-        win.appendChild(d);
-        win.scrollTop = win.scrollHeight;
-        if (saveMsg) _HISTORY.find(c => c.id === _ACTIVE_ID).messages.push({ role, content, raw });
-    }
-
-    // --- FICHIERS ---
-    function handleFiles(el) {
+    function up(el) {
         for (let f of el.files) {
             const r = new FileReader();
             r.onload = (e) => {
-                _FILES.push({ name: f.name, content: e.target.result });
+                _F.push({ n: f.name, c: e.target.result });
                 document.getElementById('tray').innerHTML += `<div class="pill">📄 ${f.name}</div>`;
             };
             r.readAsText(f);
         }
     }
 
-    // --- VOCAL ---
-    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    rec.lang = 'fr-FR';
+    async function run(ov = null) {
+        const i = document.getElementById('q');
+        const val = ov || i.value.trim();
+        const key = localStorage.getItem('ixa_k'); // Récupération forcée à chaque clic
 
-    function vocalTrigger() {
-        document.getElementById('orb').classList.add('anim');
-        document.getElementById('v-txt').textContent = "Écoute...";
+        if (!val && _F.length === 0) return;
+
+        let disp = val;
+        if (_F.length > 0) {
+            disp = (val ? val + "<br>" : "") + _F.map(f => `<div class="f-box">${f.n}</div>`).join('');
+        }
+        add('user', disp);
+        i.value = "";
+
+        let ctx = val;
+        if (_F.length > 0) {
+            ctx = "[DOCS]\n" + _F.map(f => f.n + ": " + f.c).join("\n") + "\n\nMSG: " + val;
+        }
+
+        const chat = _H.find(c => c.id === _ID);
+        if (chat.messages.length === 0) chat.title = val.substring(0, 30);
+
+        try {
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: _M,
+                    messages: [
+                        {role: "system", content: "Tu es IXA. Style Claude. Analytique et précis. Si l'utilisateur donne des fichiers, utilise-les sans répéter leur contenu."},
+                        ...chat.messages.slice(-6).map(m => ({role: m.role, content: m.raw || m.content})),
+                        {role: "user", content: ctx}
+                    ]
+                })
+            });
+            const d = await res.json();
+            const rep = d.choices[0].message.content;
+            add('assistant', rep, true, ctx);
+            _F = []; document.getElementById('tray').innerHTML = "";
+            save(); render();
+            return rep;
+        } catch(e) {
+            add('assistant', "Erreur de connexion. Assurez-vous que config.json contient une clé valide.");
+        }
+    }
+
+    function newChat() { _ID = Date.now(); _H.unshift({ id: _ID, title: "Nouveau chat", messages: [] }); save(); load(_ID); }
+    function load(id) { _ID = id; document.getElementById('chat').innerHTML = ""; _H.find(c => c.id === id).messages.forEach(m => add(m.role, m.content, false)); render(); }
+    function render() { document.getElementById('hist').innerHTML = _H.map(c => `<div class="item ${c.id === _ID ? 'active' : ''}" onclick="load(${c.id})">${c.title}<span class="del" onclick="del(event, ${c.id})">✕</span></div>`).join(''); }
+    function del(e, id) { e.stopPropagation(); _H = _H.filter(c => c.id !== id); save(); if (_H.length > 0) load(_H[0].id); else newChat(); }
+    function save() { localStorage.setItem('ixa_h_v7', JSON.stringify(_H)); }
+    function add(r, c, s = true, raw = null) {
+        const win = document.getElementById('chat');
+        const d = document.createElement('div');
+        d.className = 'msg ' + r;
+        d.innerHTML = `<b>${r === 'user' ? 'Vous' : 'IXA'}</b><div>${c}</div>`;
+        win.appendChild(d);
+        win.scrollTop = win.scrollHeight;
+        if (s) _H.find(c => c.id === _ID).messages.push({ role: r, content: c, raw });
+    }
+
+    function vocal() {
+        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.lang = 'fr-FR';
+        document.getElementById('orb').classList.add('pulse');
+        document.getElementById('v-st').textContent = "Écoute...";
         rec.start();
         rec.onresult = async (e) => {
-            const rep = await execute(e.results[0][0].transcript);
-            if(rep) {
-                const u = new SpeechSynthesisUtterance(rep);
+            const r = await run(e.results[0][0].transcript);
+            if (r) {
+                const u = new SpeechSynthesisUtterance(r);
                 u.lang = 'fr-FR';
-                u.onstart = () => document.getElementById('v-txt').textContent = "IXA vous répond...";
-                u.onend = () => document.getElementById('v-txt').textContent = "Prêt à écouter";
                 window.speechSynthesis.speak(u);
             }
         };
-        rec.onend = () => document.getElementById('orb').classList.remove('anim');
+        rec.onend = () => { document.getElementById('orb').classList.remove('pulse'); document.getElementById('v-st').textContent = "Système prêt"; };
     }
 
-    function setView(v) {
-        document.getElementById('chat-window').style.display = v==='chat'?'flex':'none';
-        document.getElementById('bottom-bar').style.display = v==='chat'?'block':'none';
-        document.getElementById('voice-mode').style.display = v==='voice'?'flex':'none';
+    function setV(v) {
+        document.getElementById('chat').style.display = v==='chat'?'flex':'none';
+        document.getElementById('input-zone').style.display = v==='chat'?'block':'none';
+        document.getElementById('v-view').style.display = v==='voice'?'flex':'none';
         document.querySelectorAll('.tabs span').forEach(s => s.classList.remove('active'));
-        document.getElementById('tab-'+v).classList.add('active');
+        document.getElementById('t-'+v).classList.add('active');
     }
 
     init();
