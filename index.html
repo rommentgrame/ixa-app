@@ -2318,10 +2318,18 @@ function updateApiSt(ok=null) {
   t.textContent=hasSearch?'API + Recherche web':'API connectée';
 }
 function saveLocal() {
-  if(S.chats.length>60) S.chats=S.chats.slice(0,60);
-  try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e){
-    S.chats.forEach(c=>{if(c.messages.length>8)c.messages=c.messages.slice(-8);});
-    try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e2){}
+  if (S.chats.length > 60) S.chats = S.chats.slice(0, 60);
+  try {
+    localStorage.setItem('ixa_chats', JSON.stringify(S.chats));
+  } catch (e) {
+    S.chats.forEach(c => {
+      if (c.messages.length > 8) c.messages = c.messages.slice(-8);
+    });
+    try {
+      localStorage.setItem('ixa_chats', JSON.stringify(S.chats));
+    } catch (e2) {
+      console.error(e2);
+    }
   }
 }
 let _tt;
