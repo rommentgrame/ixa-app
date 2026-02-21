@@ -1,7 +1,7 @@
 {
-  "groq_key": "gsk_TON_API_KEY",
+  "groq_key": "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",
   "groq_model": "llama-2-7b",
-  "github_repo": "UTILISATEUR/TON_DEPOT",
+  "github_repo": "rommentgrame/ixa-app",
   "github_path": "database",
-  "github_token": "ghp_VOTRE_TOKEN_GITHUB"
+  "github_token": "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"
 }
