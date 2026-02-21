@@ -20,12 +20,36 @@
         <button id="send">Envoyer</button>
     </div>
 
+    <!-- configuration / base de données GitHub -->
+    <div id="settings" style="margin-top:20px; padding:10px; border:1px solid #ddd; background:#f0f0f0; max-width:400px;">
+        <h2 style="margin-top:0">⚙ Configuration</h2>
+        <label>Clé API Groq:<br><input type="text" id="cfg_api" style="width:100%" /></label><br><br>
+        <label>Modèle:&nbsp;
+            <select id="cfg_model">
+                <option>llama-3.3-70b-versatile</option>
+                <option>llama-3.3-70b-chat</option>
+                <option>llama-2-7b</option>
+                <option>llama-2-13b</option>
+                <option>llama-2-70b</option>
+            </select>
+        </label><br><br>
+        <label>Dépôt GitHub (user/repo):<br><input type="text" id="cfg_repo" style="width:100%" /></label><br><br>
+        <label>Chemin du fichier config:<br><input type="text" id="cfg_path" style="width:100%" placeholder="config.json" /></label><br><br>
+        <label>Token GitHub (pour sauvegarder):<br><input type="password" id="cfg_ghtoken" style="width:100%" /></label><br><br>
+        <button id="savecfg">Enregistrer</button>
+        <p style="font-size:0.9em;color:#555;">Si vous avez un dépôt, les paramètres peuvent être stockés et lus via GitHub ; c'est votre base de données.</p>
+    </div>
+
     <script>
         let config = {
             groq_api_key: "",
-            groq_model: "llama-3.3-70b-versatile"
+            groq_model: "llama-3.3-70b-versatile",
+            github_repo: "",
+            github_path: "config.json",
+            github_token: ""
         };
 
+        // charge config locale puis, si renseigné, remote GitHub
         async function loadConfig() {
             try {
                 const resp = await fetch('config.json');
@@ -33,9 +57,19 @@
             } catch (e) {
                 console.warn('Impossible de charger config.json', e);
             }
+            await loadRemoteConfig();
+            fillForm();
         }
 
-        function append(role, text) {
+        function fillForm() {
+            document.getElementById('cfg_api').value = config.groq_api_key || '';
+            document.getElementById('cfg_model').value = config.groq_model || '';
+            document.getElementById('cfg_repo').value = config.github_repo || '';
+            document.getElementById('cfg_path').value = config.github_path || 'config.json';
+            document.getElementById('cfg_ghtoken').value = config.github_token || '';
+        }
+
+        async function append(role, text) {
             const div = document.createElement('div');
             div.className = role;
             div.textContent = text;
@@ -69,7 +103,13 @@
                     body: JSON.stringify(body)
                 });
                 const data = await resp.json();
-                if (data.error) throw new Error(data.error);
+                if (data.error) {
+                    let msg = data.error;
+                    if (msg.includes('model') && msg.includes('does not exist')) {
+                        msg += ' — vérifie ton modèle dans la configuration.';
+                    }
+                    throw new Error(msg);
+                }
                 const reply = data.choices[0].message.content;
                 append('assistant', reply);
             } catch (err) {
@@ -77,8 +117,69 @@
             }
         }
 
+        // GitHub helpers ------------------------------------
+        async function loadRemoteConfig() {
+            if (!config.github_repo) return;
+            let path = config.github_path || 'config.json';
+            try {
+                let url = `https://api.github.com/repos/${config.github_repo}/contents/${path}`;
+                let headers = {};
+                if (config.github_token) headers.Authorization = 'token ' + config.github_token;
+                let resp = await fetch(url, { headers });
+                if (!resp.ok) return;
+                let data = await resp.json();
+                if (data.content) {
+                    let txt = atob(data.content.replace(/\n/g, ''));
+                    let remote = JSON.parse(txt);
+                    Object.assign(config, remote);
+                }
+            } catch (e) {
+                console.warn('lecture config GitHub échouée', e);
+            }
+        }
+
+        async function storeSettings() {
+            // mettre à jour config localement
+            config.groq_api_key = document.getElementById('cfg_api').value.trim();
+            config.groq_model   = document.getElementById('cfg_model').value;
+            config.github_repo  = document.getElementById('cfg_repo').value.trim();
+            config.github_path  = document.getElementById('cfg_path').value.trim() || 'config.json';
+            config.github_token = document.getElementById('cfg_ghtoken').value.trim();
+
+            if (config.github_repo && config.github_token) {
+                try {
+                    let path = config.github_path || 'config.json';
+                    let url = `https://api.github.com/repos/${config.github_repo}/contents/${path}`;
+                    let headers = {
+                        'Content-Type': 'application/json',
+                        Authorization: 'token ' + config.github_token
+                    };
+                    // récupérer sha existant
+                    let sha = '';
+                    let check = await fetch(url, { headers });
+                    if (check.ok) {
+                        let js = await check.json();
+                        sha = js.sha || '';
+                    }
+                    let body = {
+                        message: 'mise à jour config IXA',
+                        content: btoa(JSON.stringify(config, null, 2))
+                    };
+                    if (sha) body.sha = sha;
+                    let put = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+                    if (!put.ok) throw new Error('HTTP ' + put.status);
+                    alert('Configuration enregistrée sur GitHub.');
+                } catch (e) {
+                    alert('Impossible d\'enregistrer sur GitHub: ' + e.message);
+                }
+            } else {
+                alert('Paramètres mis à jour localement. Saisissez un dépôt + token pour sauvegarder.');
+            }
+        }
+
         document.getElementById('send').addEventListener('click', sendMessage);
         document.getElementById('input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+        document.getElementById('savecfg').addEventListener('click', storeSettings);
 
         loadConfig();
     </script>
