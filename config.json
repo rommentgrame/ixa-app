@@ -1,7 +1,7 @@
 {
-  "groq_key": "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",
-  "groq_model": "llama-2-7b",
+  "groq_api_key": "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",
+  "groq_model": "llama-3.3-70b-versatile",
   "github_repo": "rommentgrame/ixa-app",
-  "github_path": "database",
+  "github_path": "config.json",
   "github_token": "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"
 }
