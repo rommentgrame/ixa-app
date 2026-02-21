@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IXA — Intelligence Personnelle</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- XLSX (Excel) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s)">
+</script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+  onerror="var s=document.createElement('script');s.src='https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';document.head.appendChild(s)">
+</script>
+<!-- DOCX: généré nativement en JS pur (aucune bibliothèque requise) -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0c0f;--c1:#111115;--c2:#18181e;--c3:#1f1f27;
+  --ln:#23232c;--ln2:#2d2d38;
+  --g:#a8ff3e;--b:#3eb8ff;--r:#ff4d6d;--p:#9d6bff;--o:#ffb23e;
+  --tx:#eeeef4;--t2:#6e6e82;--t3:#28282f;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:'Geist',sans-serif;font-size:14px;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(35,35,44,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(35,35,44,.5) 1px,transparent 1px);
+  background-size:44px 44px}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 45% at 50% 0%,rgba(168,255,62,.05) 0%,transparent 65%)}
+
+/* ── SIDEBAR ── */
+.sb{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--c1);border-right:1px solid var(--ln);
+  display:flex;flex-direction:column;z-index:20;transition:transform .22s ease}
+.sb.off{transform:translateX(-220px)}
+.sb-logo{padding:16px 14px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:10px}
+.sb-mk{width:30px;height:30px;background:var(--g);border-radius:8px;display:grid;place-items:center;
+  font-size:12px;color:#0c0c0f;font-weight:700;flex-shrink:0}
+.sb-nm{font-size:15px;font-weight:600}
+.sb-vr{font-family:'Geist Mono',monospace;font-size:9px;color:var(--t2);letter-spacing:1.5px;margin-top:1px}
+.modes{display:flex;gap:6px;padding:10px;border-bottom:1px solid var(--ln)}
+.modb{flex:1;padding:7px;border-radius:7px;border:1px solid var(--ln2);background:transparent;
+  color:var(--t2);font-size:10px;font-family:'Geist Mono',monospace;text-transform:uppercase;
+  letter-spacing:.5px;cursor:pointer;transition:.15s;text-align:center}
+.modb:hover{color:var(--tx);border-color:var(--ln)}
+.modb.on{border-color:rgba(168,255,62,.3);color:var(--g);background:rgba(168,255,62,.07)}
+.modb.von{border-color:rgba(255,77,109,.3);color:var(--r);background:rgba(255,77,109,.07)}
+.sb-new{margin:10px;padding:8px 12px;background:rgba(168,255,62,.09);color:var(--g);
+  border:1px solid rgba(168,255,62,.22);border-radius:8px;cursor:pointer;
+  font-size:12px;font-weight:500;font-family:'Geist',sans-serif;
+  display:flex;align-items:center;gap:6px;transition:.15s;width:calc(100% - 20px)}
+.sb-new:hover{background:rgba(168,255,62,.15)}
+.sb-sec{font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:2px;
+  color:var(--t2);padding:10px 14px 5px;text-transform:uppercase}
+.cvl{flex:1;overflow-y:auto;padding:0 6px 8px}
+.cvl::-webkit-scrollbar{width:2px}.cvl::-webkit-scrollbar-thumb{background:var(--ln2)}
+.cvi{padding:8px 10px;border-radius:7px;cursor:pointer;transition:.12s;
+  border:1px solid transparent;position:relative;margin-bottom:1px}
+.cvi:hover{background:var(--c2);border-color:var(--ln)}
+.cvi.on{background:rgba(168,255,62,.06);border-color:rgba(168,255,62,.18)}
+.cvi-n{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2)}
+.cvi.on .cvi-n{color:var(--g)}
+.cvi-d{font-size:10px;color:var(--t3);margin-top:2px;font-family:'Geist Mono',monospace}
+.cvi-x{position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--t2);cursor:pointer;font-size:11px;
+  opacity:0;padding:2px 4px;border-radius:4px;transition:.12s}
+.cvi:hover .cvi-x{opacity:1}.cvi-x:hover{color:var(--r)}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;overflow:hidden;
+  position:relative;z-index:1;transition:margin-left .22s ease}
+.main.full{margin-left:0}
+.tb{height:48px;min-height:48px;display:flex;align-items:center;gap:8px;padding:0 14px;
+  border-bottom:1px solid var(--ln);background:rgba(12,12,15,.92);backdrop-filter:blur(14px);z-index:5}
+.tbb{width:30px;height:30px;border-radius:7px;background:none;border:1px solid var(--ln);
+  color:var(--t2);cursor:pointer;font-size:13px;display:grid;place-items:center;transition:.12s;flex-shrink:0}
+.tbb:hover{border-color:var(--ln2);color:var(--tx)}.tbb.on{border-color:rgba(168,255,62,.3);color:var(--g)}
+.tb-t{flex:1;font-size:12px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Geist Mono',monospace}
+.tb-st{display:flex;align-items:center;gap:5px;font-family:'Geist Mono',monospace;font-size:9px;
+  color:var(--t2);padding:3px 9px;border:1px solid var(--ln);border-radius:20px;letter-spacing:1px}
+.tb-dot{width:5px;height:5px;background:var(--g);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── CHAT ── */
+.chat{flex:1;overflow-y:auto;padding:24px 0}
+.chat::-webkit-scrollbar{width:3px}.chat::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:3px}
+.mw{max-width:720px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:18px}
+
+/* ── WELCOME ── */
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:65vh;padding:40px 20px;text-align:center;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.w-mk{width:52px;height:52px;background:var(--g);border-radius:13px;display:grid;place-items:center;
+  font-size:18px;color:#0c0c0f;font-weight:700;margin:0 auto 18px;box-shadow:0 0 40px rgba(168,255,62,.18)}
+.w-h{font-size:24px;font-weight:700;margin-bottom:5px}
+.w-s{font-family:'Geist Mono',monospace;font-size:9px;color:var(--t2);letter-spacing:2.5px;margin-bottom:32px}
+.wg{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-width:480px;width:100%;margin:0 auto}
+.wc{background:var(--c1);border:1px solid var(--ln);border-radius:9px;padding:12px;cursor:pointer;text-align:left;transition:.15s}
+.wc:hover{border-color:var(--ln2);background:var(--c2);transform:translateY(-1px)}
+.wc-i{font-size:17px;margin-bottom:7px}.wc-t{font-size:12px;font-weight:500;color:var(--tx);margin-bottom:2px}
+.wc-s{font-size:11px;color:var(--t2);line-height:1.4}
+
+/* ── MESSAGES ── */
+.msg{animation:mIn .18s ease both}
+@keyframes mIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.mu{display:flex;justify-content:flex-end}
+.mu .bb{background:var(--c2);border:1px solid var(--ln2);border-radius:13px 13px 3px 13px;
+  padding:11px 15px;max-width:76%;font-size:13.5px;line-height:1.65}
+.ma{display:flex;gap:10px;align-items:flex-start}
+.av{width:27px;height:27px;min-width:27px;background:var(--g);border-radius:7px;
+  display:grid;place-items:center;font-size:11px;color:#0c0c0f;font-weight:700;margin-top:1px}
+.ab{flex:1;min-width:0}
+.an{font-family:'Geist Mono',monospace;font-size:9px;color:var(--t2);letter-spacing:1px;margin-bottom:6px}
+.ac{font-size:13.5px;line-height:1.72}
+.ac h1{font-size:17px;font-weight:600;margin:12px 0 5px;color:var(--g)}
+.ac h2{font-size:14px;font-weight:600;margin:10px 0 4px}
+.ac h3{font-size:13px;font-weight:600;margin:8px 0 3px;color:var(--t2)}
+.ac strong{font-weight:600}.ac em{color:var(--t2)}
+.ac code{font-family:'Geist Mono',monospace;font-size:11.5px;background:var(--c3);color:var(--g);padding:2px 6px;border-radius:4px}
+.ac pre{background:var(--c1);border:1px solid var(--ln);border-radius:8px;padding:13px;margin:8px 0;overflow-x:auto}
+.ac pre code{background:none;color:var(--tx);padding:0;font-size:12px}
+.ac a{color:var(--b);text-decoration:none}.ac a:hover{text-decoration:underline}
+.ac ul,.ac ol{padding-left:20px;margin:6px 0}.ac li{margin:3px 0;line-height:1.6}
+.ac table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12px}
+.ac th{background:var(--c2);padding:7px 10px;text-align:left;border:1px solid var(--ln);color:var(--g)}
+.ac td{padding:6px 10px;border:1px solid var(--ln)}
+.ac tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.ac blockquote{border-left:3px solid var(--g);padding-left:11px;color:var(--t2);margin:7px 0;font-style:italic}
+.ac hr{border:none;border-top:1px solid var(--ln);margin:10px 0}
+
+/* ── FILE CARDS ── */
+.file-card{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:9px 14px;
+  background:var(--c1);border:1px solid var(--ln2);border-radius:9px;
+  color:var(--tx);font-size:12px;font-family:'Geist Mono',monospace;cursor:pointer;text-decoration:none;transition:.15s}
+.file-card:hover{border-color:var(--g);color:var(--g);text-decoration:none}
+.file-card-icon{font-size:18px}
+.file-card-info{display:flex;flex-direction:column;gap:2px}
+.file-card-name{font-weight:500;color:inherit}
+.file-card-size{font-size:10px;color:var(--t2)}
+.file-dl-btn{padding:5px 11px;background:rgba(168,255,62,.1);border:1px solid rgba(168,255,62,.2);
+  border-radius:6px;color:var(--g);font-size:11px;font-family:'Geist Mono',monospace;
+  cursor:pointer;transition:.12s;margin-left:auto;white-space:nowrap}
+.file-dl-btn:hover{background:rgba(168,255,62,.2)}
+
+/* ── IMAGE ── */
+.img-wrap{margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid var(--ln);
+  background:var(--c1);max-width:100%}
+.img-wrap img{display:block;width:100%;max-height:420px;object-fit:cover;transition:.15s;cursor:zoom-in}
+.img-footer{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px;flex-wrap:wrap}
+.img-cap{font-family:'Geist Mono',monospace;font-size:10px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.img-actions{display:flex;gap:5px;flex-shrink:0}
+.img-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-family:'Geist Mono',monospace;
+  cursor:pointer;transition:.12s;border:none;background:rgba(255,255,255,.06);color:var(--t2)}
+.img-btn:hover{background:rgba(255,255,255,.12);color:var(--tx)}
+.img-btn.g{background:rgba(168,255,62,.1);border:1px solid rgba(168,255,62,.2);color:var(--g)}
+.img-btn.g:hover{background:rgba(168,255,62,.2)}
+.img-spin{padding:28px;text-align:center}
+.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--ln2);
+  border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TYPING ── */
+.typ{display:flex;gap:4px;align-items:center;padding:3px 0}
+.td{width:5px;height:5px;border-radius:50%;background:var(--g);animation:tda 1.1s infinite ease}
+.td:nth-child(2){animation-delay:.18s}.td:nth-child(3){animation-delay:.36s}
+@keyframes tda{0%,60%,100%{opacity:.2;transform:scale(1)}30%{opacity:1;transform:scale(1.3)}}
+
+/* ── VOICE ── */
+.vm{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+.vm.on{display:flex}
+.vm-orb{position:relative;width:140px;height:140px;cursor:pointer;margin-bottom:30px}
+.vm-r{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(168,255,62,.18);animation:vring 2.5s infinite}
+.vm-r:nth-child(2){animation-delay:.5s;inset:-12px}
+.vm-r:nth-child(3){animation-delay:1s;inset:-24px}
+.vm-orb.lst .vm-r{border-color:rgba(255,77,109,.35);animation:vringR 1s infinite}
+.vm-orb.spk .vm-r{border-color:rgba(168,255,62,.45);animation:vringG .7s infinite}
+@keyframes vring{0%,100%{opacity:.7;transform:scale(.98)}50%{opacity:.25;transform:scale(1.02)}}
+@keyframes vringR{0%,100%{opacity:.9}50%{opacity:.2}}
+@keyframes vringG{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:.4;transform:scale(1.04)}}
+.vm-btn{width:86px;height:86px;background:var(--c1);border:2px solid var(--ln2);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);font-size:28px;cursor:pointer;transition:.2s;z-index:2}
+.vm-orb:hover .vm-btn{border-color:var(--g);background:rgba(168,255,62,.07)}
+.vm-orb.lst .vm-btn{border-color:var(--r);background:rgba(255,77,109,.08)}
+.vm-orb.spk .vm-btn{border-color:var(--g);animation:pulse .9s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(168,255,62,.3)}50%{box-shadow:0 0 0 14px rgba(168,255,62,0)}}
+.vm-st{font-family:'Geist Mono',monospace;font-size:12px;color:var(--t2);letter-spacing:1px;margin-bottom:14px}
+.vm-tr{max-width:380px;min-height:46px;font-size:13.5px;color:var(--t2);line-height:1.6;
+  background:var(--c1);border:1px solid var(--ln);border-radius:10px;padding:11px 15px;font-style:italic}
+.vm-hist{max-width:420px;width:100%;margin-top:18px;max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+.vmh{padding:7px 11px;border-radius:8px;font-size:12px;text-align:left}
+.vmh.u{background:var(--c2);border:1px solid var(--ln2);align-self:flex-end;max-width:80%}
+.vmh.a{background:rgba(168,255,62,.06);border:1px solid rgba(168,255,62,.14);color:var(--g);max-width:80%}
+
+/* ── INPUT ZONE ── */
+.inw{border-top:1px solid var(--ln);background:rgba(12,12,15,.94);backdrop-filter:blur(14px);padding:11px 14px 13px}
+.ar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
+.ach{display:flex;align-items:center;gap:5px;background:var(--c2);border:1px solid var(--ln2);
+  border-radius:20px;padding:3px 9px 3px 7px;font-size:11px;color:var(--t2);font-family:'Geist Mono',monospace}
+.ach img{width:20px;height:20px;border-radius:4px;object-fit:cover}
+.ach-x{background:none;border:none;color:var(--t2);cursor:pointer;font-size:13px;line-height:1;padding:0;transition:.12s}
+.ach-x:hover{color:var(--r)}
+.ib{display:flex;gap:7px;align-items:flex-end}
+textarea.inp{flex:1;background:var(--c1);border:1px solid var(--ln2);border-radius:9px;
+  padding:10px 13px;color:var(--tx);font-family:'Geist',sans-serif;font-size:13.5px;
+  line-height:1.5;resize:none;outline:none;min-height:42px;max-height:150px;transition:border-color .15s}
+textarea.inp:focus{border-color:rgba(168,255,62,.3)}
+textarea.inp::placeholder{color:var(--t2)}
+.ibs{display:flex;gap:5px}
+.ibtn{width:38px;height:38px;border-radius:8px;border:1px solid var(--ln2);background:var(--c1);
+  color:var(--t2);cursor:pointer;font-size:14px;display:grid;place-items:center;transition:.12s;flex-shrink:0}
+.ibtn:hover{color:var(--tx)}
+.ibtn.snd{background:var(--g);border-color:var(--g);color:#0c0c0f}
+.ibtn.snd:hover{filter:brightness(1.08);box-shadow:0 0 18px rgba(168,255,62,.25)}
+.ibtn.snd:disabled{opacity:.35;cursor:not-allowed;filter:none;box-shadow:none}
+.inh{margin-top:7px;text-align:center;font-family:'Geist Mono',monospace;font-size:9px;color:var(--t3);letter-spacing:1px}
+
+/* ── RIGHT PANEL ── */
+.rp{position:fixed;right:0;top:0;bottom:0;width:258px;background:var(--c1);
+  border-left:1px solid var(--ln);display:flex;flex-direction:column;z-index:20;transition:transform .22s ease}
+.rp.off{transform:translateX(258px)}
+.rp-tabs{display:flex;border-bottom:1px solid var(--ln);flex-shrink:0}
+.rpt{flex:1;padding:12px 0;text-align:center;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;font-family:'Geist Mono',monospace}
+.rpt.on{color:var(--g);border-bottom-color:var(--g)}
+.rpb{flex:1;overflow-y:auto;padding:14px}
+.rpb::-webkit-scrollbar{width:2px}.rpb::-webkit-scrollbar-thumb{background:var(--ln2)}
+.rps{margin-bottom:18px}
+.rpl{font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--t2);text-transform:uppercase;margin-bottom:8px}
+.dz{border:2px dashed var(--ln2);border-radius:9px;padding:22px 14px;text-align:center;cursor:pointer;transition:.15s}
+.dz:hover,.dz.ov{border-color:var(--g);background:rgba(168,255,62,.03)}
+.dz-i{font-size:22px;margin-bottom:7px}
+.dz-t{font-size:11px;color:var(--t2);line-height:1.5}
+.dz-t span{color:var(--g)}
+.rpfl{display:flex;flex-direction:column;gap:3px;margin-top:7px}
+.rpf{display:flex;align-items:center;gap:6px;padding:6px 9px;background:var(--c2);
+  border:1px solid var(--ln);border-radius:7px;font-size:11px;font-family:'Geist Mono',monospace}
+.rpf-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2)}
+.rpf-x{background:none;border:none;color:var(--t2);cursor:pointer;font-size:11px;transition:.12s}
+.rpf-x:hover{color:var(--r)}
+.rp-an{width:100%;margin-top:9px;padding:9px;background:rgba(168,255,62,.07);
+  border:1px solid rgba(168,255,62,.2);border-radius:8px;color:var(--g);cursor:pointer;
+  font-size:12px;font-family:'Geist',sans-serif;font-weight:500;transition:.15s}
+.rp-an:hover{background:rgba(168,255,62,.12)}
+.stg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:9px}
+.stc{padding:7px;border-radius:7px;text-align:center;border:1px solid var(--ln2);
+  font-size:11px;color:var(--t2);cursor:pointer;transition:.12s}
+.stc:hover{border-color:var(--ln);color:var(--tx)}
+.stc.on{border-color:rgba(157,107,255,.4);color:var(--p);background:rgba(157,107,255,.07)}
+textarea.rpt2{width:100%;background:var(--bg);border:1px solid var(--ln2);color:var(--tx);
+  padding:9px 11px;border-radius:8px;font-size:12px;font-family:'Geist',sans-serif;
+  outline:none;resize:none;min-height:82px;transition:border-color .15s;margin-bottom:9px;line-height:1.5;display:block}
+textarea.rpt2:focus{border-color:rgba(168,255,62,.25)}
+textarea.rpt2::placeholder{color:var(--t2)}
+input.rpin{width:100%;background:var(--bg);border:1px solid var(--ln2);color:var(--tx);
+  padding:8px 11px;border-radius:7px;font-size:12px;font-family:'Geist Mono',monospace;
+  outline:none;margin-bottom:6px;transition:border-color .15s}
+input.rpin:focus{border-color:rgba(168,255,62,.25)}
+input.rpin::placeholder{color:var(--t2)}
+textarea.rpta{width:100%;background:var(--bg);border:1px solid var(--ln2);color:var(--tx);
+  padding:9px 11px;border-radius:7px;font-size:12px;font-family:'Geist',sans-serif;
+  outline:none;resize:none;min-height:100px;margin-bottom:6px;transition:border-color .15s;line-height:1.5;display:block}
+textarea.rpta:focus{border-color:rgba(168,255,62,.25)}
+textarea.rpta::placeholder{color:var(--t2)}
+.rpbtn{width:100%;padding:9px;border-radius:7px;font-size:12px;font-family:'Geist',sans-serif;
+  cursor:pointer;transition:.12s;border:1px solid;margin-bottom:5px}
+.rpbtn.g{background:transparent;border-color:var(--ln2);color:var(--t2)}
+.rpbtn.g:hover{border-color:var(--tx);color:var(--tx)}
+.rpbtn.a{background:rgba(168,255,62,.07);border-color:rgba(168,255,62,.2);color:var(--g)}
+.rpbtn.a:hover{background:rgba(168,255,62,.12)}
+.rpbtn.b{background:rgba(62,184,255,.07);border-color:rgba(62,184,255,.2);color:var(--b)}
+.rpbtn.b:hover{background:rgba(62,184,255,.12)}
+.ghfl{display:flex;flex-direction:column;gap:2px;margin-top:7px;max-height:200px;overflow-y:auto}
+.ghfi{display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:6px;font-size:10px;
+  color:var(--t2);font-family:'Geist Mono',monospace;cursor:pointer;transition:.12s;border:1px solid transparent}
+.ghfi:hover{background:var(--c2);border-color:var(--ln);color:var(--g)}
+.db-box{background:rgba(168,255,62,.05);border:1px solid rgba(168,255,62,.15);
+  border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.db-box-l{font-size:9px;color:var(--t2);margin-bottom:3px;font-family:'Geist Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.db-box-v{font-family:'Geist Mono',monospace;font-size:10px;color:var(--g);word-break:break-all}
+.db-status{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t2);font-family:'Geist Mono',monospace;margin-bottom:6px}
+.db-dot{width:6px;height:6px;border-radius:50%;background:var(--t2);flex-shrink:0}
+.db-dot.ok{background:var(--g)}.db-dot.err{background:var(--r)}
+
+/* ── MODALS ── */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:200;display:grid;place-items:center}
+.mbg.h{display:none}
+.modal{background:var(--c1);border:1px solid var(--ln2);border-radius:13px;padding:24px;width:90%;max-width:440px;animation:mI .2s ease}
+.modal.wide{max-width:560px}
+@keyframes mI{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.mtt{font-size:15px;font-weight:600;margin-bottom:4px}
+.mst{font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.5}
+.minp{width:100%;background:var(--bg);border:1px solid var(--ln2);color:var(--tx);
+  padding:9px 12px;border-radius:8px;font-size:12px;font-family:'Geist Mono',monospace;
+  outline:none;margin-bottom:7px;transition:border-color .15s}
+.minp:focus{border-color:rgba(168,255,62,.3)}.minp::placeholder{color:var(--t2)}
+.mrow{display:flex;gap:7px;justify-content:flex-end;margin-top:14px}
+.mbtn{padding:8px 17px;border-radius:7px;cursor:pointer;font-size:12px;font-family:'Geist',sans-serif;font-weight:500;border:1px solid;transition:.12s}
+.mbtn.s{background:transparent;border-color:var(--ln2);color:var(--t2)}.mbtn.s:hover{color:var(--tx);border-color:var(--tx)}
+.mbtn.p{background:var(--g);border-color:var(--g);color:#0c0c0f}.mbtn.p:hover{filter:brightness(1.08)}
+.mbtn.d{background:rgba(255,77,109,.1);border-color:rgba(255,77,109,.3);color:var(--r)}
+.mbtn.d:hover{background:rgba(255,77,109,.18)}
+.msec{font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--t2);text-transform:uppercase;margin:14px 0 8px}
+
+/* ── IMAGE VIEWER ── */
+.imgv{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);z-index:300;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.imgv.h{display:none}
+.imgv img{max-width:100%;max-height:85vh;border-radius:10px;object-fit:contain}
+.imgv-bar{display:flex;gap:10px;margin-top:14px}
+.imgv-btn{padding:7px 15px;border-radius:7px;cursor:pointer;font-size:12px;font-family:'Geist Mono',monospace;
+  border:1px solid;transition:.12s}
+.imgv-btn.cl{border-color:var(--ln2);color:var(--t2);background:transparent}
+.imgv-btn.cl:hover{border-color:var(--tx);color:var(--tx)}
+.imgv-btn.dl{border-color:rgba(168,255,62,.3);color:var(--g);background:rgba(168,255,62,.07)}
+.imgv-btn.dl:hover{background:rgba(168,255,62,.14)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:16px;right:16px;background:var(--c1);border:1px solid var(--ln2);
+  padding:9px 14px;border-radius:8px;font-size:11px;z-index:999;
+  animation:tI .22s ease;max-width:280px;font-family:'Geist Mono',monospace;line-height:1.5}
+@keyframes tI{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.toast.ok{border-color:rgba(168,255,62,.3);color:var(--g)}.toast.err{border-color:rgba(255,77,109,.3);color:var(--r)}
+.toast.info{border-color:rgba(62,184,255,.3);color:var(--b)}
+.h{display:none!important}
+
+/* ── TAGS EXPORT ── */
+.exp-wrap{margin-top:10px}
+.exp-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--c1);
+  border:1px solid var(--ln2);border-radius:9px;margin-bottom:6px}
+.exp-ico{font-size:20px;flex-shrink:0}
+.exp-info{flex:1;min-width:0}
+.exp-name{font-size:12px;font-weight:500;color:var(--tx);margin-bottom:2px}
+.exp-type{font-size:10px;color:var(--t2);font-family:'Geist Mono',monospace}
+.exp-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-family:'Geist Mono',monospace;
+  cursor:pointer;transition:.12s;border:1px solid rgba(168,255,62,.25);
+  background:rgba(168,255,62,.08);color:var(--g);white-space:nowrap}
+.exp-btn:hover{background:rgba(168,255,62,.16)}
+</style>
+</head>
+<body>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<div class="sb" id="sb">
+  <div class="sb-logo">
+    <div class="sb-mk">IX</div>
+    <div><div class="sb-nm">IXA</div><div class="sb-vr">v2.0 · IA PERSONNELLE</div></div>
+  </div>
+  <div class="modes">
+    <button class="modb on" id="btn-chat" onclick="setMode('chat')">Chat</button>
+    <button class="modb" id="btn-voice" onclick="setMode('voice')">🎤 Voix</button>
+  </div>
+  <button class="sb-new" onclick="nC()">+ Nouvelle conversation</button>
+  <div class="sb-sec">Historique</div>
+  <div class="cvl" id="cvl"></div>
+</div>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main" id="main">
+  <div class="tb">
+    <button class="tbb on" id="bsb" onclick="tSb()">☰</button>
+    <span class="tb-t" id="tbt">Nouvelle conversation</span>
+    <div class="tb-st"><div class="tb-dot"></div><span id="tb-status">EN LIGNE</span></div>
+    <button class="tbb" id="brp" onclick="tRp()">⊞</button>
+    <button class="tbb" onclick="oM('mapi')" title="Configuration">⚙</button>
+  </div>
+  <div class="chat" id="chat"><div id="ci"></div></div>
+  <div class="vm" id="vm">
+    <div class="vm-orb" id="vm-orb" onclick="tMic()">
+      <div class="vm-r"></div><div class="vm-r"></div><div class="vm-r"></div>
+      <div class="vm-btn" id="vm-ico">🎤</div>
+    </div>
+    <div class="vm-st" id="vm-st">Cliquez pour parler</div>
+    <div class="vm-tr" id="vm-tr">…</div>
+    <div class="vm-hist" id="vm-hist"></div>
+  </div>
+  <div class="inw" id="inw">
+    <div class="ar" id="ar"></div>
+    <div class="ib">
+      <textarea class="inp" id="inp" placeholder="Parle à IXA…" onkeydown="oK(event)" oninput="gr(this)" rows="1"></textarea>
+      <div class="ibs">
+        <button class="ibtn" onclick="document.getElementById('fi').click()" title="Joindre un fichier">📎</button>
+        <button class="ibtn snd" id="snd" onclick="go()">▶</button>
+      </div>
+    </div>
+    <div class="inh">Entrée = envoyer · Shift+Entrée = retour à la ligne</div>
+  </div>
+</div>
+
+<!-- ══════════ RIGHT PANEL ══════════ -->
+<div class="rp off" id="rp">
+  <div class="rp-tabs">
+    <div class="rpt on" onclick="rTab('f',this)">Fichiers</div>
+    <div class="rpt" onclick="rTab('i',this)">🎨 Image</div>
+    <div class="rpt" onclick="rTab('db',this)">GitHub</div>
+  </div>
+
+  <!-- Fichiers -->
+  <div class="rpb" id="rp-f">
+    <div class="rps">
+      <div class="rpl">Joindre au chat</div>
+      <div class="dz" id="dz" onclick="document.getElementById('fi').click()"
+        ondragover="dzO(event)" ondragleave="dzL()" ondrop="dzD(event)">
+        <div class="dz-i">📁</div>
+        <div class="dz-t">Glisse ou <span>clique pour parcourir</span><br>Tous types acceptés</div>
+      </div>
+      <div class="rpfl" id="rpfl"></div>
+    </div>
+    <button class="rp-an" onclick="anF()">⬡ Analyser avec IXA</button>
+    <div style="height:10px"></div>
+    <div class="rps">
+      <div class="rpl">Créer un document</div>
+      <button class="rpbtn a" onclick="qs('Crée un fichier Excel avec un tableau structuré et des données')">📊 Nouveau Excel</button>
+      <button class="rpbtn a" onclick="qs('Rédige un document Word professionnel')">📝 Nouveau Word</button>
+      <button class="rpbtn a" onclick="qs('Génère un rapport PDF complet')">📕 Nouveau PDF</button>
+      <button class="rpbtn g" onclick="qs('Génère un fichier CSV avec des données')">📋 Nouveau CSV</button>
+    </div>
+  </div>
+
+  <!-- Image -->
+  <div class="rpb h" id="rp-i">
+    <div class="rps">
+      <div class="rpl">Description de l'image</div>
+      <textarea class="rpt2" id="idesc" placeholder="Ex: un château médiéval au coucher du soleil, style réaliste…"></textarea>
+      <div class="rpl">Format</div>
+      <div style="display:flex;gap:5px;margin-bottom:9px">
+        <div class="stc on" id="fmt-l" onclick="pFmt('landscape',this)" style="flex:1">🖼 Paysage</div>
+        <div class="stc" id="fmt-p" onclick="pFmt('portrait',this)" style="flex:1">📱 Portrait</div>
+        <div class="stc" id="fmt-s" onclick="pFmt('square',this)" style="flex:1">⬜ Carré</div>
+      </div>
+      <div class="rpl">Style artistique</div>
+      <div class="stg">
+        <div class="stc on" onclick="pSt(this)">Réaliste</div>
+        <div class="stc" onclick="pSt(this)">Anime</div>
+        <div class="stc" onclick="pSt(this)">Peinture</div>
+        <div class="stc" onclick="pSt(this)">Cyberpunk</div>
+        <div class="stc" onclick="pSt(this)">Aquarelle</div>
+        <div class="stc" onclick="pSt(this)">Pixel art</div>
+        <div class="stc" onclick="pSt(this)">Abstrait</div>
+        <div class="stc" onclick="pSt(this)">Minimal</div>
+        <div class="stc" onclick="pSt(this)">Cinématique</div>
+        <div class="stc" onclick="pSt(this)">Fantasy</div>
+      </div>
+      <div class="rpl">Qualité / Seed</div>
+      <input class="rpin" id="iseed" placeholder="Seed aléatoire (optionnel)">
+    </div>
+    <button class="rpbtn a" onclick="gIP()">✦ Générer l'image</button>
+    <button class="rpbtn g" onclick="gIPMulti()" style="margin-top:5px">✦ Générer 3 variantes</button>
+  </div>
+
+  <!-- GitHub DB -->
+  <div class="rpb h" id="rp-db">
+    <div class="rps">
+      <div class="rpl">Connexion GitHub</div>
+      <div class="db-box">
+        <div class="db-box-l">Dépôt connecté</div>
+        <div class="db-box-v" id="db-url">Non configuré</div>
+      </div>
+      <div class="db-status"><div class="db-dot" id="db-dot"></div><span id="db-st-txt">Non connecté</span></div>
+      <button class="rpbtn g" onclick="oM('mdb')" style="margin-bottom:6px">⚙ Configurer GitHub</button>
+    </div>
+    <div class="rps">
+      <div class="rpl">Envoyer un fichier</div>
+      <div class="dz" id="dz2" onclick="document.getElementById('fi2').click()"
+        ondragover="dz2O(event)" ondragleave="dz2L()" ondrop="dz2D(event)">
+        <div class="dz-i">⬆</div>
+        <div class="dz-t">Glisse ou <span>clique</span><br>Envoi direct dans la base</div>
+      </div>
+    </div>
+    <div class="rps">
+      <div class="rpl">Nouvelle note</div>
+      <input class="rpin" id="nn" placeholder="nom-fichier.md (optionnel)">
+      <textarea class="rpta" id="nb" placeholder="Contenu de la note…"></textarea>
+      <button class="rpbtn a" onclick="sN()">⬆ Envoyer dans la base</button>
+    </div>
+    <div class="rps">
+      <div class="rpl">Fichiers de la base <button class="rpbtn g" onclick="refreshDB()" style="width:auto;padding:3px 9px;font-size:10px;margin-bottom:0;display:inline-block;margin-left:8px">↻</button></div>
+      <div class="ghfl" id="dbfl"><div style="font-size:10px;color:var(--t2);font-family:'Geist Mono'">Cliquez sur GitHub pour configurer</div></div>
+    </div>
+    <div class="rps">
+      <div class="rpl">Déploiement Web</div>
+      <button class="rpbtn b" onclick="showDeploy()">🚀 Guide GitHub Pages</button>
+    </div>
+  </div>
+</div>
+
+<!-- INPUTS FICHIERS -->
+<input type="file" id="fi" multiple accept="*/*" style="display:none" onchange="oF(event)">
+<input type="file" id="fi2" multiple accept="*/*" style="display:none" onchange="oF2(event)">
+
+<!-- ══════════ MODAL CONFIGURATION ══════════ -->
+<div class="mbg h" id="mapi">
+  <div class="modal">
+    <div class="mtt">⚙ Configuration IXA</div>
+    <div class="mst">Paramètres stockés dans votre navigateur, jamais envoyés.</div>
+    <div class="msec">API IA (Groq)</div>
+    <input class="minp" id="mk" type="password" placeholder="Clé API Groq — gsk_…">
+    <input class="minp" id="mm" placeholder="Modèle (défaut: llama-3.3-70b-versatile)">
+    <div class="mrow">
+      <button class="mbtn s" onclick="cM('mapi')">Annuler</button>
+      <button class="mbtn p" onclick="sConf()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GITHUB DB -->
+<div class="mbg h" id="mdb">
+  <div class="modal wide">
+    <div class="mtt">🗄 Base de données GitHub</div>
+    <div class="mst">Ton dépôt GitHub sert de base de données persistante. Crée un dépôt public/privé et un Personal Access Token (repo scope).</div>
+    <div class="msec">Dépôt GitHub</div>
+    <input class="minp" id="db-repo" placeholder="utilisateur/mon-depot">
+    <input class="minp" id="db-path" placeholder="Dossier (ex: database) — optionnel">
+    <div class="msec">Token d'accès</div>
+    <input class="minp" id="db-tok" type="password" placeholder="github_pat_… ou ghp_…">
+    <div style="font-size:11px;color:var(--t2);margin-bottom:12px;line-height:1.6">
+      → Crée un token sur <strong style="color:var(--b)">github.com → Settings → Developer settings → Personal access tokens</strong><br>
+      → Sélectionne le scope <strong style="color:var(--g)">repo</strong>
+    </div>
+    <div class="mrow">
+      <button class="mbtn s" onclick="cM('mdb')">Annuler</button>
+      <button class="mbtn d" onclick="clearDB()">Effacer</button>
+      <button class="mbtn p" onclick="sDB()">Connecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉPLOIEMENT -->
+<div class="mbg h" id="mdeploy">
+  <div class="modal wide">
+    <div class="mtt">🚀 Déployer IXA sur le Web</div>
+    <div class="mst">Héberge IXA gratuitement sur GitHub Pages en quelques minutes.</div>
+    <div style="background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:14px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--t2);line-height:2">
+      <span style="color:var(--g)">1.</span> Crée un dépôt GitHub nommé <span style="color:var(--tx)">ixa-app</span><br>
+      <span style="color:var(--g)">2.</span> Upload ce fichier <span style="color:var(--tx)">IXA_v2.html</span> → renomme en <span style="color:var(--tx)">index.html</span><br>
+      <span style="color:var(--g)">3.</span> Va dans <span style="color:var(--tx)">Settings → Pages → Deploy from branch</span><br>
+      <span style="color:var(--g)">4.</span> Sélectionne <span style="color:var(--tx)">main</span> branch → Save<br>
+      <span style="color:var(--g)">5.</span> Ton IXA est en ligne sur <span style="color:var(--b)">ton-user.github.io/ixa-app</span><br><br>
+      <span style="color:var(--o)">💡 Pour la base GitHub: configure le token dans le panel GitHub ci-dessus.</span>
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:var(--t2)">
+      <strong style="color:var(--tx)">Alternative: Vercel/Netlify</strong> — Drag & drop ton fichier HTML sur vercel.com ou netlify.com pour un déploiement instantané.
+    </div>
+    <div class="mrow">
+      <button class="mbtn s" onclick="cM('mdeploy')">Fermer</button>
+      <button class="mbtn p" onclick="window.open('https://github.com/new','_blank')">Créer le dépôt →</button>
+    </div>
+  </div>
+</div>
+
+<!-- VISIONNEUSE IMAGE -->
+<div class="imgv h" id="imgv" onclick="closeImgV(event)">
+  <img id="imgv-img" src="" alt="">
+  <div class="imgv-bar" onclick="event.stopPropagation()">
+    <button class="imgv-btn cl" onclick="cM('imgv')" id="imgv-close-btn">✕ Fermer</button>
+    <button class="imgv-btn dl" id="imgv-dl-btn" onclick="dlImgV()">⬇ Télécharger PNG</button>
+    <button class="imgv-btn dl" id="imgv-dl-jpg" onclick="dlImgVJpg()">⬇ Télécharger JPG</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// ═══ CONFIG & STATE ═══
+// ════════════════════════════════════════════════
+// Clé API intégrée (mode test) — remplace par la tienne dans ⚙ si besoin
+var KEY_DEFAULT = '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';
+var KEY   = localStorage.getItem('ixa_k')     || KEY_DEFAULT;
+var MDL   = localStorage.getItem('ixa_m')     || 'llama-3.3-70b-versatile';
+var DB_REPO  = localStorage.getItem('ixa_db_repo')  || '';
+var DB_PATH  = localStorage.getItem('ixa_db_path')  || '';
+var DB_TOKEN = localStorage.getItem('ixa_db_token') || '';
+
+var CONVS = [];
+var AID   = null;
+var FILES = [];
+var REC   = null;
+var LST   = false;
+var MODE  = 'chat';
+var SBO   = true;
+var RPO   = false;
+var IMG_FMT = { w: 832, h: 512 }; // landscape par défaut
+var CURRENT_IMG_URL = '';
+
+try { CONVS = JSON.parse(localStorage.getItem('ixa_c6') || '[]'); } catch(e) { CONVS = []; }
+
+// Remplir les champs de config
+document.getElementById('mk').value  = KEY;
+document.getElementById('mm').value  = MDL;
+document.getElementById('db-repo').value = DB_REPO;
+document.getElementById('db-path').value = DB_PATH;
+document.getElementById('db-tok').value  = DB_TOKEN;
+
+// Init conversations
+if (!CONVS.length) nC(); else { rCL(); sC(CONVS[0].id); }
+setTimeout(function() { refreshDB(); uDB(); }, 600);
+
+// ════════════════════════════════════════════════
+// ═══ SYSTEM PROMPT ═══
+// ════════════════════════════════════════════════
+var SYS = `Tu es IXA, une intelligence artificielle personnelle experte. Réponds TOUJOURS en français, de façon directe, précise et utile.
+
+══ CRÉATION DE FICHIERS ══
+
+📊 EXCEL (.xlsx) — utilise ; comme séparateur:
+[EXCEL_DATA:nom.xlsx]Colonne A;Colonne B;Colonne C
+Valeur 1;100;Oui
+Valeur 2;200;Non[/EXCEL_DATA]
+
+📝 WORD (.docx) — format Markdown enrichi:
+[WORD_DATA:nom.docx]# Titre Principal
+## Section 1
+Paragraphe de texte avec **gras** et *italique*.
+- Point de liste 1
+- Point de liste 2
+## Section 2
+Autre contenu...[/WORD_DATA]
+
+📕 PDF (.pdf) — même format que Word:
+[PDF_DATA:nom.pdf]# Titre du Rapport
+## Introduction
+Contenu du rapport...[/PDF_DATA]
+
+📋 CSV (.csv) — utilise , comme séparateur:
+[CSV_DATA:nom.csv]col1,col2,col3
+val1,val2,val3[/CSV_DATA]
+
+💻 FICHIER TEXTE/CODE (.py, .js, .json, .md, .html, etc.):
+[TXT_DATA:nom.ext]contenu du fichier ici[/TXT_DATA]
+
+🎨 IMAGE:
+[IMAGE_GEN:detailed english description of the image|style]
+
+══ RÈGLES ABSOLUES ══
+1. TOUJOURS utiliser les tags pour créer un fichier quand demandé — sans exception.
+2. Pour les images, TOUJOURS écrire la description en anglais dans le tag [IMAGE_GEN:...].
+3. Styles image: réaliste, anime, peinture, cyberpunk, aquarelle, pixel art, abstrait, minimal, cinématique, fantasy.
+4. Excel: séparateur ; entre colonnes. Chaque ligne = une nouvelle ligne de données.
+5. QUALITÉ DOCUMENTS: fais des documents complets, riches et bien structurés. Pas de contenu vide ou trop court.
+   - Excel: minimum 10-15 lignes de données réalistes avec formules si pertinent
+   - Word/PDF: minimum 3-5 sections avec du contenu substantiel (plusieurs paragraphes chacune)
+   - Code: code complet et fonctionnel, commenté
+6. Quand tu analyses un fichier joint, sois très précis et détaillé sur son contenu.
+7. Si on te donne un PDF ou document à améliorer, propose une version enrichie avec le bon tag.
+
+══ EXEMPLES DOCUMENTS DE QUALITÉ ══
+
+Rapport Word de qualité:
+[WORD_DATA:rapport-ventes.docx]# Rapport des Ventes 2024
+**Date:** Janvier 2025 | **Auteur:** Équipe Commerciale
+
+## Résumé Exécutif
+Ce rapport présente l'analyse complète des performances commerciales sur l'année 2024. Les résultats montrent une **croissance de 18%** par rapport à 2023, avec des performances exceptionnelles au T3.
+
+## Analyse par Trimestre
+### T1 2024 — Démarrage Solide
+Le premier trimestre a atteint **2,3M€** de chiffre d'affaires, soit +12% vs T1 2023. Les produits phares sont la gamme Premium (+34%) et les services Cloud (+21%).
+
+### T2 2024 — Consolidation
+Croissance stable à **2,5M€**. Introduction de 3 nouveaux produits avec succès commercial immédiat.
+
+## Recommandations
+- Renforcer l'équipe commerciale sur le segment B2B
+- Accélérer le déploiement de la stratégie digitale
+- Investir dans la formation produit[/WORD_DATA]
+
+Excel de qualité:
+[EXCEL_DATA:budget.xlsx]Poste;Janvier;Février;Mars;Total T1;Variation %
+Salaires;45000;45000;47000;137000;+4,4%
+Marketing;8500;9200;11000;28700;+29,4%
+Hébergement;1200;1200;1200;3600;0%
+Logiciels;2300;2300;2300;6900;0%
+Formation;0;3500;0;3500;N/A
+Déplacements;1800;2100;1650;5550;-8,3%
+Total;58800;63300;63150;185250;+7,4%[/EXCEL_DATA]`.trim();
+
+// ════════════════════════════════════════════════
+// ═══ CONVERSATIONS ═══
+// ════════════════════════════════════════════════
+function nC() {
+  var c = { id: 'c' + Date.now(), title: 'Nouvelle conversation', msgs: [], ts: Date.now() };
+  CONVS.unshift(c); sv(); rCL(); sC(c.id);
+}
+function sC(id) {
+  AID = id;
+  var c = cv();
+  document.getElementById('tbt').textContent = c ? c.title : '—';
+  rCL(); rChat();
+}
+function cv(id) { return CONVS.find(function(c) { return c.id === (id || AID); }); }
+function dC(id, e) {
+  e.stopPropagation();
+  CONVS = CONVS.filter(function(c) { return c.id !== id; });
+  sv();
+  if (AID === id) { if (CONVS.length) sC(CONVS[0].id); else nC(); }
+  else rCL();
+}
+function sv() {
+  try {
+    var s = CONVS.map(function(c) { return Object.assign({}, c, { msgs: c.msgs.slice(-30) }); });
+    localStorage.setItem('ixa_c6', JSON.stringify(s));
+  } catch(e) {}
+}
+function rCL() {
+  var el = document.getElementById('cvl');
+  el.innerHTML = '';
+  CONVS.forEach(function(c) {
+    var d = document.createElement('div');
+    d.className = 'cvi' + (c.id === AID ? ' on' : '');
+    d.onclick = function() { sC(c.id); };
+    var dt = new Date(c.ts);
+    d.innerHTML = '<div class="cvi-n">' + esc(c.title) + '</div>' +
+      '<div class="cvi-d">' + dt.toLocaleDateString('fr-FR') + '</div>' +
+      '<button class="cvi-x" onclick="dC(\'' + c.id + '\',event)">✕</button>';
+    el.appendChild(d);
+  });
+}
+
+// ════════════════════════════════════════════════
+// ═══ MODES ═══
+// ════════════════════════════════════════════════
+function setMode(m) {
+  MODE = m;
+  document.getElementById('btn-chat').className  = 'modb' + (m === 'chat'  ? ' on'  : '');
+  document.getElementById('btn-voice').className = 'modb' + (m === 'voice' ? ' von' : '');
+  document.getElementById('chat').style.display  = m === 'chat' ? '' : 'none';
+  document.getElementById('inw').style.display   = m === 'chat' ? '' : 'none';
+  document.getElementById('vm').className        = 'vm' + (m === 'voice' ? ' on' : '');
+  if (m === 'voice') vmReset();
+  if (m === 'chat' && window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+// ════════════════════════════════════════════════
+// ═══ RENDER CHAT ═══
+// ════════════════════════════════════════════════
+function rChat() {
+  var c = cv();
+  var inner = document.getElementById('ci');
+  if (!c || !c.msgs.length) {
+    inner.innerHTML =
+      '<div class="welcome">' +
+        '<div class="w-mk">IX</div>' +
+        '<div class="w-h">Bonjour, je suis IXA</div>' +
+        '<div class="w-s">INTELLIGENCE PERSONNELLE v2.0</div>' +
+        '<div class="wg">' +
+          '<div class="wc" onclick="qsI()"><div class="wc-i">🎨</div><div class="wc-t">Générer une image</div><div class="wc-s">Directement dans le chat</div></div>' +
+          '<div class="wc" onclick="qs(\'Crée un Excel avec un planning de projet sur 3 mois avec tâches, responsables et statuts\')"><div class="wc-i">📊</div><div class="wc-t">Créer un Excel</div><div class="wc-s">Téléchargeable immédiatement</div></div>' +
+          '<div class="wc" onclick="qs(\'Rédige un rapport Word professionnel sur les tendances IA en 2025, avec introduction, sections et conclusion\')"><div class="wc-i">📝</div><div class="wc-t">Créer un Word</div><div class="wc-s">Document formaté complet</div></div>' +
+          '<div class="wc" onclick="qs(\'Génère un rapport PDF de présentation sur l\\\'intelligence artificielle avec plusieurs sections\')"><div class="wc-i">📕</div><div class="wc-t">Créer un PDF</div><div class="wc-s">Rapport téléchargeable</div></div>' +
+          '<div class="wc" onclick="qs(\'Génère un fichier CSV avec des données de ventes par mois pour 12 mois\')"><div class="wc-i">📋</div><div class="wc-t">Créer un CSV</div><div class="wc-s">Données structurées</div></div>' +
+          '<div class="wc" onclick="qs(\'Qui es-tu et que peux-tu faire exactement ?\')"><div class="wc-i">⬡</div><div class="wc-t">Découvrir IXA</div><div class="wc-s">Toutes mes capacités</div></div>' +
+        '</div>' +
+      '</div>';
+    return;
+  }
+  inner.innerHTML = '<div class="mw" id="mw"></div>';
+  c.msgs.forEach(function(m) { aB(m.role, m.content, m.files, false); });
+  setTimeout(function() { document.getElementById('chat').scrollTop = 99999; }, 50);
+}
+
+function aB(role, content, files, scroll) {
+  if (scroll === undefined) scroll = true;
+  var chat = document.getElementById('chat');
+  var mw   = document.getElementById('mw');
+  if (!mw) {
+    document.getElementById('ci').innerHTML = '<div class="mw" id="mw"></div>';
+    mw = document.getElementById('mw');
+  }
+  var div = document.createElement('div');
+  div.className = 'msg';
+  if (role === 'user') {
+    var txt = typeof content === 'string' ? content :
+      (Array.isArray(content) ? content.filter(function(x){return x.type==='text';}).map(function(x){return x.text;}).join(' ') : '');
+    var ih = '';
+    if (files && files.length) {
+      files.filter(function(f){return f&&f.isImg;}).forEach(function(f){
+        ih += '<img src="' + f.data + '" style="max-width:100%;max-height:180px;border-radius:8px;margin-top:7px;display:block">';
+      });
+    }
+    div.innerHTML = '<div class="mu"><div class="bb">' + fmtText(txt) + ih + '</div></div>';
+  } else {
+    div.innerHTML = '<div class="ma"><div class="av">IX</div><div class="ab"><div class="an">IXA</div><div class="ac" id="ac_' + Date.now() + '">' + fmt(content) + '</div></div></div>';
+  }
+  mw.appendChild(div);
+  if (scroll) setTimeout(function(){chat.scrollTop=99999;},30);
+}
+
+// ════════════════════════════════════════════════
+// ═══ FORMAT TEXT ═══
+// ════════════════════════════════════════════════
+function fmtText(t) {
+  if (!t) return '';
+  return esc(t).replace(/\n/g,'<br>');
+}
+
+function fmt(t) {
+  if (!t || typeof t !== 'string') return '';
+
+  // ── Excel ──
+  t = t.replace(/\[EXCEL_DATA:([^\]]+)\]([\s\S]*?)\[\/EXCEL_DATA\]/g, function(a, fn, csv) {
+    var id = 'xl' + rId();
+    setTimeout(function(){ mkXl(fn, csv.trim(), id); }, 100);
+    return '<div id="' + id + '"><div class="exp-row"><span class="exp-ico">📊</span><div class="exp-info"><div class="exp-name">' + esc(fn) + '</div><div class="exp-type">Génération Excel…</div></div><div class="spin" style="width:14px;height:14px;border-width:2px"></div></div></div>';
+  });
+
+  // ── Word ──
+  t = t.replace(/\[WORD_DATA:([^\]]+)\]([\s\S]*?)\[\/WORD_DATA\]/g, function(a, fn, md) {
+    var id = 'wd' + rId();
+    setTimeout(function(){ mkDoc(fn, md.trim(), id); }, 100);
+    return '<div id="' + id + '"><div class="exp-row"><span class="exp-ico">📝</span><div class="exp-info"><div class="exp-name">' + esc(fn) + '</div><div class="exp-type">Génération Word…</div></div><div class="spin" style="width:14px;height:14px;border-width:2px"></div></div></div>';
+  });
+
+  // ── PDF ──
+  t = t.replace(/\[PDF_DATA:([^\]]+)\]([\s\S]*?)\[\/PDF_DATA\]/g, function(a, fn, md) {
+    var id = 'pd' + rId();
+    setTimeout(function(){ mkPdf(fn, md.trim(), id); }, 100);
+    return '<div id="' + id + '"><div class="exp-row"><span class="exp-ico">📕</span><div class="exp-info"><div class="exp-name">' + esc(fn) + '</div><div class="exp-type">Génération PDF…</div></div><div class="spin" style="width:14px;height:14px;border-width:2px"></div></div></div>';
+  });
+
+  // ── CSV ──
+  t = t.replace(/\[CSV_DATA:([^\]]+)\]([\s\S]*?)\[\/CSV_DATA\]/g, function(a, fn, data) {
+    var id = 'cv' + rId();
+    setTimeout(function(){ mkCsv(fn, data.trim(), id); }, 100);
+    return '<div id="' + id + '"><div class="exp-row"><span class="exp-ico">📋</span><div class="exp-info"><div class="exp-name">' + esc(fn) + '</div><div class="exp-type">Génération CSV…</div></div><div class="spin" style="width:14px;height:14px;border-width:2px"></div></div></div>';
+  });
+
+  // ── Texte/Code/JSON ──
+  t = t.replace(/\[TXT_DATA:([^\]]+)\]([\s\S]*?)\[\/TXT_DATA\]/g, function(a, fn, data) {
+    var id = 'tx' + rId();
+    setTimeout(function(){ mkTxt(fn, data.trim(), id); }, 100);
+    return '<div id="' + id + '"><div class="exp-row"><span class="exp-ico">💻</span><div class="exp-info"><div class="exp-name">' + esc(fn) + '</div><div class="exp-type">Génération fichier…</div></div><div class="spin" style="width:14px;height:14px;border-width:2px"></div></div></div>';
+  });
+
+  // ── Image ──
+  t = t.replace(/\[IMAGE_GEN:([^|\]]+)\|?([^\]]*)\]/g, function(a, desc, style) {
+    var id = 'ig' + rId();
+    setTimeout(function(){ renderImg(id, desc.trim(), style.trim()); }, 120);
+    return '<div id="' + id + '"><div class="img-spin"><div class="spin"></div><br><span style="font-size:11px;color:var(--t2)">Génération de l\'image en cours…</span></div></div>';
+  });
+
+  // ── Markdown ──
+  // Code block (avant inline)
+  t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, function(a,lang,code){
+    return '<pre><code' + (lang?' class="lang-'+lang+'"':'') + '>' + esc(code) + '</code></pre>';
+  });
+  t = t.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  t = t.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  // Titres
+  t = t.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  t = t.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  t = t.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  t = t.replace(/^---$/gm, '<hr>');
+  // Listes
+  t = t.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+  t = t.replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>');
+  // Citation
+  t = t.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  // Liens
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  // Saut de ligne
+  t = t.replace(/\n/g, '<br>');
+  return t;
+}
+
+// ════════════════════════════════════════════════
+// ═══ IMAGE GENERATION — fetch() + blob URL ═══
+// (contourne l'erreur 1033/CORS en chargeant via fetch puis blob)
+// ════════════════════════════════════════════════
+var STYLES = {
+  'réaliste':     'photorealistic, ultra detailed, 8k, professional photography, sharp focus, RAW photo',
+  'anime':        'anime style, manga illustration, studio ghibli quality, vibrant colors, detailed',
+  'peinture':     'oil painting, impressionist style, artistic brushwork, masterpiece, museum quality',
+  'cyberpunk':    'cyberpunk, neon lights, dark futuristic city, rain, blade runner aesthetic, 4k',
+  'aquarelle':    'watercolor painting, soft pastel colors, artistic watercolor washes, beautiful',
+  'pixel art':    'pixel art, retro 16-bit game style, pixelated, detailed game sprite',
+  'abstrait':     'abstract art, colorful geometric shapes, modern contemporary art, vibrant',
+  'minimal':      'minimalist design, clean simple shapes, white space, elegant, modern',
+  'cinématique':  'cinematic lighting, dramatic atmosphere, movie still, 4k, film grain, epic',
+  'fantasy':      'fantasy art, magical, epic landscape, detailed illustration, concept art, stunning'
+};
+
+var IMG_FORMATS = {
+  'landscape': { w: 1024, h: 576  },
+  'portrait':  { w: 576,  h: 1024 },
+  'square':    { w: 768,  h: 768  }
+};
+var CURRENT_FMT = 'landscape';
+
+// Les 3 endpoints Pollinations (on essaie dans l'ordre)
+function getImgUrls(desc, style, seed) {
+  var suffix = STYLES[style.toLowerCase()] || style || 'high quality, ultra detailed';
+  var prompt  = encodeURIComponent(desc + ', ' + suffix);
+  var fmt     = IMG_FORMATS[CURRENT_FMT] || IMG_FORMATS.landscape;
+  var w = fmt.w, h = fmt.h;
+  var s = seed || Math.floor(Math.random() * 999999);
+  return [
+    'https://image.pollinations.ai/prompt/' + prompt + '?width=' + w + '&height=' + h + '&seed=' + s + '&nologo=true',
+    'https://pollinations.ai/p/' + prompt + '?width=' + w + '&height=' + h + '&seed=' + s + '&nologo=true',
+    'https://image.pollinations.ai/prompt/' + prompt + '?width=832&height=512&seed=' + (s+1) + '&nologo=true'
+  ];
+}
+
+function pFmt(fmt, el) {
+  CURRENT_FMT = fmt;
+  document.querySelectorAll('[id^="fmt-"]').forEach(function(e){e.classList.remove('on');});
+  el.classList.add('on');
+}
+function pSt(el) {
+  document.querySelectorAll('.stg .stc').forEach(function(t){t.classList.remove('on');});
+  el.classList.add('on');
+}
+
+// ════ IMAGE: chargement direct via <img> (évite CORS/fetch/DNS 1033) ════
+// On utilise l'élément <img> natif du navigateur — pas de fetch — donc jamais de CORS.
+// Pour le téléchargement on tente canvas, sinon lien direct.
+
+function loadImgDirect(src, timeoutMs) {
+  timeoutMs = timeoutMs || 45000;
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous'; // tente CORS pour canvas download
+    var timer = setTimeout(function() {
+      img.src = '';
+      reject(new Error('Timeout ' + timeoutMs + 'ms'));
+    }, timeoutMs);
+    img.onload = function() { clearTimeout(timer); resolve(img); };
+    img.onerror = function() { clearTimeout(timer); reject(new Error('Chargement échoué')); };
+    img.src = src;
+  });
+}
+
+// Essaie les URLs en cascade avec <img>
+async function tryImgUrls(urls, progressCb) {
+  for (var i = 0; i < urls.length; i++) {
+    try {
+      if (progressCb) progressCb('Chargement ' + (i+1) + '/' + urls.length + '…');
+      var img = await loadImgDirect(urls[i], 45000);
+      return { img: img, srcUrl: urls[i] };
+    } catch(e) {
+      console.warn('URL image ' + (i+1) + ' échouée:', e.message);
+    }
+  }
+  throw new Error('Impossible de charger l\'image (vérifiez la connexion)');
+}
+
+// Télécharge une image depuis une URL directe (canvas si CORS ok, sinon lien)
+function dlImgFromUrl(url, seed) {
+  var img2 = new Image();
+  img2.crossOrigin = 'anonymous';
+  img2.onload = function() {
+    try {
+      var c = document.createElement('canvas');
+      c.width = img2.naturalWidth; c.height = img2.naturalHeight;
+      c.getContext('2d').drawImage(img2, 0, 0);
+      c.toBlob(function(b) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = 'ixa-' + (seed||'img') + '.png';
+        a.click();
+      }, 'image/png');
+    } catch(e) {
+      // Canvas bloqué (CORS strict) → ouvrir dans un nouvel onglet
+      var a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.click();
+      toast('Ouverture dans un nouvel onglet (clic droit → Enregistrer)', 'info');
+    }
+  };
+  img2.onerror = function() { window.open(url, '_blank'); };
+  img2.src = url + (url.includes('?') ? '&' : '?') + '_dl=' + Date.now();
+}
+
+async function renderImg(id, desc, style, seedVal) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var finalSeed = seedVal || Math.floor(Math.random() * 999999);
+  var urls = getImgUrls(desc, style, finalSeed);
+  var cap  = desc.length > 70 ? desc.slice(0, 70) + '…' : desc;
+
+  el.innerHTML =
+    '<div class="img-spin">' +
+      '<div class="spin"></div>' +
+      '<div id="ipr_' + id + '" style="font-size:11px;color:var(--t2);margin-top:8px">Génération en cours…</div>' +
+      '<div style="font-size:10px;color:var(--t3);margin-top:4px">Pollinations.ai · 15-45s</div>' +
+    '</div>';
+
+  // Mise à jour progression
+  var pr = document.getElementById('ipr_' + id);
+  function updPr(msg) { var e = document.getElementById('ipr_' + id); if (e) e.textContent = msg; }
+
+  try {
+    var result = await tryImgUrls(urls, updPr);
+    var srcUrl = result.srcUrl;
+
+    el.innerHTML =
+      '<div class="img-wrap" id="iw_' + id + '">' +
+        '<img id="im_' + id + '" src="' + esc(srcUrl) + '" alt="' + esc(cap) + '" crossorigin="anonymous" style="cursor:zoom-in">' +
+        '<div class="img-footer">' +
+          '<span class="img-cap">' + esc(cap) + '</span>' +
+          '<div class="img-actions">' +
+            '<button class="img-btn" onclick="renderImg(\'' + id + '\',\'' + esc(desc) + '\',\'' + esc(style) + '\')" title="Nouveau seed">↻</button>' +
+            '<button class="img-btn g" onclick="dlImgFromUrl(\'' + esc(srcUrl) + '\',' + finalSeed + ')">⬇ PNG</button>' +
+            '<a class="img-btn" href="' + esc(srcUrl) + '" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center">🔗</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    // Visionneuse
+    var imgEl = document.getElementById('im_' + id);
+    if (imgEl) imgEl.onclick = function() {
+      CURRENT_IMG_URL = srcUrl;
+      document.getElementById('imgv-img').src = srcUrl;
+      document.getElementById('imgv').classList.remove('h');
+    };
+
+    document.getElementById('chat').scrollTop = 99999;
+
+  } catch(err) {
+    // Fallback: montrer les liens directs à ouvrir
+    el.innerHTML =
+      '<div style="padding:16px;background:var(--c1);border:1px solid var(--ln);border-radius:10px">' +
+        '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">' +
+          '<span style="font-size:24px">🎨</span>' +
+          '<div>' +
+            '<div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:3px">' + esc(cap) + '</div>' +
+            '<div style="font-size:10px;color:var(--r);font-family:\'Geist Mono\'">⚠ ' + esc(err.message) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--t2);margin-bottom:8px">Liens directs (ouvrir dans un nouvel onglet) :</div>' +
+        '<div style="display:flex;flex-direction:column;gap:5px">' +
+          urls.map(function(u,i){ return '<a href="' + esc(u) + '" target="_blank" style="font-size:10px;color:var(--b);font-family:\'Geist Mono\';word-break:break-all">→ Lien ' + (i+1) + '</a>'; }).join('') +
+        '</div>' +
+        '<div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">' +
+          '<button onclick="renderImg(\'' + id + '\',\'' + esc(desc) + '\',\'' + esc(style) + '\')" style="padding:6px 11px;background:rgba(255,255,255,.05);border:1px solid var(--ln2);border-radius:6px;color:var(--t2);font-size:11px;font-family:\'Geist Mono\';cursor:pointer">↻ Réessayer</button>' +
+          '<button onclick="cpTxt(\'' + esc(urls[0]) + '\')" style="padding:6px 11px;background:rgba(255,255,255,.05);border:1px solid var(--ln2);border-radius:6px;color:var(--t2);font-size:11px;font-family:\'Geist Mono\';cursor:pointer">📋 Copier URL</button>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
+function cpTxt(txt) {
+  navigator.clipboard && navigator.clipboard.writeText(txt).then(function(){ toast('URL copiée', 'ok'); });
+}
+
+function rgImg(id, desc, style) {
+  var parent = document.getElementById(id);
+  if (parent) parent.innerHTML = '<div class="img-spin"><div class="spin"></div><div style="font-size:11px;color:var(--t2);margin-top:8px">Régénération…</div></div>';
+  renderImg(id, desc, style);
+}
+
+function gIP() {
+  var d = document.getElementById('idesc').value.trim();
+  var s = document.querySelector('.stg .stc.on');
+  s = s ? s.textContent.trim() : 'réaliste';
+  var seed = document.getElementById('iseed').value.trim() || '';
+  if (!d) { toast('Décris l\'image d\'abord', 'err'); return; }
+  setMode('chat');
+  var prompt = 'Génère une image: ' + d + ', style ' + s;
+  if (seed) prompt += ', seed ' + seed;
+  document.getElementById('inp').value = prompt;
+  go();
+}
+
+function gIPMulti() {
+  var d = document.getElementById('idesc').value.trim();
+  var s = document.querySelector('.stg .stc.on');
+  s = s ? s.textContent.trim() : 'réaliste';
+  if (!d) { toast('Décris l\'image d\'abord', 'err'); return; }
+  setMode('chat');
+  document.getElementById('inp').value = 'Génère 3 variantes de cette image avec des seeds différents: ' + d + ', style ' + s;
+  go();
+}
+
+function qsI() {
+  rTab('i', document.querySelectorAll('.rpt')[1]);
+  if (!RPO) tRp();
+}
+
+// Visionneuse
+function closeImgV(e) {
+  if (e.target === document.getElementById('imgv') || e.target === document.getElementById('imgv-close-btn')) {
+    document.getElementById('imgv').classList.add('h');
+  }
+}
+function dlImgV() {
+  dlImgFromUrl(CURRENT_IMG_URL, 'viewer');
+}
+function dlImgVJpg() {
+  var img = document.getElementById('imgv-img');
+  var canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth || 1024; canvas.height = img.naturalHeight || 576;
+  try {
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    canvas.toBlob(function(b){
+      var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='ixa-image.jpg'; a.click();
+    },'image/jpeg',0.92);
+  } catch(e) { window.open(CURRENT_IMG_URL,'_blank'); toast('Clic droit → Enregistrer sous','info'); }
+}
+
+// ════════════════════════════════════════════════
+// ═══ GÉNÉRATION FICHIERS ═══
+// ════════════════════════════════════════════════
+
+// ── EXCEL ──
+async function mkXl(fn, csv, id) {
+  try {
+    if (!window.XLSX) throw new Error('XLSX non chargé');
+    var rows = csv.split('\n').filter(function(r){return r.trim();}).map(function(r){return r.split(';');});
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    // Largeur auto des colonnes
+    if (rows.length) {
+      ws['!cols'] = rows[0].map(function(_, ci) {
+        var max = Math.max.apply(null, rows.map(function(r){return (r[ci]||'').length;}).concat([8]));
+        return { wch: Math.min(max + 2, 40) };
+      });
+    }
+    XLSX.utils.book_append_sheet(wb, ws, 'IXA Data');
+    var buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+    var url = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = mkFileCard('📊', fn, 'Tableur Excel', url, fn);
+  } catch(e) {
+    setElErr(id, 'Excel: ' + e.message);
+  }
+}
+
+// ════ WORD (.docx) — Générateur autonome sans bibliothèque externe ════
+// Crée un vrai .docx (ZIP + XML) directement en JS pur.
+// Fonctionne 100% hors-ligne, aucune dépendance CDN.
+
+async function mkDoc(fn, md, id) {
+  try {
+    var blob = await buildDocx(fn.replace('.docx',''), md);
+    var url  = URL.createObjectURL(blob);
+    var el   = document.getElementById(id);
+    if (el) el.innerHTML = mkFileCard('📝', fn, 'Document Word', url, fn);
+  } catch(e) {
+    // Fallback: proposer un fichier RTF (ouvert par Word aussi)
+    try {
+      var rtfBlob = buildRtf(md);
+      var rtfName = fn.replace('.docx', '.rtf');
+      var url2 = URL.createObjectURL(rtfBlob);
+      var el2 = document.getElementById(id);
+      if (el2) el2.innerHTML = mkFileCard('📝', rtfName, 'Document RTF (compatible Word)', url2, rtfName);
+    } catch(e2) {
+      setElErr(id, 'Word: ' + e.message);
+    }
+  }
+}
+
+// ─── Miniature ZIP pour DOCX ───
+function buildDocx(title, md) {
+  // Convertit Markdown → paragraphes Word XML
+  var paras = [];
+  var lines  = md.split('\n');
+
+  // Style couverture si le titre existe
+  paras.push('<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:color w:val="287A0C"/><w:sz w:val="48"/><w:szCs w:val="48"/><w:b/></w:rPr><w:t>' + xmlEsc(title) + '</w:t></w:r></w:p>');
+  paras.push('<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:color w:val="6E6E82"/><w:sz w:val="20"/></w:rPr><w:t>Généré par IXA — ' + xmlEsc(new Date().toLocaleDateString('fr-FR')) + '</w:t></w:r></w:p>');
+  paras.push('<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="A8FF3E"/></w:pBdr></w:p>');
+
+  for (var i = 0; i < lines.length; i++) {
+    var l = lines[i];
+    if (!l.trim()) { paras.push('<w:p/>'); continue; }
+
+    if (l.startsWith('# ')) {
+      paras.push('<w:p><w:pPr><w:pStyle w:val="Heading1"/><w:spacing w:before="240" w:after="120"/></w:pPr>' + runXml(l.slice(2), {color:'1F4D0A', sz:32, bold:true}) + '</w:p>');
+    } else if (l.startsWith('## ')) {
+      paras.push('<w:p><w:pPr><w:pStyle w:val="Heading2"/><w:spacing w:before="160" w:after="80"/></w:pPr>' + runXml(l.slice(3), {color:'2E6B14', sz:26, bold:true}) + '</w:p>');
+    } else if (l.startsWith('### ')) {
+      paras.push('<w:p><w:pPr><w:spacing w:before="120" w:after="60"/></w:pPr>' + runXml(l.slice(4), {color:'3D5A27', sz:22, bold:true}) + '</w:p>');
+    } else if (/^[-*] /.test(l)) {
+      paras.push('<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr>' + inlineXml(l.slice(2)) + '</w:p>');
+    } else if (/^\d+\. /.test(l)) {
+      paras.push('<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="2"/></w:numPr></w:pPr>' + inlineXml(l.replace(/^\d+\. /,'')) + '</w:p>');
+    } else if (l.startsWith('> ')) {
+      paras.push('<w:p><w:pPr><w:ind w:left="720"/><w:pBdr><w:left w:val="single" w:sz="8" w:space="4" w:color="A8FF3E"/></w:pBdr></w:p>');
+      paras.push('<w:p><w:pPr><w:ind w:left="760"/></w:pPr>' + runXml(l.slice(2), {color:'6E6E82', italic:true}) + '</w:p>');
+    } else if (/^---+$/.test(l)) {
+      paras.push('<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="4" w:space="1" w:color="CCCCCC"/></w:pBdr></w:p>');
+    } else if (/^[|]/.test(l)) {
+      // Tableau simple
+      var cells = l.split('|').filter(function(c){return c.trim();});
+      var isHeader = lines[i+1] && /^[|\s:-]+$/.test(lines[i+1]);
+      var tCells = cells.map(function(c){
+        return '<w:tc><w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + (isHeader?'287A0C':'FFFFFF') + '"/><w:tcBorders><w:top w:val="single" w:sz="4" w:color="CCCCCC"/><w:bottom w:val="single" w:sz="4" w:color="CCCCCC"/><w:left w:val="single" w:sz="4" w:color="CCCCCC"/><w:right w:val="single" w:sz="4" w:color="CCCCCC"/></w:tcBorders></w:tcPr>' +
+          '<w:p>' + runXml(c.trim(), {bold:isHeader, color:isHeader?'FFFFFF':'1A1A1A'}) + '</w:p></w:tc>';
+      }).join('');
+      paras.push('<w:tr>' + tCells + '</w:tr>');
+      if (lines[i+1] && /^[|\s:-]+$/.test(lines[i+1])) i++; // skip separator
+    } else {
+      paras.push('<w:p><w:pPr><w:spacing w:after="80" w:line="276" w:lineRule="auto"/></w:pPr>' + inlineXml(l) + '</w:p>');
+    }
+  }
+
+  function xmlEsc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;'); }
+
+  function runXml(text, opts) {
+    opts = opts || {};
+    var rpr = '<w:rPr>';
+    if (opts.bold)   rpr += '<w:b/><w:bCs/>';
+    if (opts.italic) rpr += '<w:i/><w:iCs/>';
+    if (opts.color)  rpr += '<w:color w:val="' + opts.color + '"/>';
+    if (opts.sz)     rpr += '<w:sz w:val="' + opts.sz + '"/><w:szCs w:val="' + opts.sz + '"/>';
+    rpr += '</w:rPr>';
+    return '<w:r>' + rpr + '<w:t xml:space="preserve">' + xmlEsc(text) + '</w:t></w:r>';
+  }
+
+  function inlineXml(text) {
+    // Parse **gras** *italic* `code`
+    var parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+    return parts.map(function(p) {
+      if (p.startsWith('**') && p.endsWith('**')) return runXml(p.slice(2,-2), {bold:true});
+      if (p.startsWith('*')  && p.endsWith('*'))  return runXml(p.slice(1,-1), {italic:true});
+      if (p.startsWith('`')  && p.endsWith('`'))  return runXml(p.slice(1,-1), {color:'287A0C'});
+      return p ? '<w:r><w:t xml:space="preserve">' + xmlEsc(p) + '</w:t></w:r>' : '';
+    }).join('');
+  }
+
+  // XML du document principal
+  var docXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" ' +
+    'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ' +
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+    '<w:body>' +
+    paras.join('') +
+    '<w:sectPr>' +
+      '<w:pgSz w:w="11906" w:h="16838"/>' +
+      '<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/>' +
+    '</w:sectPr>' +
+    '</w:body></w:document>';
+
+  var stylesXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+    '<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:rPr><w:b/><w:color w:val="1F4D0A"/><w:sz w:val="32"/></w:rPr></w:style>' +
+    '<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:rPr><w:b/><w:color w:val="2E6B14"/><w:sz w:val="26"/></w:rPr></w:style>' +
+    '</w:styles>';
+
+  var numberingXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+    '<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>' +
+    '<w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>' +
+    '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>' +
+    '<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>' +
+    '</w:numbering>';
+
+  var coreXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/">' +
+    '<dc:creator>IXA</dc:creator><dc:title>' + xmlEsc(title) + '</dc:title>' +
+    '</cp:coreProperties>';
+
+  var relsXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+    '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>' +
+    '</Relationships>';
+
+  var wordRelsXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+    '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>' +
+    '</Relationships>';
+
+  var contentTypesXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="xml" ContentType="application/xml"/>' +
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+    '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+    '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>' +
+    '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>' +
+    '</Types>';
+
+  // Créer le ZIP (DOCX = ZIP)
+  var files = {
+    '[Content_Types].xml': contentTypesXml,
+    '_rels/.rels': relsXml,
+    'word/document.xml': docXml,
+    'word/styles.xml': stylesXml,
+    'word/numbering.xml': numberingXml,
+    'word/_rels/document.xml.rels': wordRelsXml,
+    'docProps/core.xml': coreXml
+  };
+
+  return buildZip(files);
+}
+
+// ─── ZIP builder minimal (pour DOCX) ───
+function buildZip(files) {
+  var entries = [];
+  var centralDir = [];
+  var offset = 0;
+
+  function str2bytes(s) {
+    var enc = new TextEncoder();
+    return enc.encode(s);
+  }
+  function u16le(n) { return [n & 0xFF, (n >> 8) & 0xFF]; }
+  function u32le(n) { return [n & 0xFF, (n >> 8) & 0xFF, (n >> 16) & 0xFF, (n >> 24) & 0xFF]; }
+
+  function crc32(buf) {
+    var table = [];
+    for (var i = 0; i < 256; i++) {
+      var c = i;
+      for (var j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[i] = c;
+    }
+    var crc = 0xFFFFFFFF;
+    for (var k = 0; k < buf.length; k++) crc = table[(crc ^ buf[k]) & 0xFF] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  var namesList = Object.keys(files);
+  for (var f = 0; f < namesList.length; f++) {
+    var name = namesList[f];
+    var data = str2bytes(files[name]);
+    var nameBytes = str2bytes(name);
+    var crc = crc32(data);
+    var localHeader = []
+      .concat([0x50,0x4B,0x03,0x04]) // sig
+      .concat(u16le(20))              // version needed
+      .concat(u16le(0))               // flags
+      .concat(u16le(0))               // compression: stored
+      .concat(u16le(0))               // mod time
+      .concat(u16le(0))               // mod date
+      .concat(u32le(crc))             // crc32
+      .concat(u32le(data.length))     // compressed size
+      .concat(u32le(data.length))     // uncompressed size
+      .concat(u16le(nameBytes.length))// name length
+      .concat(u16le(0))               // extra length
+      .concat(Array.from(nameBytes)); // name
+
+    centralDir.push({
+      name: nameBytes,
+      crc: crc,
+      size: data.length,
+      offset: offset
+    });
+
+    entries.push(new Uint8Array(localHeader));
+    entries.push(data);
+    offset += localHeader.length + data.length;
+  }
+
+  var centralDirOffset = offset;
+  var centralDirBytes = [];
+  for (var cd = 0; cd < centralDir.length; cd++) {
+    var e = centralDir[cd];
+    var cdEntry = []
+      .concat([0x50,0x4B,0x01,0x02]) // sig
+      .concat(u16le(20))              // version made by
+      .concat(u16le(20))              // version needed
+      .concat(u16le(0))               // flags
+      .concat(u16le(0))               // compression
+      .concat(u16le(0))               // mod time
+      .concat(u16le(0))               // mod date
+      .concat(u32le(e.crc))
+      .concat(u32le(e.size))
+      .concat(u32le(e.size))
+      .concat(u16le(e.name.length))
+      .concat(u16le(0))               // extra
+      .concat(u16le(0))               // comment
+      .concat(u16le(0))               // disk start
+      .concat(u16le(0))               // int attrib
+      .concat(u32le(0))               // ext attrib
+      .concat(u32le(e.offset))
+      .concat(Array.from(e.name));
+    centralDirBytes = centralDirBytes.concat(cdEntry);
+  }
+
+  var eocd = []
+    .concat([0x50,0x4B,0x05,0x06])  // sig
+    .concat(u16le(0))                // disk number
+    .concat(u16le(0))                // disk with central dir
+    .concat(u16le(centralDir.length))
+    .concat(u16le(centralDir.length))
+    .concat(u32le(centralDirBytes.length))
+    .concat(u32le(centralDirOffset))
+    .concat(u16le(0));               // comment length
+
+  var allBytes = [];
+  for (var e2 = 0; e2 < entries.length; e2++) {
+    for (var b = 0; b < entries[e2].length; b++) allBytes.push(entries[e2][b]);
+  }
+  allBytes = allBytes.concat(centralDirBytes).concat(eocd);
+
+  return Promise.resolve(new Blob([new Uint8Array(allBytes)],
+    { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
+}
+
+// ─── RTF Fallback (si ZIP échoue) ───
+function buildRtf(md) {
+  var lines = md.split('\n');
+  var rtf = '{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Calibri;}}{\\colortbl;\\red40\\green122\\blue10;\\red110\\green110\\blue130;}\\f0\\fs24\n';
+  lines.forEach(function(l) {
+    if (!l.trim()) { rtf += '\\par\n'; return; }
+    if (l.startsWith('# '))       rtf += '{\\pard\\keepn\\sb240\\sa120\\b\\fs36\\cf1 ' + rtfEsc(l.slice(2)) + '\\par}\n';
+    else if (l.startsWith('## ')) rtf += '{\\pard\\keepn\\sb160\\sa80\\b\\fs28\\cf1 ' + rtfEsc(l.slice(3)) + '\\par}\n';
+    else if (l.startsWith('### '))rtf += '{\\pard\\sb120\\sa60\\b\\fs24 ' + rtfEsc(l.slice(4)) + '\\par}\n';
+    else if (/^[-*] /.test(l))    rtf += '{\\pard\\li360\\fi-180 • ' + rtfInline(l.slice(2)) + '\\par}\n';
+    else rtf += '{\\pard\\sa80\\sl276\\slmult1 ' + rtfInline(l) + '\\par}\n';
+  });
+  rtf += '}';
+  function rtfEsc(s) { return s.replace(/\\/g,'\\\\').replace(/\{/g,'\\{').replace(/\}/g,'\\}'); }
+  function rtfInline(s) {
+    s = rtfEsc(s);
+    s = s.replace(/\*\*([^*]+)\*\*/g, '{\\b $1}');
+    s = s.replace(/\*([^*]+)\*/g, '{\\i $1}');
+    return s;
+  }
+  return new Blob([rtf], { type: 'application/rtf' });
+}
+
+// ── PDF ──
+async function mkPdf(fn, md, id) {
+  try {
+    if (!window.jspdf) throw new Error('jsPDF non chargé');
+    var { jsPDF } = window.jspdf;
+    var doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    var x = 20, y = 20, lh = 7, pw = 170;
+    doc.setFont('helvetica');
+
+    var lines = md.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i];
+      if (y > 270) { doc.addPage(); y = 20; }
+      if (!l.trim()) { y += 3; continue; }
+      if (l.startsWith('# ')) {
+        doc.setFontSize(18); doc.setFont('helvetica','bold');
+        doc.setTextColor(40,80,20);
+        var wrapped = doc.splitTextToSize(l.slice(2), pw);
+        doc.text(wrapped, x, y); y += wrapped.length * 9 + 4;
+      } else if (l.startsWith('## ')) {
+        doc.setFontSize(14); doc.setFont('helvetica','bold');
+        doc.setTextColor(30,60,15);
+        var wrapped = doc.splitTextToSize(l.slice(3), pw);
+        doc.text(wrapped, x, y); y += wrapped.length * 7 + 3;
+      } else if (l.startsWith('### ')) {
+        doc.setFontSize(12); doc.setFont('helvetica','bold');
+        doc.setTextColor(60,60,60);
+        var wrapped = doc.splitTextToSize(l.slice(4), pw);
+        doc.text(wrapped, x, y); y += wrapped.length * 6 + 2;
+      } else if (/^[-*] /.test(l)) {
+        doc.setFontSize(11); doc.setFont('helvetica','normal');
+        doc.setTextColor(40,40,40);
+        var txt = '• ' + l.slice(2).replace(/\*\*/g,'').replace(/\*/g,'');
+        var wrapped = doc.splitTextToSize(txt, pw - 5);
+        doc.text(wrapped, x + 3, y); y += wrapped.length * lh + 1;
+      } else {
+        doc.setFontSize(11); doc.setFont('helvetica','normal');
+        doc.setTextColor(40,40,40);
+        var clean = l.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1');
+        var wrapped = doc.splitTextToSize(clean, pw);
+        doc.text(wrapped, x, y); y += wrapped.length * lh;
+      }
+    }
+    // Footer
+    var pages = doc.internal.getNumberOfPages();
+    for (var p = 1; p <= pages; p++) {
+      doc.setPage(p);
+      doc.setFontSize(8); doc.setTextColor(150,150,150);
+      doc.text('IXA — ' + fn + ' — Page ' + p + '/' + pages, x, 285);
+    }
+    var blob = doc.output('blob');
+    var url  = URL.createObjectURL(blob);
+    var el   = document.getElementById(id);
+    if (el) el.innerHTML = mkFileCard('📕', fn, 'Document PDF', url, fn);
+  } catch(e) {
+    setElErr(id, 'PDF: ' + e.message);
+  }
+}
+
+// ── CSV ──
+function mkCsv(fn, data, id) {
+  try {
+    var blob = new Blob(['\uFEFF' + data], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var el   = document.getElementById(id);
+    if (el) el.innerHTML = mkFileCard('📋', fn, 'Fichier CSV', url, fn);
+  } catch(e) {
+    setElErr(id, 'CSV: ' + e.message);
+  }
+}
+
+// ── TEXTE / JSON / CODE / etc. ──
+function mkTxt(fn, data, id) {
+  try {
+    var ext  = fn.split('.').pop().toLowerCase();
+    var mime = ext === 'json' ? 'application/json' : 'text/plain';
+    var ico  = ext === 'json' ? '{}' : (ext === 'py' ? '🐍' : (ext === 'js' ? '📜' : '📄'));
+    var blob = new Blob([data], { type: mime + ';charset=utf-8' });
+    var url  = URL.createObjectURL(blob);
+    var el   = document.getElementById(id);
+    if (el) el.innerHTML = mkFileCard(ico, fn, 'Fichier ' + ext.toUpperCase(), url, fn);
+  } catch(e) {
+    setElErr(id, 'Fichier: ' + e.message);
+  }
+}
+
+function mkFileCard(ico, name, type, url, dl) {
+  return '<div class="exp-row">' +
+    '<span class="exp-ico">' + ico + '</span>' +
+    '<div class="exp-info"><div class="exp-name">' + esc(name) + '</div><div class="exp-type">' + esc(type) + ' · prêt</div></div>' +
+    '<a class="exp-btn" href="' + url + '" download="' + esc(dl) + '">⬇ Télécharger</a>' +
+    '</div>';
+}
+function setElErr(id, msg) {
+  var el = document.getElementById(id);
+  if (el) el.innerHTML = '<div style="padding:8px 12px;background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.2);border-radius:8px;color:var(--r);font-size:12px;font-family:\'Geist Mono\'">⚠ ' + esc(msg) + '</div>';
+}
+
+// ════════════════════════════════════════════════
+// ═══ SEND / GO ═══
+// ════════════════════════════════════════════════
+async function go() {
+  var inp   = document.getElementById('inp');
+  var text  = inp.value.trim();
+  var files = FILES.filter(Boolean);
+  if (!text && !files.length) return;
+  if (!KEY) { toast('Configure ta clé API Groq d\'abord', 'err'); oM('mapi'); return; }
+  var c = cv(); if (!c) return;
+
+  var ac = [], df = [];
+  files.forEach(function(f) {
+    if (f.isImg) { ac.push({ type: 'image_url', image_url: { url: f.data } }); df.push(f); }
+    else { ac.push({ type: 'text', text: '[Fichier: ' + f.name + ']\n' + (f.data || '').slice(0, 6000) }); }
+  });
+  if (text) ac.push({ type: 'text', text: text });
+
+  var fc = (ac.length === 1 && ac[0].type === 'text') ? ac[0].text : ac;
+  c.msgs.push({ role: 'user', content: fc, files: df });
+  if (c.msgs.length === 1 && text) {
+    c.title = text.slice(0, 40) + (text.length > 40 ? '…' : '');
+    document.getElementById('tbt').textContent = c.title;
+  }
+  rCL();
+  aB('user', typeof fc === 'string' ? fc : text, df);
+
+  inp.value = ''; inp.style.height = '';
+  FILES = [];
+  document.getElementById('ar').innerHTML   = '';
+  document.getElementById('rpfl').innerHTML = '';
+  document.getElementById('snd').disabled   = true;
+
+  var tid = typi();
+  try {
+    var hist = c.msgs.slice(0, -1).slice(-8).map(function(m) {
+      return { role: m.role, content: typeof m.content === 'string' ? m.content : m.content };
+    });
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY },
+      body: JSON.stringify({
+        model: MDL,
+        messages: [{ role: 'system', content: SYS }].concat(hist).concat([{ role: 'user', content: fc }]),
+        max_tokens: 4000,
+        temperature: 0.8
+      })
+    });
+    rEl(tid);
+    if (!res.ok) {
+      var e = await res.json().catch(function(){return{};});
+      throw new Error(e.error && e.error.message ? e.error.message : 'HTTP ' + res.status);
+    }
+    var data = await res.json();
+    var rep  = data.choices[0].message.content;
+    c.msgs.push({ role: 'assistant', content: rep });
+    sv(); aB('assistant', rep);
+  } catch(e) {
+    rEl(tid);
+    aB('assistant', '⚠ **Erreur:** ' + e.message + '\n\nVérifie ta clé API dans ⚙ Configuration.');
+  }
+  document.getElementById('snd').disabled = false;
+}
+
+function typi() {
+  var mw = document.getElementById('mw');
+  if (!mw) { document.getElementById('ci').innerHTML = '<div class="mw" id="mw"></div>'; mw = document.getElementById('mw'); }
+  var id = 't' + Date.now();
+  var d  = document.createElement('div');
+  d.id = id; d.className = 'msg';
+  d.innerHTML = '<div class="ma"><div class="av">IX</div><div class="ab"><div class="an">IXA</div>' +
+    '<div class="typ"><div class="td"></div><div class="td"></div><div class="td"></div></div></div></div>';
+  mw.appendChild(d);
+  document.getElementById('chat').scrollTop = 99999;
+  return id;
+}
+
+// ════════════════════════════════════════════════
+// ═══ VOICE MODE ═══
+// ════════════════════════════════════════════════
+function vmReset() {
+  document.getElementById('vm-st').textContent  = 'Cliquez pour parler';
+  document.getElementById('vm-tr').textContent  = '…';
+  document.getElementById('vm-orb').className   = 'vm-orb';
+  document.getElementById('vm-ico').textContent = '🎤';
+}
+async function vmSend(text) {
+  if (!text || !KEY) return;
+  var c = cv(); if (!c) return;
+  var hist = document.getElementById('vm-hist');
+  var ud = document.createElement('div');
+  ud.className = 'vmh u'; ud.textContent = text; hist.appendChild(ud); hist.scrollTop = 99999;
+  document.getElementById('vm-st').textContent  = 'IXA réfléchit…';
+  document.getElementById('vm-orb').className   = 'vm-orb';
+  document.getElementById('vm-ico').textContent = '⬡';
+  try {
+    c.msgs.push({ role: 'user', content: text, files: [] });
+    if (c.msgs.length === 1) { c.title = text.slice(0, 36) + (text.length > 36 ? '…' : ''); rCL(); }
+    var h = c.msgs.slice(0,-1).slice(-6).map(function(m){ return { role: m.role, content: typeof m.content === 'string' ? m.content : m.content }; });
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY },
+      body: JSON.stringify({ model: MDL, messages: [{ role: 'system', content: 'Tu es IXA. Réponds en français, concis et naturel. Mode vocal, pas de markdown.' }].concat(h).concat([{ role: 'user', content: text }]), max_tokens: 300, temperature: 0.8 })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var rep  = data.choices[0].message.content;
+    c.msgs.push({ role: 'assistant', content: rep }); sv();
+    var ad = document.createElement('div');
+    ad.className = 'vmh a'; ad.textContent = rep; hist.appendChild(ad); hist.scrollTop = 99999;
+    document.getElementById('vm-st').textContent  = 'IXA parle…';
+    document.getElementById('vm-orb').className   = 'vm-orb spk';
+    document.getElementById('vm-ico').textContent = '🔊';
+    spk(rep, function(){ vmReset(); });
+  } catch(e) { vmReset(); document.getElementById('vm-st').textContent = 'Erreur: ' + e.message; }
+}
+function tMic() {
+  if (MODE !== 'voice') return;
+  if (LST) { stM(); return; }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Microphone non supporté sur ce navigateur', 'err'); return; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  REC = new SR();
+  REC.lang = 'fr-FR'; REC.continuous = false; REC.interimResults = true;
+  REC.onresult = function(e) {
+    var t = Array.from(e.results).map(function(r){return r[0].transcript;}).join('');
+    document.getElementById('vm-tr').textContent = t;
+    if (e.results[e.results.length-1].isFinal) { stM(); vmSend(t); }
+  };
+  REC.onerror = REC.onend = function(){ stM(); };
+  REC.start(); LST = true;
+  document.getElementById('vm-st').textContent  = 'À l\'écoute…';
+  document.getElementById('vm-orb').className   = 'vm-orb lst';
+  document.getElementById('vm-ico').textContent = '⏹';
+  document.getElementById('vm-tr').textContent  = '…';
+}
+function stM() { if (REC) try { REC.stop(); } catch(e){} LST = false; }
+function spk(text, cb) {
+  if (!window.speechSynthesis) { if (cb) cb(); return; }
+  window.speechSynthesis.cancel();
+  var clean = text.replace(/\[[\s\S]*?\]/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/#{1,3}\s/g,'').trim().slice(0,400);
+  var u = new SpeechSynthesisUtterance(clean);
+  u.lang = 'fr-FR'; u.rate = 1.05;
+  var voices = window.speechSynthesis.getVoices();
+  var v = voices.find(function(v){return v.lang==='fr-FR';}) || voices.find(function(v){return v.lang.startsWith('fr');});
+  if (v) u.voice = v;
+  u.onend = function(){ if (cb) cb(); };
+  u.onerror = function(){ if (cb) cb(); };
+  window.speechSynthesis.speak(u);
+}
+
+// ════════════════════════════════════════════════
+// ═══ FICHIERS (LOCAL) ═══
+// ════════════════════════════════════════════════
+async function oF(e) { for (var i=0; i<e.target.files.length; i++) await aFl(e.target.files[i]); e.target.value=''; }
+async function aFl(f) {
+  var isI = f.type.startsWith('image/');
+  var data = await new Promise(function(resolve) {
+    var rd = new FileReader();
+    rd.onload = function(e){ resolve(e.target.result); };
+    if (isI) rd.readAsDataURL(f); else rd.readAsText(f);
+  });
+  var obj = { name: f.name, type: f.type, data: data, isImg: isI, id: 'f' + Date.now() + rId() };
+  FILES.push(obj); rAt(); rPF();
+}
+function rFl(id) { FILES = FILES.filter(function(f){return f.id!==id;}); rAt(); rPF(); }
+function rAt() {
+  var el = document.getElementById('ar'); el.innerHTML = '';
+  FILES.forEach(function(f) {
+    var d = document.createElement('div'); d.className = 'ach';
+    if (f.isImg) d.innerHTML = '<img src="' + f.data + '">' + esc(f.name.slice(0,14)) + ' <button class="ach-x" onclick="rFl(\'' + f.id + '\')">✕</button>';
+    else d.innerHTML = fIco(f.name) + ' ' + esc(f.name.slice(0,18)) + ' <button class="ach-x" onclick="rFl(\'' + f.id + '\')">✕</button>';
+    el.appendChild(d);
+  });
+}
+function rPF() {
+  var el = document.getElementById('rpfl'); el.innerHTML = '';
+  FILES.forEach(function(f) {
+    var d = document.createElement('div'); d.className = 'rpf';
+    d.innerHTML = '<span>' + fIco(f.name) + '</span><span class="rpf-n">' + esc(f.name) + '</span><button class="rpf-x" onclick="rFl(\'' + f.id + '\')">✕</button>';
+    el.appendChild(d);
+  });
+}
+function anF() {
+  if (!FILES.filter(Boolean).length) { toast('Ajoute d\'abord des fichiers', 'err'); return; }
+  document.getElementById('inp').value = 'Analyse ces fichiers et dis-moi ce qu\'ils contiennent en détail.';
+  go();
+}
+function dzO(e) { e.preventDefault(); document.getElementById('dz').classList.add('ov'); }
+function dzL() { document.getElementById('dz').classList.remove('ov'); }
+async function dzD(e) { e.preventDefault(); dzL(); for (var i=0; i<e.dataTransfer.files.length; i++) await aFl(e.dataTransfer.files[i]); }
+
+// ════════════════════════════════════════════════
+// ═══ BASE DE DONNÉES GITHUB ═══
+// ════════════════════════════════════════════════
+
+// détection d'un backend disponible (pour utiliser /api/github/*)
+var SERVER_AVAILABLE = false;
+var SERVER_CONFIG = {};
+async function checkServer() {
+  try {
+    var r = await fetch('/api/config');
+    if (r.ok) {
+      SERVER_AVAILABLE = true;
+      SERVER_CONFIG = await r.json();
+      if (SERVER_CONFIG.github_repo) {
+        DB_REPO = SERVER_CONFIG.github_repo;
+        DB_PATH = SERVER_CONFIG.github_path || '';
+      }
+      uDB();
+      if (SERVER_CONFIG.save_history) {
+        toast('Historique de chat sauvegardé automatiquement sur GitHub (serveur)', 'info');
+      }
+    }
+  } catch(e) {
+    // pas de serveur
+  }
+}
+checkServer();
+
+function ghH() {
+  // si on passe par le backend, on n'a pas besoin d'en-têtes GitHub
+  if (SERVER_AVAILABLE) return {};
+  var h = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  if (DB_TOKEN) h['Authorization'] = 'Bearer ' + DB_TOKEN;
+  return h;
+}
+
+function uDB() {
+  var dbUrl = document.getElementById('db-url');
+  var dbDot = document.getElementById('db-dot');
+  var dbTxt = document.getElementById('db-st-txt');
+  if (DB_REPO) {
+    dbUrl.textContent = 'github.com/' + DB_REPO + (DB_PATH ? '/' + DB_PATH : '');
+    if (DB_TOKEN) { dbDot.className = 'db-dot ok'; dbTxt.textContent = 'Connecté'; }
+    else { dbDot.className = 'db-dot'; dbTxt.textContent = 'Token manquant'; }
+  } else {
+    dbUrl.textContent = 'Non configuré';
+    dbDot.className   = 'db-dot';
+    dbTxt.textContent = 'Non connecté';
+  }
+}
+
+async function refreshDB() {
+  if (!DB_REPO) return;
+  var dbfl = document.getElementById('dbfl');
+  var path = DB_PATH ? '/' + DB_PATH : '';
+  try {
+    var r;
+    if (SERVER_AVAILABLE) {
+      r = await fetch('/api/github/list' + (DB_PATH ? '?path=' + encodeURIComponent(DB_PATH) : ''));
+    } else {
+      r = await fetch('https://api.github.com/repos/' + DB_REPO + '/contents' + path, { headers: ghH() });
+    }
+    if (!r.ok) {
+      var e = await r.json().catch(function(){return{};});
+      throw new Error(e.message || 'GitHub ' + r.status);
+    }
+    var files = await r.json();
+    rDBF(Array.isArray(files) ? files : []);
+    document.getElementById('db-dot').className = 'db-dot ok';
+    document.getElementById('db-st-txt').textContent = 'Connecté · ' + (Array.isArray(files) ? files.length : 0) + ' fichier(s)';
+  } catch(e) {
+    if (dbfl) dbfl.innerHTML = '<div style="font-size:10px;color:var(--r);font-family:\'Geist Mono\';padding:6px">' + esc(e.message) + '</div>';
+    document.getElementById('db-dot').className = 'db-dot err';
+    document.getElementById('db-st-txt').textContent = 'Erreur: ' + e.message.slice(0,30);
+  }
+}
+
+function rDBF(files) {
+  var el = document.getElementById('dbfl'); if (!el) return;
+  el.innerHTML = '';
+  if (!files.length) { el.innerHTML = '<div style="font-size:10px;color:var(--t2);font-family:\'Geist Mono\'">Dossier vide</div>'; return; }
+  files.filter(function(f){return f.type==='file';}).forEach(function(f) {
+    var d = document.createElement('div'); d.className = 'ghfi';
+    d.innerHTML = fIco(f.name) + ' ' + esc(f.name) + '<span style="margin-left:auto;font-size:9px;color:var(--t3)">' + (f.size ? Math.round(f.size/1024*10)/10 + 'Ko' : '') + '</span>';
+    d.onclick = function(){ dbLoad(f); };
+    el.appendChild(d);
+  });
+}
+
+async function dbLoad(file) {
+  try {
+    toast('Chargement de "' + file.name + '"…', 'info');
+    var data;
+    if (SERVER_AVAILABLE) {
+      var r = await fetch('/api/github/download?path=' + encodeURIComponent((DB_PATH?DB_PATH+'/':'') + file.name));
+      if (!r.ok) throw new Error('GitHub ' + r.status);
+      // backend returns file bytes
+      var blob = await r.blob();
+      var isI = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+      if (isI) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          FILES.push({ name: file.name, type: file.type || 'image/png', data: e.target.result, isImg: true, id: 'f'+Date.now() });
+          rAt(); rPF();
+          toast('"' + file.name + '" chargé dans le chat', 'ok');
+        };
+        reader.readAsDataURL(blob);
+        return;
+      } else {
+        data = await blob.text();
+      }
+    } else {
+      var r = await fetch(file.url, { headers: ghH() });
+      if (!r.ok) throw new Error('GitHub ' + r.status);
+      var resp = await r.json();
+      var isI = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+      if (resp.encoding === 'base64') {
+        var raw = resp.content.replace(/\n/g,'');
+        if (isI) { var ext=file.name.split('.').pop(); data='data:image/'+ext+';base64,'+raw; }
+        else { try { data = decodeURIComponent(escape(atob(raw))); } catch(e) { data = atob(raw); } }
+      } else { data = resp.content; }
+    }
+    var isI = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+    FILES.push({ name: file.name, type: isI ? 'image/'+file.name.split('.').pop() : 'text/plain', data: data, isImg: isI, id: 'f'+Date.now() });
+    rAt(); rPF();
+    toast('"' + file.name + '" chargé dans le chat', 'ok');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function dbUpload(file) {
+  if (!DB_REPO) { toast('Configure GitHub d\'abord', 'err'); oM('mdb'); return; }
+  if (!SERVER_AVAILABLE && !DB_TOKEN) { toast('Token GitHub manquant', 'err'); oM('mdb'); return; }
+  var isI = file.type.startsWith('image/');
+  var data = await new Promise(function(resolve) {
+    var rd = new FileReader();
+    rd.onload = function(e){ resolve(e.target.result); };
+    if (isI) rd.readAsDataURL(file); else rd.readAsText(file);
+  });
+  var path    = (DB_PATH ? DB_PATH + '/' : '') + file.name;
+  var encoded = isI ? data.split(',')[1] : btoa(unescape(encodeURIComponent(data)));
+  toast('Envoi de "' + file.name + '"…', 'info');
+  try {
+    if (SERVER_AVAILABLE) {
+      // laisser le backend gérer l'upload
+      var form = new FormData();
+      form.append('path', path);
+      form.append('filename', file.name);
+      form.append('content_base64', encoded);
+      var r = await fetch('/api/github/upload', { method: 'POST', body: JSON.stringify({ repo: DB_REPO, path: DB_PATH, filename: file.name, content_base64: encoded }) , headers: {'Content-Type':'application/json'} });
+      if (!r.ok) { var e=await r.json().catch(_=>{}); throw new Error(e && e.error ? e.error : 'GitHub error'); }
+    } else {
+      // fonctionnement normal direct
+      var sha = '';
+      try {
+        var chk = await fetch('https://api.github.com/repos/' + DB_REPO + '/contents/' + path, { headers: ghH() });
+        if (chk.ok) { var cd = await chk.json(); sha = cd.sha || ''; }
+      } catch(e) {}
+      var body = { message: 'IXA: ' + file.name, content: encoded };
+      if (sha) body.sha = sha;
+      var r = await fetch('https://api.github.com/repos/' + DB_REPO + '/contents/' + path, {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, ghH()),
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) { var e=await r.json().catch(function(){return{};}); throw new Error(e.message || 'GitHub error'); }
+    }
+    toast('✓ "' + file.name + '" → base de données GitHub', 'ok');
+    refreshDB();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function oF2(e) { for (var i=0; i<e.target.files.length; i++) await dbUpload(e.target.files[i]); e.target.value=''; }
+function dz2O(e) { e.preventDefault(); document.getElementById('dz2').classList.add('ov'); }
+function dz2L() { document.getElementById('dz2').classList.remove('ov'); }
+async function dz2D(e) { e.preventDefault(); dz2L(); for (var i=0; i<e.dataTransfer.files.length; i++) await dbUpload(e.dataTransfer.files[i]); }
+
+async function sN() {
+  if (!DB_REPO || (!SERVER_AVAILABLE && !DB_TOKEN)) { toast('Configure GitHub d\'abord', 'err'); oM('mdb'); return; }
+  var fn   = document.getElementById('nn').value.trim() || 'note-' + new Date().toISOString().slice(0,10) + '.md';
+  var body = document.getElementById('nb').value;
+  if (!body) { toast('Note vide', 'err'); return; }
+  var path    = (DB_PATH ? DB_PATH + '/' : '') + fn;
+  var encoded = btoa(unescape(encodeURIComponent(body)));
+  toast('Envoi…', 'info');
+  try {
+    if (SERVER_AVAILABLE) {
+      var r = await fetch('/api/github/upload', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ repo: DB_REPO, path: DB_PATH, filename: fn, content_base64: encoded })
+      });
+      if (!r.ok) { var e=await r.json().catch(function(){return{};}); throw new Error(e.error|| 'GitHub error'); }
+    } else {
+      var r = await fetch('https://api.github.com/repos/' + DB_REPO + '/contents/' + path, {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, ghH()),
+        body: JSON.stringify({ message: 'IXA: ' + fn, content: encoded })
+      });
+      if (!r.ok) { var e=await r.json().catch(function(){return{};}); throw new Error(e.message || 'GitHub error'); }
+    }
+    toast('✓ "' + fn + '" envoyé', 'ok');
+    document.getElementById('nb').value = ''; document.getElementById('nn').value = '';
+    refreshDB();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ════════════════════════════════════════════════
+// ═══ UI ═══
+// ════════════════════════════════════════════════
+function tSb() {
+  SBO = !SBO;
+  document.getElementById('sb').classList.toggle('off', !SBO);
+  document.getElementById('main').classList.toggle('full', !SBO);
+  document.getElementById('bsb').classList.toggle('on', SBO);
+}
+function tRp() {
+  RPO = !RPO;
+  document.getElementById('rp').classList.toggle('off', !RPO);
+  document.getElementById('brp').classList.toggle('on', RPO);
+  if (RPO) refreshDB();
+}
+function rTab(n, el) {
+  document.querySelectorAll('.rpt').forEach(function(t){t.classList.remove('on');});
+  el.classList.add('on');
+  ['f','i','db'].forEach(function(x){ document.getElementById('rp-'+x).classList.toggle('h', x!==n); });
+  if (n==='db') refreshDB();
+}
+function oM(id) { document.getElementById(id).classList.remove('h'); }
+function cM(id) { document.getElementById(id).classList.add('h'); }
+
+function sConf() {
+  KEY = document.getElementById('mk').value.trim();
+  MDL = document.getElementById('mm').value.trim() || 'llama-3.3-70b-versatile';
+  localStorage.setItem('ixa_k', KEY);
+  localStorage.setItem('ixa_m', MDL);
+  cM('mapi'); toast('✓ Configuration sauvegardée', 'ok');
+}
+
+function sDB() {
+  DB_REPO  = document.getElementById('db-repo').value.trim();
+  DB_PATH  = document.getElementById('db-path').value.trim();
+  DB_TOKEN = document.getElementById('db-tok').value.trim();
+  localStorage.setItem('ixa_db_repo',  DB_REPO);
+  localStorage.setItem('ixa_db_path',  DB_PATH);
+  localStorage.setItem('ixa_db_token', DB_TOKEN);
+  cM('mdb'); uDB();
+  toast('✓ GitHub connecté', 'ok');
+  setTimeout(refreshDB, 400);
+}
+
+function clearDB() {
+  DB_REPO = DB_PATH = DB_TOKEN = '';
+  localStorage.removeItem('ixa_db_repo');
+  localStorage.removeItem('ixa_db_path');
+  localStorage.removeItem('ixa_db_token');
+  document.getElementById('db-repo').value = '';
+  document.getElementById('db-path').value = '';
+  document.getElementById('db-tok').value  = '';
+  cM('mdb'); uDB(); toast('Base de données déconnectée', 'info');
+}
+
+function showDeploy() { oM('mdeploy'); }
+
+function toast(msg, type) {
+  document.querySelectorAll('.toast').forEach(function(t){t.remove();});
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type || ''); t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(function(){t.remove();},300); }, 3000);
+}
+
+function qs(t) { if (MODE!=='chat') setMode('chat'); document.getElementById('inp').value = t; go(); }
+function esc(s) { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function rEl(id) { var e=document.getElementById(id); if(e) e.remove(); }
+function rId() { return Math.random().toString(36).slice(2,8); }
+function fIco(n) {
+  if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(n)) return '🖼️';
+  if (/\.(xlsx|xls)$/i.test(n)) return '📊';
+  if (/\.(csv)$/i.test(n)) return '📋';
+  if (/\.(doc|docx)$/i.test(n)) return '📝';
+  if (/\.(pdf)$/i.test(n)) return '📕';
+  if (/\.(pptx|ppt)$/i.test(n)) return '📑';
+  if (/\.(mp3|wav|ogg)$/i.test(n)) return '🎵';
+  if (/\.(mp4|mov|avi)$/i.test(n)) return '🎬';
+  if (/\.(zip|rar|7z)$/i.test(n)) return '📦';
+  if (/\.(js|ts|jsx|tsx)$/i.test(n)) return '📜';
+  if (/\.(py)$/i.test(n)) return '🐍';
+  if (/\.(html|css)$/i.test(n)) return '🌐';
+  if (/\.(json)$/i.test(n)) return '{}';
+  if (/\.(md|txt)$/i.test(n)) return '📄';
+  return '📄';
+}
+function gr(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,150)+'px'; }
+function oK(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); go(); } }
+
+// ── INIT ──
+document.getElementById('bsb').classList.add('on');
+window.speechSynthesis && window.speechSynthesis.getVoices();
+
+// Fermer modals avec Échap
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.mbg:not(.h)').forEach(function(m){ m.classList.add('h'); });
+    document.getElementById('imgv').classList.add('h');
+  }
+});
+
+// Fermer imgv en cliquant hors
+document.getElementById('imgv').addEventListener('click', function(e){
+  if (e.target === this) this.classList.add('h');
+});
+
+</script>
+</body>
+</html>
