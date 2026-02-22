@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>IXA — Système de Tom</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -650,7 +651,9 @@ textarea::placeholder{color:var(--mu)}
             <button class="lab2 sec" id="lb-fc" onclick="learnGen('flash')">🃏 Flashcards</button>
             <button class="lab2 sec" id="lb-quiz" onclick="learnGen('quiz')">🧩 Quiz</button>
             <button class="lab2 sec" id="lb-chat" onclick="learnGen('chat')">💬 Chat</button>
-            <button class="lab2 sec" style="margin-left:auto" onclick="learnReset()">✕</button>
+            <button class="lab2 sec" id="lb-mind" onclick="learnGen('mindmap')">🗺️ Carte</button>
+            <button class="lab2 sec" id="lb-tl" onclick="learnGen('timeline')">📅 Chrono</button>
+            <button class="lab2 sec" style="margin-left:auto;border-color:var(--err)" onclick="learnReset()">✕</button>
           </div>
         </div>
         <div class="laudio-bar" id="laudio">
@@ -726,25 +729,33 @@ const TPM = {
 // ── SYSTEM PROMPT ──
 const SYS = (webContext='') => {
   const userName = S.user?.display_name || S.user?.username || 'Tom';
-  return `Tu es IXA (Intelligence eXpansive Avancée), un système d'IA personnel de haute technologie créé par ${userName}.
-PERSONNALITÉ : Tu parles comme JARVIS d'Iron Man — sophistiqué, légèrement formel mais chaleureux, efficace et précis. Tu appelles ${userName} par son prénom naturellement.
-RÈGLES ABSOLUES :
-• Réponds TOUJOURS en français (sauf si ${userName} demande une autre langue)
-• Sois direct, structuré, utilise le Markdown pour la clarté
-• Ne dis jamais "Je suis une IA" — tu es IXA, le système de ${userName}
-• N'invente JAMAIS des liens YouTube, Amazon ou autres — donne uniquement des vrais liens vérifiables ou indique que tu n'as pas accès à internet en ce moment
-• IMPORTANT : Ne crée des documents (Word, Excel, PDF, PowerPoint) QUE si ${userName} le demande explicitement — jamais automatiquement
-• Pour les liens : utilise uniquement des URLs réelles (ex: https://www.youtube.com/results?search_query=MOT+CLE pour YouTube search, https://www.amazon.fr/s?k=MOT+CLE pour Amazon search)
-${webContext ? `\nINFORMATIONS WEB EN TEMPS RÉEL (utilise ces données pour répondre) :\n${webContext}` : ''}
-DOCUMENTS (UNIQUEMENT si demandé explicitement) :
-\`\`\`document:TYPE
-contenu complet ici
-\`\`\`
-Types: excel, word, powerpoint, pdf, rapport, lettre, cv, contrat, code
-Pour excel: JSON { "sheets":[{"name":"Feuille1","headers":["Col1"],"rows":[["val1"]]}] }
-Pour powerpoint: JSON { "title":"Titre","slides":[{"title":"Slide","content":"Texte","bullets":["point1"]}] }
-Pour word/rapport/lettre/cv/pdf: Markdown structuré complet
-Date actuelle : ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}.`;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const memStr = S.memory && S.memory.length ? S.memory.map(m=>'- '+m).join('\n') : 'Aucune mémoire enregistrée.';
+  const webStr = webContext ? '\nINFORMATIONS WEB EN TEMPS REEL :\n' + webContext + '\n' : '';
+  return 'Tu es IXA (Intelligence eXpansive Avancee), assistant IA personnel de ' + userName + '. Tu es JARVIS : elegant, direct, precis, chaleureux.\n'
+    + 'DATE : ' + dateStr + ' a ' + timeStr + '.\n'
+    + webStr
+    + 'LANGUE : Reponds TOUJOURS en francais (sauf demande explicite).\n\n'
+    + '=== REGLE CRITIQUE : GENERATION DE DOCUMENTS ===\n'
+    + 'Quand ' + userName + ' demande un fichier (PowerPoint, Excel, PDF, Word, rapport, CV, lettre, tableau, presentation), tu DOIS OBLIGATOIREMENT repondre EXACTEMENT comme ceci :\n\n'
+    + 'Pour PowerPoint/presentation :\n'
+    + '```document:powerpoint\n'
+    + '{"title":"TITRE","slides":[{"title":"Slide 1","content":"Texte","bullets":["Point A","Point B"]},{"title":"Slide 2","content":"Texte 2","bullets":["Bullet 1","Bullet 2"]}]}\n'
+    + '```\n\n'
+    + 'Pour Excel/tableau :\n'
+    + '```document:excel\n'
+    + '{"sheets":[{"name":"Feuille1","headers":["Col A","Col B","Col C"],"rows":[["v1","v2","v3"],["v4","v5","v6"]]}]}\n'
+    + '```\n\n'
+    + 'Pour PDF/Word/rapport/lettre/CV :\n'
+    + '```document:pdf\n'
+    + '# Titre\n## Section\nContenu complet en Markdown...\n'
+    + '```\n\n'
+    + 'INTERDIT : Ne JAMAIS mettre du JSON ou Markdown brut sans les balises ```document:TYPE```. Ne JAMAIS expliquer le format. Ne JAMAIS dire "voici un exemple". Generer DIRECTEMENT le contenu complet.\n'
+    + 'Le JSON PowerPoint/Excel doit etre VALIDE et COMPLET (5+ slides pour PPT, donnees reelles pour Excel).\n'
+    + '================================================\n\n'
+    + 'MEMOIRE UTILISATEUR :\n' + memStr + '\n';
 };
 
 // ── STATE ──
@@ -1427,7 +1438,7 @@ async function callWithFallback(text,atts,chat,models,idx,webContext='') {
   const tid=showTyping();
 
   try {
-    const sysPrompt=SYS(webContext)+(S.memory.length?'\n\nMÉMOIRE:\n'+S.memory.map(m=>`• ${m}`).join('\n'):'');
+    const sysPrompt=SYS(webContext);
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
@@ -1554,14 +1565,17 @@ function editMsg(mid,text) {
   saveLocal();
 }
 
-/* ── MARKDOWN RENDERER (v2 — encodage corrigé) ── */
+/* ── MARKDOWN RENDERER (v2 — encodage corrigé + auto-doc interceptor) ── */
 function renderAI(raw) {
+  // Pass 1: explicit ```document:TYPE``` blocks
   const re=/```document(?::(\w+))?\n([\s\S]*?)```/g;
-  let html='',li=0,m;
+  let html='', li=0, m, foundDoc=false;
   while((m=re.exec(raw))!==null) {
+    foundDoc=true;
     const before=raw.slice(li,m.index).trim();
     if(before) html+=`<div class="mc">${md(before)}</div>`;
-    const dtype=m[1]||'document', dcontent=m[2].trim();
+    const dtype=(m[1]||'document').toLowerCase();
+    const dcontent=m[2].trim();
     const did='doc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
     window.__docs[did]={type:dtype,content:dcontent};
     html+=makeDocCard(did,dtype,dcontent);
@@ -1569,7 +1583,43 @@ function renderAI(raw) {
   }
   const rem=raw.slice(li).trim();
   if(rem) html+=`<div class="mc">${md(rem)}</div>`;
-  return html||`<div class="mc">${md(raw)}</div>`;
+  if(foundDoc) return html;
+
+  // Pass 2: auto-detect raw JSON blocks (PPT or Excel) — model forgot document: tag
+  const jsonBlockRe=/```(?:json)?\s*\n?([\s\S]*?)```/g;
+  let rhtml='', jli=0, jm, intercepted=false;
+  while((jm=jsonBlockRe.exec(raw))!==null) {
+    const jstr=jm[1].trim();
+    try {
+      const parsed=JSON.parse(jstr);
+      if(parsed.slides && Array.isArray(parsed.slides) && parsed.slides.length>0) {
+        intercepted=true;
+        const bef=raw.slice(jli,jm.index).trim();
+        if(bef) rhtml+=`<div class="mc">${md(bef)}</div>`;
+        const did='doc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+        window.__docs[did]={type:'powerpoint',content:jstr};
+        rhtml+=makeDocCard(did,'powerpoint',jstr);
+        jli=jm.index+jm[0].length; continue;
+      }
+      if(parsed.sheets && Array.isArray(parsed.sheets) && parsed.sheets.length>0) {
+        intercepted=true;
+        const bef=raw.slice(jli,jm.index).trim();
+        if(bef) rhtml+=`<div class="mc">${md(bef)}</div>`;
+        const did='doc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+        window.__docs[did]={type:'excel',content:jstr};
+        rhtml+=makeDocCard(did,'excel',jstr);
+        jli=jm.index+jm[0].length; continue;
+      }
+    } catch(e) {}
+  }
+  if(intercepted) {
+    const remJ=raw.slice(jli).trim();
+    if(remJ) rhtml+=`<div class="mc">${md(remJ)}</div>`;
+    return rhtml;
+  }
+
+  // Pass 3: normal markdown
+  return `<div class="mc">${md(raw)}</div>`;
 }
 
 function md(raw) {
@@ -1677,23 +1727,33 @@ function copyCode(id) {
    DOCUMENT GENERATION
 ══════════════════════════════════════════════════════ */
 function makeDocCard(id,type,content) {
-  const icons={rapport:'📊',lettre:'✉️',cv:'👤',tableau:'📋',code:'💻',document:'📄',contrat:'📝',presentation:'📑',excel:'📗',word:'📘',powerpoint:'📑',pdf:'📕'};
-  const icon=icons[type]||'📄';
-  const isXL=type==='excel', isPPT=['powerpoint','presentation'].includes(type), isPDF=type==='pdf';
+  const icons={rapport:"📊",lettre:"✉️",cv:"👤",tableau:"📋",code:"💻",document:"📄",contrat:"📝",presentation:"📑",excel:"📗",word:"📘",powerpoint:"📑",pdf:"📕"};
+  const labels={powerpoint:"PowerPoint",excel:"Excel",pdf:"PDF",word:"Word",rapport:"Rapport",lettre:"Lettre",cv:"CV",contrat:"Contrat",tableau:"Tableau",presentation:"Présentation",document:"Document",code:"Code"};
+  const icon=icons[type]||"📄";
+  const label=labels[type]||type.charAt(0).toUpperCase()+type.slice(1);
+  const isPPT=["powerpoint","presentation"].includes(type);
+  const isXL=type==="excel";
+  const isPDF=type==="pdf";
+  const isWord=["word","rapport","lettre","cv","contrat","document"].includes(type);
+  const lines=content.split("\n").length;
+  const chars=content.length;
   return `<div class="doc-card">
-    <div class="dch"><span class="dci">${icon}</span><div>
-      <div class="dct">${type.charAt(0).toUpperCase()+type.slice(1)} — prêt à télécharger</div>
-      <div class="dcs">${content.split('\n').length} lignes · ${content.length} car.</div>
-    </div></div>
+    <div class="dch">
+      <span class="dci">${icon}</span>
+      <div>
+        <div class="dct">${label} — prêt à télécharger</div>
+        <div class="dcs">${lines} lignes · ${chars} caractères</div>
+      </div>
+    </div>
     <div class="dca">
-      ${isXL?`<button class="dcb dl" onclick="genXLSX('${id}')">⬇ Excel (.xlsx)</button>`:''}
-      ${isPPT?`<button class="dcb dl" onclick="genPPTX('${id}')">⬇ Présentation (.html)</button>`:''}
-      ${isPDF?`<button class="dcb dl" onclick="genPDF('${id}')">⬇ PDF (.pdf)</button>`:''}
-      ${!isXL&&!isPPT?`<button class="dcb dl" onclick="genWord('${id}')">⬇ Word (.doc)</button>`:''}
-      ${!isXL&&!isPPT&&!isPDF?`<button class="dcb dl" onclick="dlRaw('${id}','md')">⬇ Markdown (.md)</button>`:''}
+      ${isPPT?`<button class="dcb dl" onclick="genPPTX('${id}')">⬇ PowerPoint (.pptx)</button>`:""}
+      ${isXL?`<button class="dcb dl" onclick="genXLSX('${id}')">⬇ Excel (.xlsx)</button>`:""}
+      ${isPDF?`<button class="dcb dl" onclick="genPDF('${id}')">⬇ PDF (.pdf)</button>`:""}
+      ${isWord?`<button class="dcb dl" onclick="genWord('${id}')">⬇ Word (.doc)</button>`:""}
       <button class="dcb pv" onclick="prvDoc('${id}')">👁 Aperçu</button>
       <button class="dcb pv" onclick="cpDoc('${id}')">📋 Copier</button>
-    </div></div>`;
+    </div>
+  </div>`;
 }
 
 function getDoc(id){return window.__docs[id]||null;}
@@ -1726,26 +1786,46 @@ function genWord(id) {
 }
 
 function genPDF(id) {
-  // Generate print-ready HTML that user can print to PDF
   const d=getDoc(id); if(!d) return;
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — ${d.type}</title>
-  <style>@media print{@page{margin:2cm}body{margin:0}}
-  body{font-family:Georgia,serif;font-size:11pt;max-width:800px;margin:2cm auto;line-height:1.7;color:#1a1a1a}
-  h1{font-size:18pt;color:#6c5ce7;border-bottom:2px solid #6c5ce7;padding-bottom:8px}
-  h2{font-size:13pt;color:#333}h3{font-size:11pt}
-  table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #ccc;padding:7px}
-  th{background:#f5f5ff;font-weight:bold}pre{background:#f5f5f5;padding:12px;border-radius:4px;font-size:9pt;overflow-x:auto}
-  blockquote{border-left:4px solid #6c5ce7;padding-left:12px;color:#555;margin:10px 0}
-  .no-print{display:none}
+  const bodyContent=md2htmlExport(d.content);
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IXA — ${d.type||'document'}</title>
+  <style>
+  @page{margin:2cm}
+  *{box-sizing:border-box}
+  body{font-family:Georgia,serif;font-size:11pt;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.8;color:#1a1a1a}
+  h1{font-size:20pt;color:#6c5ce7;border-bottom:3px solid #6c5ce7;padding-bottom:10px;margin-top:0}
+  h2{font-size:14pt;color:#333;margin-top:24px}h3{font-size:12pt;color:#444}
+  p{margin:10px 0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:10pt}
+  th{background:#6c5ce7;color:#fff;padding:8px;font-weight:bold;text-align:left}
+  td{border:1px solid #ccc;padding:7px}tr:nth-child(even) td{background:#f8f8ff}
+  pre{background:#f5f5f5;padding:14px;border-radius:6px;font-size:9pt;overflow-x:auto;border-left:4px solid #6c5ce7}
+  code{background:#f0f0f8;padding:2px 5px;border-radius:3px;font-size:9pt}
+  blockquote{border-left:4px solid #6c5ce7;padding-left:16px;color:#555;margin:12px 0;font-style:italic}
+  ul,ol{padding-left:22px}li{margin-bottom:5px}
+  .pdf-header{background:linear-gradient(120deg,#6c5ce7,#d63af9);padding:20px 24px;border-radius:8px;margin-bottom:28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pdf-header h1{color:#fff;border:none;padding:0;font-size:18pt;margin:0}
+  .pdf-header p{color:rgba(255,255,255,.8);margin:6px 0 0;font-size:10pt}
+  .pdf-footer{margin-top:40px;padding-top:12px;border-top:1px solid #ddd;font-size:8pt;color:#999;text-align:center}
+  .no-print{background:#6c5ce7;color:#fff;padding:12px 20px;border-radius:8px;font-family:sans-serif;font-size:13px;margin-bottom:24px;display:flex;align-items:center;gap:12px}
+  .no-print button{background:#fff;color:#6c5ce7;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px}
+  @media print{.no-print{display:none!important}}
   </style></head><body>
-  <div class="no-print" style="display:block!important;background:#6c5ce7;color:#fff;padding:12px 20px;margin-bottom:20px;border-radius:8px;font-family:sans-serif;font-size:13px">
-    📄 Pour sauvegarder en PDF : <strong>Ctrl+P → Enregistrer en PDF</strong>
-    <button onclick="window.print()" style="margin-left:12px;background:#fff;color:#6c5ce7;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600">🖨️ Imprimer / PDF</button>
+  <div class="no-print">
+    📄 <span>Appuyez sur <strong>Ctrl+P</strong> (ou ⌘P sur Mac) puis choisissez <strong>"Enregistrer en PDF"</strong></span>
+    <button onclick="window.print()">🖨️ Imprimer / PDF</button>
   </div>
-  ${md2htmlExport(d.content)}</body></html>`;
+  <div class="pdf-header">
+    <h1>${esc(d.type==='pdf'?'Document PDF':'Rapport IXA')}</h1>
+    <p>Généré par IXA · ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+  </div>
+  ${bodyContent}
+  <div class="pdf-footer">Document généré par le Système IXA · ${new Date().toLocaleDateString('fr-FR')}</div>
+  </body></html>`;
   const w=window.open('','_blank');
+  if(!w){toast('❌ Popup bloqué — autorisez les popups pour ce site','err');return;}
   w.document.write(html); w.document.close();
-  toast('✅ Ouvrir → Ctrl+P → Enregistrer en PDF','ok');
+  toast('✅ PDF ouvert — Ctrl+P pour télécharger','ok');
 }
 
 function genXLSX(id) {
@@ -1775,6 +1855,82 @@ function genXLSX(id) {
 
 function genPPTX(id) {
   const d=getDoc(id); if(!d) return;
+  toast('⏳ Génération du PowerPoint…');
+  try {
+    let data;
+    try { data=JSON.parse(d.content); } catch(e) {
+      data={title:'Présentation IXA',slides:[{title:'Contenu',content:d.content,bullets:[]}]};
+    }
+    const pptx=new PptxGenJS();
+    pptx.layout='LAYOUT_WIDE';
+    pptx.author='IXA';
+    pptx.title=data.title||'Présentation IXA';
+
+    const COLORS={bg:'0F0F1E',accent:'6C5CE7',accent2:'D63AF9',white:'FFFFFF',light:'E6E6F0',muted:'8888AA',dark:'181835'};
+    const slides=data.slides||[];
+
+    slides.forEach((sl,i)=>{
+      const slide=pptx.addSlide();
+      if(i===0) {
+        // Title slide
+        slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:'100%',fill:{type:'gradient',stops:[{position:0,color:COLORS.bg},{position:100,color:'1A1A3A'}]}});
+        slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:COLORS.accent}});
+        slide.addShape(pptx.ShapeType.rect,{x:0,y:7.42,w:'100%',h:0.08,fill:{color:COLORS.accent2}});
+        slide.addText(sl.title||data.title||'',{x:0.5,y:1.8,w:12,h:1.4,fontSize:36,bold:true,color:COLORS.white,fontFace:'Arial',align:'center'});
+        if(sl.content) slide.addText(sl.content,{x:1,y:3.4,w:11,h:1.2,fontSize:18,color:COLORS.light,fontFace:'Arial',align:'center'});
+        if(sl.bullets&&sl.bullets.length) {
+          const btext=sl.bullets.map(b=>({text:'▸ '+b,options:{color:COLORS.light,fontSize:14,breakLine:true}}));
+          slide.addText(btext,{x:2,y:4.8,w:9,h:2,fontFace:'Arial',valign:'top'});
+        }
+        slide.addText(`IXA — ${new Date().toLocaleDateString('fr-FR')}`,{x:0,y:7.0,w:'100%',h:0.35,fontSize:11,color:COLORS.muted,fontFace:'Arial',align:'center'});
+      } else {
+        // Content slide
+        const isLast=i===slides.length-1;
+        slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:'100%',fill:{color:COLORS.bg}});
+        slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.06,fill:{color:COLORS.accent}});
+        slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:0.06,h:'100%',fill:{type:'gradient',stops:[{position:0,color:COLORS.accent},{position:100,color:COLORS.accent2}]}});
+        // Slide number badge
+        slide.addShape(pptx.ShapeType.rect,{x:11.8,y:7.1,w:0.8,h:0.35,fill:{color:COLORS.dark},line:{color:COLORS.accent,width:1},rounding:true});
+        slide.addText(`${i+1}/${slides.length}`,{x:11.8,y:7.1,w:0.8,h:0.35,fontSize:9,color:COLORS.muted,align:'center',fontFace:'Arial'});
+        // Title bar
+        slide.addShape(pptx.ShapeType.rect,{x:0.2,y:0.15,w:12.4,h:0.9,fill:{color:COLORS.dark},line:{color:COLORS.accent,width:1},rounding:true});
+        slide.addText(sl.title||'',{x:0.4,y:0.2,w:12,h:0.8,fontSize:22,bold:true,color:COLORS.white,fontFace:'Arial',valign:'middle'});
+        let yPos=1.3;
+        if(sl.content) {
+          slide.addText(sl.content,{x:0.4,y:yPos,w:12.4,h:0.7,fontSize:14,color:COLORS.light,fontFace:'Arial',wrap:true});
+          yPos+=0.9;
+        }
+        if(sl.bullets&&sl.bullets.length) {
+          sl.bullets.forEach((b,bi)=>{
+            const clr=bi%2===0?COLORS.accent:COLORS.accent2;
+            slide.addShape(pptx.ShapeType.rect,{x:0.3,y:yPos+0.07,w:0.04,h:0.28,fill:{color:clr}});
+            slide.addText(b,{x:0.5,y:yPos,w:12.2,h:0.42,fontSize:13,color:COLORS.light,fontFace:'Arial',valign:'middle',wrap:true});
+            yPos+=0.52;
+            if(yPos>6.9) return;
+          });
+        }
+        // Notes
+        if(isLast) {
+          slide.addText('Généré par IXA',{x:0.2,y:7.1,w:4,h:0.35,fontSize:9,color:COLORS.muted,fontFace:'Arial'});
+        }
+      }
+    });
+
+    pptx.writeFile({fileName:'ixa_presentation.pptx'}).then(()=>{
+      toast('✅ PowerPoint (.pptx) téléchargé !','ok');
+    }).catch(e=>{
+      toast('❌ Erreur PPTX: '+e.message,'err');
+      genPPTXFallback(id);
+    });
+  } catch(e) {
+    toast('❌ Erreur: '+e.message,'err');
+    genPPTXFallback(id);
+  }
+}
+
+function genPPTXFallback(id) {
+  // HTML fallback if PptxGenJS fails
+  const d=getDoc(id); if(!d) return;
   try {
     let data;
     try{data=JSON.parse(d.content);}catch(e){data={title:'Présentation IXA',slides:[{title:'Contenu',content:d.content,bullets:[]}]};}
@@ -1782,15 +1938,15 @@ function genPPTX(id) {
       <section style="min-height:100vh;background:${i===0?'linear-gradient(135deg,#6c5ce7,#d63af9)':'#0f0f1e'};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;text-align:center;page-break-after:always;box-sizing:border-box">
         <h${i===0?'1':'2'} style="font-family:sans-serif;color:#fff;font-size:${i===0?'2.5rem':'2rem'};margin-bottom:20px;font-weight:700">${esc(sl.title||'')}</h${i===0?'1':'2'}>
         ${sl.content?`<p style="color:rgba(255,255,255,.85);font-size:1.1rem;max-width:700px;line-height:1.7;font-family:sans-serif">${esc(sl.content)}</p>`:''}
-        ${sl.bullets?.length?`<ul style="text-align:left;max-width:650px;margin-top:20px">${sl.bullets.map(b=>`<li style="color:rgba(255,255,255,.9);font-size:1rem;margin-bottom:10px;font-family:sans-serif;list-style:none;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#d63af9">▸</span>${esc(b)}</li>`).join('')}</ul>`:''}
-        <div style="position:absolute;bottom:20px;right:30px;font-size:.75rem;color:rgba(255,255,255,.4);font-family:sans-serif">${i+1}/${data.slides.length}</div>
+        ${sl.bullets&&sl.bullets.length?`<ul style="text-align:left;max-width:650px;margin-top:20px">${sl.bullets.map(b=>`<li style="color:rgba(255,255,255,.9);font-size:1rem;margin-bottom:10px;font-family:sans-serif;list-style:none;padding-left:20px;position:relative"><span style="position:absolute;left:0;color:#d63af9">▸</span>${esc(b)}</li>`).join('')}</ul>`:''}
+        <div style="position:absolute;bottom:20px;right:30px;font-size:.75rem;color:rgba(255,255,255,.4);font-family:sans-serif">${i+1}/${(data.slides||[]).length}</div>
       </section>`).join('');
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(data.title||'Présentation')}</title>
       <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000}@media print{section{min-height:100vh}}</style>
       </head><body>${slides}<script>document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){window.scrollBy({top:window.innerHeight,behavior:'smooth'})}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){window.scrollBy({top:-window.innerHeight,behavior:'smooth'})}})<\/script></body></html>`;
     dlBlob(new Blob([html],{type:'text/html;charset=utf-8'}),'ixa_presentation.html');
-    toast('✅ Présentation téléchargée ! (Ouvrir dans Chrome, F11 pour plein écran)','ok');
-  } catch(e){toast('❌ Erreur PPT: '+e.message,'err');}
+    toast('✅ Présentation HTML (fallback) téléchargée !','ok');
+  } catch(e){toast('❌ Erreur PPT fallback: '+e.message,'err');}
 }
 
 function prvDoc(id) {
@@ -1998,132 +2154,236 @@ function learnReset() {
   stopSpeech();
 }
 
-// Build the document context for learn calls
-function getLearnContext() {
-  if(!S.learnDoc) return null;
-  if(S.learnDoc.isImg||S.learnDoc.isPDF) return null; // use vision API instead
-  return (S.learnDoc.content||'').slice(0,6000);
+// Clean text content of any BOM or bad UTF-8 sequences
+function cleanLearnText(txt) {
+  if(!txt) return '';
+  // Remove BOM
+  txt = txt.replace(/^\uFEFF/, '');
+  // Normalize line endings
+  txt = txt.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // Remove null bytes
+  txt = txt.replace(/\0/g, '');
+  return txt;
 }
 
-async function learnCallAPI(userPrompt, useVision=false) {
-  const doc=S.learnDoc; if(!doc) throw new Error('Aucun document');
+// Build document context for learn calls (text only)
+function getLearnContext() {
+  if(!S.learnDoc) return null;
+  if(S.learnDoc.isImg || S.learnDoc.isPDF) return null;
+  return cleanLearnText(S.learnDoc.content||'').slice(0, 6000);
+}
+
+async function learnCallAPI(userPrompt, chatHistory=[]) {
+  const doc = S.learnDoc;
+  if(!doc) throw new Error('Aucun document chargé');
+  if(!S.groqKey) throw new Error('Clé API manquante');
+
+  const isVision = (doc.isImg || doc.isPDF) && doc.dataURL;
+  const model = isVision ? MODELS.vision : MODELS.smart;
+
   let messages;
-  if((doc.isImg||doc.isPDF||useVision)&&doc.dataURL) {
-    messages=[{role:'user',content:[
-      {type:'image_url',image_url:{url:doc.dataURL}},
-      {type:'text',text:userPrompt}
-    ]}];
+  if(isVision) {
+    // Vision: send image + prompt
+    const mediaType = doc.isPDF ? 'image/jpeg' : (doc.dataURL.split(';')[0].split(':')[1] || 'image/jpeg');
+    const sysMsg = {role:'system', content:'Tu es IXA, assistant IA expert. Réponds TOUJOURS en français avec du texte propre, sans caractères spéciaux parasites. Utilise du Markdown structuré.'};
+    const userMsg = {
+      role:'user',
+      content:[
+        {type:'image_url', image_url:{url: doc.dataURL}},
+        {type:'text', text: userPrompt}
+      ]
+    };
+    if(chatHistory.length > 0) {
+      messages = [sysMsg, ...chatHistory, userMsg];
+    } else {
+      messages = [sysMsg, userMsg];
+    }
   } else {
-    const ctx=getLearnContext()||'[Document vide]';
-    messages=[{role:'user',content:`DOCUMENT:\n${ctx}\n\n---\n${userPrompt}`}];
+    // Text: inject document context
+    const ctx = getLearnContext() || '[Document vide]';
+    const sysMsg = {
+      role:'system',
+      content: 'Tu es IXA, assistant IA expert. Réponds TOUJOURS en français avec du texte propre, bien formaté en Markdown. Voici le document à analyser:\n\n===DOCUMENT===\n' + ctx + '\n===FIN DOCUMENT==='
+    };
+    if(chatHistory.length > 0) {
+      messages = [sysMsg, ...chatHistory, {role:'user', content: userPrompt}];
+    } else {
+      messages = [sysMsg, {role:'user', content: userPrompt}];
+    }
   }
-  const isVision=(doc.isImg||doc.isPDF)&&doc.dataURL;
-  const model=isVision?MODELS.vision:MODELS.smart;
-  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method:'POST',
-    headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
-    body:JSON.stringify({model,messages,max_tokens:3000,temperature:0.6})
+    headers:{'Authorization':'Bearer '+S.groqKey, 'Content-Type':'application/json'},
+    body: JSON.stringify({model, messages, max_tokens:3000, temperature:0.5})
   });
-  if(!res.ok) throw new Error('API '+res.status);
-  const data=await res.json();
-  return data.choices?.[0]?.message?.content||'';
+  if(!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error('Erreur API ' + res.status + (err.error?.message?' : '+err.error.message:''));
+  }
+  const data = await res.json();
+  const reply = data.choices?.[0]?.message?.content || '';
+  // Clean the reply from any encoding artifacts
+  return reply.replace(/â€™/g,"'").replace(/â€œ/g,'"').replace(/â€/g,'"').replace(/Ã©/g,'é').replace(/Ã¨/g,'è').replace(/Ã /g,'à').replace(/Ã§/g,'ç').replace(/Ã®/g,'î').replace(/Ã´/g,'ô').replace(/Ã»/g,'û').replace(/Ã¹/g,'ù').replace(/â‚¬/g,'€');
 }
 
 async function learnGen(mode) {
   if(!S.learnDoc) return;
-  const btns=['lb-audio','lb-sum','lb-fc','lb-quiz','lb-chat'].map(id=>document.getElementById(id));
-  btns.forEach(b=>{if(b)b.disabled=true;});
-  const lc=document.getElementById('lc');
-  lc.style.display='flex'; lc.innerHTML='';
+  const allBtns = ['lb-audio','lb-sum','lb-fc','lb-quiz','lb-chat','lb-mind','lb-tl'].map(id=>document.getElementById(id)).filter(Boolean);
+  allBtns.forEach(b=>b.disabled=true);
+  const lc = document.getElementById('lc');
+  lc.style.display='flex';
 
-  if(mode==='chat') {
-    // Show chat UI
-    lc.innerHTML=`<div class="learn-chat">
+  if(mode === 'chat') {
+    S.learnChatHistory = [];
+    lc.innerHTML = `<div class="learn-chat">
       <div class="learn-chat-msgs" id="lc-msgs">
-        <div class="lcm a">💬 Posez-moi des questions sur ce document, je vous répondrai !</div>
+        <div class="lcm a">💬 Bonjour ! Je suis votre assistant pour ce document. Posez-moi n'importe quelle question !</div>
       </div>
       <div class="learn-chat-inp">
-        <input id="lc-inp" placeholder="Votre question sur le document…" onkeydown="if(event.key==='Enter')learnChatSend()">
+        <input id="lc-inp" placeholder="Votre question sur le document…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();learnChatSend();}">
         <button onclick="learnChatSend()">Envoyer</button>
       </div>
     </div>`;
-    btns.forEach(b=>{if(b)b.disabled=false;});
+    allBtns.forEach(b=>b.disabled=false);
+    document.getElementById('lc-inp')?.focus();
     return;
   }
 
+  if(mode === 'mindmap') {
+    lc.innerHTML = '<div style="text-align:center;color:var(--mu);padding:20px">⏳ Génération de la carte mentale…</div>';
+    try {
+      const reply = await learnCallAPI('Génère une carte mentale structurée de ce document. Format : titre central, puis branches principales, puis sous-branches. Retourne UNIQUEMENT du JSON comme ceci: {"center":"TITRE","branches":[{"label":"Branche 1","children":["sous-point A","sous-point B"]},{"label":"Branche 2","children":["sous-point C"]}]}');
+      let mapData;
+      try { mapData = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
+      catch(e) { const m = reply.match(/\{[\s\S]*\}/); mapData = m ? JSON.parse(m[0]) : null; }
+      if(!mapData) throw new Error('Format carte invalide');
+      lc.innerHTML = renderMindMap(mapData);
+      toast('✅ Carte mentale générée !','ok');
+    } catch(e) {
+      lc.innerHTML = `<div style="color:var(--err);padding:12px">❌ ${esc(e.message)}</div>`;
+      toast('❌ Erreur: '+e.message,'err');
+    }
+    allBtns.forEach(b=>b.disabled=false);
+    return;
+  }
+
+  if(mode === 'timeline') {
+    lc.innerHTML = '<div style="text-align:center;color:var(--mu);padding:20px">⏳ Extraction de la chronologie…</div>';
+    try {
+      const reply = await learnCallAPI('Extrait tous les événements chronologiques ou dates mentionnés dans ce document. Retourne UNIQUEMENT du JSON: {"events":[{"date":"2024","event":"Description courte"},{"date":"...","event":"..."}]}. Si aucune date, retourne {"events":[]}');
+      let tlData;
+      try { tlData = JSON.parse(reply.replace(/```json|```/g,'').trim()); }
+      catch(e) { const m = reply.match(/\{[\s\S]*\}/); tlData = m ? JSON.parse(m[0]) : {events:[]}; }
+      if(!tlData.events?.length) { lc.innerHTML = '<div style="color:var(--mu);text-align:center;padding:20px">⚠️ Aucune date ou chronologie trouvée dans ce document.</div>'; }
+      else { lc.innerHTML = renderTimeline(tlData.events); }
+      toast('✅ Chronologie générée !','ok');
+    } catch(e) {
+      lc.innerHTML = `<div style="color:var(--err);padding:12px">❌ ${esc(e.message)}</div>`;
+    }
+    allBtns.forEach(b=>b.disabled=false);
+    return;
+  }
+
+  // Standard modes: audio, summary, flash, quiz
+  lc.innerHTML = '<div style="text-align:center;padding:16px"><div class="spin" style="width:20px;height:20px;border-width:3px;display:inline-block"></div><div style="margin-top:8px;color:var(--mu);font-size:.82rem">IXA analyse le document…</div></div>';
   toast('🧠 IXA génère le contenu…');
-  const prompts={
-    audio:`Explique ce document de façon claire et accessible, comme si tu l'expliquais à voix haute. Utilise des exemples concrets. 300-500 mots.`,
-    summary:`Fais un résumé structuré et complet de ce document. Utilise des titres, points clés, et une conclusion. Sois précis et exhaustif.`,
-    flash:`Génère exactement 8 flashcards pour apprendre ce document. Réponds UNIQUEMENT avec ce JSON (sans Markdown) :\n[{"q":"Question courte","a":"Réponse claire"}]`,
-    quiz:`Génère un quiz de 5 questions à choix multiples. Réponds UNIQUEMENT avec ce JSON (sans Markdown) :\n[{"q":"Question ?","opts":["A","B","C","D"],"correct":0,"explanation":"Explication courte"}]`,
+
+  const prompts = {
+    audio: 'Explique ce document de façon claire, détaillée et accessible, comme une conférence audio de qualité. Structure : introduction, développement des points clés avec exemples concrets, conclusion. 400-600 mots.',
+    summary: 'Fais un résumé COMPLET et STRUCTURÉ de ce document. Inclus : 1) Résumé exécutif (3-4 lignes) 2) Points clés (liste) 3) Développement de chaque point important 4) Conclusion. Sois exhaustif.',
+    flash: 'Génère EXACTEMENT 10 flashcards couvrant tous les aspects importants de ce document. Réponds UNIQUEMENT avec du JSON valide (pas de Markdown, pas de texte autour) : [{"q":"Question précise ?","a":"Réponse complète et claire"},...]',
+    quiz: 'Génère un quiz de 6 questions à choix multiples couvrant les concepts clés. Réponds UNIQUEMENT avec du JSON valide : [{"q":"Question ?","opts":["Option A","Option B","Option C","Option D"],"correct":0,"explanation":"Pourquoi cette réponse est correcte."},...]',
   };
 
   try {
-    const reply=await learnCallAPI(prompts[mode]);
-    if(!reply) throw new Error('Réponse vide');
+    const reply = await learnCallAPI(prompts[mode]);
+    if(!reply.trim()) throw new Error('Réponse vide de l\'API');
 
-    if(mode==='audio') {
-      lc.innerHTML=`<div class="expl"><div class="mc">${md(reply)}</div></div>`;
+    if(mode === 'audio') {
+      lc.innerHTML = `<div class="expl"><div class="mc">${md(reply)}</div></div>`;
       document.getElementById('laudio').style.display='flex';
       document.getElementById('apb').style.width='0%';
       document.getElementById('a-pp').textContent='⏸';
       document.getElementById('a-stat').textContent='Lecture…';
-      const cleanReply=stripMd(reply);
+      const cleanReply = stripMd(reply);
       S.voiceActive=false; S.voicePaused=false;
-      const total_sents=(cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]).length;
-      S.voiceQueue=(cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]).map(s=>s.trim()).filter(s=>s.length>2);
-      S.voiceActive=true;
-      const total=S.voiceQueue.length;
+      const sents = (cleanReply.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)||[cleanReply]);
+      S.voiceQueue = sents.map(s=>s.trim()).filter(s=>s.length>2);
+      S.voiceActive = true;
+      const total = S.voiceQueue.length;
       function speakNextLearn() {
         if(!S.voiceQueue.length||!S.voiceActive){
           S.voiceActive=false;
           document.getElementById('apb').style.width='100%';
-          document.getElementById('a-stat').textContent='Terminé';
+          document.getElementById('a-stat').textContent='Terminé ✓';
           return;
         }
-        const sentence=S.voiceQueue.shift();
-        const u=new SpeechSynthesisUtterance(sentence);
-        const frVoice=getSelectedVoice();
+        const sentence = S.voiceQueue.shift();
+        const u = new SpeechSynthesisUtterance(sentence);
+        const frVoice = getSelectedVoice();
         if(frVoice) u.voice=frVoice;
         u.lang='fr-FR'; u.rate=S.voiceRate; u.pitch=S.voicePitch;
-        u.onend=()=>{if(S.voiceActive&&!S.voicePaused)speakNextLearn();};
-        u.onerror=()=>speakNextLearn();
-        const done=Math.round((1-S.voiceQueue.length/total)*95);
+        u.onend = ()=>{if(S.voiceActive&&!S.voicePaused)speakNextLearn();};
+        u.onerror = ()=>speakNextLearn();
+        const done = Math.round((1-S.voiceQueue.length/total)*95);
         document.getElementById('apb').style.width=done+'%';
         S.synth.speak(u);
       }
       speakNextLearn();
 
-    } else if(mode==='summary') {
-      lc.innerHTML=`<div class="expl"><div class="mc">${md(reply)}</div></div>`;
+    } else if(mode === 'summary') {
+      lc.innerHTML = `<div class="expl"><div class="mc">${md(reply)}</div></div>`;
 
-    } else if(mode==='flash') {
+    } else if(mode === 'flash') {
       let cards;
-      try{cards=JSON.parse(reply.replace(/```json|```/g,'').trim());}
-      catch(e){const m=reply.match(/\[[\s\S]*\]/);cards=m?JSON.parse(m[0]):[];}
-      if(!Array.isArray(cards)||!cards.length) throw new Error('JSON invalide');
-      lc.innerHTML=`<div style="font-weight:600;font-size:.84rem;margin-bottom:2px">🃏 ${cards.length} Flashcards — Cliquez pour révéler</div>
-        <div class="fc-grid">${cards.map((c,i)=>`
-          <div class="fc" id="fc${i}" onclick="this.classList.toggle('flipped')">
-            <div class="fc-inner">
-              <div class="fc-f">${esc(c.q||c.question||'?')}</div>
-              <div class="fc-b">${esc(c.a||c.answer||'—')}</div>
-            </div></div>`).join('')}
+      const cleanReply = reply.replace(/```json\s*|```\s*/g,'').trim();
+      try { cards = JSON.parse(cleanReply); }
+      catch(e) {
+        const m = cleanReply.match(/\[[\s\S]*\]/);
+        if(m) { try { cards = JSON.parse(m[0]); } catch(e2) { cards = []; } }
+        else { cards = []; }
+      }
+      if(!Array.isArray(cards)||!cards.length) throw new Error('Format JSON des flashcards invalide. Réessayez.');
+      let fcIdx=0;
+      lc.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-weight:600;font-size:.87rem">🃏 ${cards.length} Flashcards — Mode étude</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="switchFCMode('grid')" id="fc-mode-grid" class="lab2 sec" style="padding:4px 10px;font-size:.72rem">⊞ Grille</button>
+            <button onclick="switchFCMode('stack')" id="fc-mode-stack" class="lab2 main" style="padding:4px 10px;font-size:.72rem">📖 Défilement</button>
+          </div>
+        </div>
+        <div id="fc-container">
+          <div class="fc-grid">${cards.map((c,i)=>`
+            <div class="fc" id="fc${i}" onclick="this.classList.toggle('flipped')">
+              <div class="fc-inner">
+                <div class="fc-f"><div style="position:absolute;top:6px;right:8px;font-size:.65rem;color:var(--mu)">${i+1}/${cards.length}</div>${esc(c.q||c.question||'?')}</div>
+                <div class="fc-b">${esc(c.a||c.answer||'—')}</div>
+              </div></div>`).join('')}
+          </div>
         </div>`;
 
-    } else if(mode==='quiz') {
+    } else if(mode === 'quiz') {
       let questions;
-      try{questions=JSON.parse(reply.replace(/```json|```/g,'').trim());}
-      catch(e){const m=reply.match(/\[[\s\S]*\]/);questions=m?JSON.parse(m[0]):[];}
-      if(!Array.isArray(questions)||!questions.length) throw new Error('JSON invalide');
+      const cleanReply = reply.replace(/```json\s*|```\s*/g,'').trim();
+      try { questions = JSON.parse(cleanReply); }
+      catch(e) {
+        const m = cleanReply.match(/\[[\s\S]*\]/);
+        if(m) { try { questions = JSON.parse(m[0]); } catch(e2) { questions = []; } }
+        else { questions = []; }
+      }
+      if(!Array.isArray(questions)||!questions.length) throw new Error('Format JSON du quiz invalide. Réessayez.');
       window._quizScore=0; window._quizAnswered=0; window._quizTotal=questions.length;
-      lc.innerHTML=`<div style="font-weight:600;font-size:.84rem;margin-bottom:4px">🧩 Quiz — ${questions.length} questions</div>`+
+      lc.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:600;font-size:.87rem">🧩 Quiz — ${questions.length} questions</div>
+        <div id="quiz-score-badge" style="font-size:.78rem;color:var(--mu)">Score : 0/${questions.length}</div>
+      </div>` +
         questions.map((q,qi)=>`
           <div class="quiz-q" id="qq${qi}">
             <div class="quiz-qt">${qi+1}. ${esc(q.q||q.question||'?')}</div>
             <div class="quiz-opts">${(q.opts||q.options||[]).map((opt,oi)=>`
-              <button class="qopt" id="opt${qi}_${oi}" onclick="quizAnswer(${qi},${oi},${q.correct||0},${questions.length},'${esc(q.explanation||'')}')">
+              <button class="qopt" id="opt${qi}_${oi}" onclick="quizAnswer(${qi},${oi},${q.correct||0},${questions.length},${JSON.stringify(esc(q.explanation||''))})">
                 <b>${'ABCD'[oi]}.</b> ${esc(opt)}
               </button>`).join('')}
             </div>
@@ -2132,63 +2392,115 @@ async function learnGen(mode) {
     toast('✅ Contenu généré !','ok');
   } catch(e) {
     toast('❌ Erreur: '+e.message,'err');
-    lc.innerHTML=`<div style="color:var(--err);font-size:.8rem;padding:10px">❌ Erreur lors de la génération: ${esc(e.message)}</div>`;
+    lc.innerHTML = `<div style="color:var(--err);font-size:.83rem;padding:12px;background:rgba(255,107,107,.07);border:1px solid var(--err);border-radius:10px">
+      ❌ <strong>Erreur :</strong> ${esc(e.message)}<br>
+      <span style="color:var(--mu);font-size:.78rem;margin-top:6px;display:block">Vérifiez votre clé API ou réessayez.</span>
+    </div>`;
   }
-  btns.forEach(b=>{if(b)b.disabled=false;});
+  allBtns.forEach(b=>b.disabled=false);
+}
+
+function renderMindMap(data) {
+  const branches = data.branches||[];
+  const colors = ['#6c5ce7','#d63af9','#00d4aa','#fdc96e','#74b9ff','#fd79a8'];
+  return `<div style="overflow-x:auto;padding:10px">
+    <div style="min-width:600px;position:relative">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="display:inline-block;background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;padding:10px 22px;border-radius:22px;font-weight:700;font-size:.95rem">${esc(data.center||'Sujet principal')}</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+        ${branches.map((b,i)=>`
+          <div style="flex:1;min-width:160px;max-width:220px">
+            <div style="background:${colors[i%colors.length]}22;border:2px solid ${colors[i%colors.length]};border-radius:11px;padding:10px">
+              <div style="font-weight:600;font-size:.83rem;color:${colors[i%colors.length]};margin-bottom:7px">${esc(b.label||'')}</div>
+              ${(b.children||[]).map(c=>`<div style="font-size:.76rem;color:var(--mu);padding:3px 0;padding-left:8px;border-left:2px solid ${colors[i%colors.length]}44">▸ ${esc(c)}</div>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTimeline(events) {
+  return `<div style="padding:4px">
+    <div style="font-weight:600;font-size:.87rem;margin-bottom:12px">📅 Chronologie — ${events.length} événements</div>
+    <div style="position:relative;padding-left:30px">
+      <div style="position:absolute;left:11px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--a),var(--a2))"></div>
+      ${events.map((e,i)=>`
+        <div style="position:relative;margin-bottom:14px">
+          <div style="position:absolute;left:-26px;top:3px;width:14px;height:14px;border-radius:50%;background:linear-gradient(120deg,var(--a),var(--a2));border:2px solid var(--bg)"></div>
+          <div style="background:var(--c1);border:1px solid var(--bd2);border-radius:9px;padding:9px 12px">
+            <div style="font-size:.72rem;color:var(--a);font-weight:600;margin-bottom:2px">${esc(e.date||'—')}</div>
+            <div style="font-size:.82rem;color:var(--tx)">${esc(e.event||'')}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function switchFCMode(mode) {
+  const container = document.getElementById('fc-container'); if(!container) return;
+  if(mode==='grid') {
+    container.style.display='';
+    document.getElementById('fc-mode-grid').className='lab2 main';
+    document.getElementById('fc-mode-stack').className='lab2 sec';
+  } else {
+    document.getElementById('fc-mode-grid').className='lab2 sec';
+    document.getElementById('fc-mode-stack').className='lab2 main';
+  }
 }
 
 async function learnChatSend() {
-  const inp=document.getElementById('lc-inp'); if(!inp) return;
-  const q=inp.value.trim(); if(!q) return;
-  inp.value='';
-  const msgs=document.getElementById('lc-msgs');
-  msgs.innerHTML+=`<div class="lcm u">${esc(q)}</div>`;
-  msgs.innerHTML+=`<div class="lcm a" id="lc-typing"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
-  msgs.scrollTop=msgs.scrollHeight;
+  const inp = document.getElementById('lc-inp'); if(!inp) return;
+  const q = inp.value.trim(); if(!q) return;
+  inp.value = ''; inp.disabled=true;
+  const msgs = document.getElementById('lc-msgs');
+  msgs.innerHTML += `<div class="lcm u">${esc(q)}</div>`;
+  const typingId = 'lct_'+Date.now();
+  msgs.innerHTML += `<div class="lcm a" id="${typingId}"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
   try {
-    S.learnChatHistory.push({role:'user',content:q});
-    const ctx=S.learnDoc?.content?`DOCUMENT:\n${S.learnDoc.content.slice(0,4000)}\n\n---\nQuestion : ${q}`:`Question sur le document : ${q}`;
-    const reply=await learnCallAPI(ctx,S.learnDoc?.isImg||S.learnDoc?.isPDF);
-    document.getElementById('lc-typing')?.remove();
-    S.learnChatHistory.push({role:'assistant',content:reply});
-    msgs.innerHTML+=`<div class="lcm a"><div class="mc">${md(reply)}</div></div>`;
-    msgs.scrollTop=msgs.scrollHeight;
+    S.learnChatHistory.push({role:'user', content:q});
+    // Keep only last 6 exchanges for context
+    const trimmedHistory = S.learnChatHistory.slice(-12);
+    const reply = await learnCallAPI(q, trimmedHistory.slice(0,-1));
+    S.learnChatHistory.push({role:'assistant', content:reply});
+    document.getElementById(typingId)?.remove();
+    msgs.innerHTML += `<div class="lcm a"><div class="mc" style="font-size:.82rem">${md(reply)}</div></div>`;
   } catch(e) {
-    document.getElementById('lc-typing')?.remove();
-    msgs.innerHTML+=`<div class="lcm a" style="color:var(--err)">❌ Erreur: ${esc(e.message)}</div>`;
+    document.getElementById(typingId)?.remove();
+    msgs.innerHTML += `<div class="lcm a" style="color:var(--err)">❌ Erreur: ${esc(e.message)}</div>`;
   }
+  inp.disabled=false; inp.focus();
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
-function quizAnswer(qi,chosen,correct,total,explanation) {
-  const opts=document.querySelectorAll(`#qq${qi} .qopt`);
-  opts.forEach(b=>b.disabled=true);
-  opts[correct].classList.add('correct');
-  if(chosen!==correct){opts[chosen].classList.add('wrong');}
-  else{window._quizScore=(window._quizScore||0)+1;}
+function quizAnswer(qi, oi, correct, total, explanation) {
+  const opts = document.querySelectorAll(`#qq${qi} .qopt`);
+  opts.forEach(o=>o.disabled=true);
+  opts[oi].classList.add(oi===correct?'correct':'wrong');
+  if(oi!==correct) opts[correct].classList.add('correct');
+  if(explanation) {
+    const expDiv = document.createElement('div');
+    expDiv.className='quiz-expl'; expDiv.textContent=explanation;
+    document.getElementById(`qq${qi}`)?.appendChild(expDiv);
+  }
+  if(oi===correct) window._quizScore=(window._quizScore||0)+1;
   window._quizAnswered=(window._quizAnswered||0)+1;
-  if(explanation){
-    const ex=document.createElement('div'); ex.className='quiz-expl'; ex.textContent='💡 '+explanation;
-    document.getElementById('qq'+qi).appendChild(ex);
-  }
-  if(window._quizAnswered>=total){
-    const sc=window._quizScore, pct=Math.round(sc/total*100);
-    const scoreDiv=document.createElement('div'); scoreDiv.className='quiz-score';
-    scoreDiv.innerHTML=`${pct>=80?'🏆':pct>=60?'👍':'📚'} Score : <strong>${sc}/${total}</strong> (${pct}%)<br><span style="font-size:.8rem;color:var(--mu);font-weight:400">${pct>=80?'Excellent !':pct>=60?'Bien joué !':'Continuez à réviser !'}</span>`;
-    document.getElementById('lc').appendChild(scoreDiv);
+  const badge = document.getElementById('quiz-score-badge');
+  if(badge) badge.textContent='Score : '+window._quizScore+'/'+window._quizTotal;
+  if(window._quizAnswered===total) {
+    const pct = Math.round(window._quizScore/total*100);
+    const lc = document.getElementById('lc');
+    const score_div = document.createElement('div');
+    score_div.className='quiz-score';
+    score_div.innerHTML=`🎉 Quiz terminé ! <strong>${window._quizScore}/${total}</strong> (${pct}%)<br><span style="font-size:.82rem;color:var(--mu);margin-top:4px;display:block">${pct>=80?'Excellent travail !':pct>=60?'Bien joué !':pct>=40?'Continuez à réviser.':'Revoyez le document.'}`;
+    lc.appendChild(score_div);
+    lc.scrollTop=lc.scrollHeight;
   }
 }
 
-/* ══════════════════════════════════════════════════════
-   TYPING INDICATOR
-══════════════════════════════════════════════════════ */
-let _tc=0;
-function showTyping() {
-  const id=`tp_${++_tc}`;
-  const cont=document.getElementById('msgs');
-  const d=document.createElement('div'); d.className='message ass'; d.id=id;
-  d.innerHTML=`<div class="mav">✦</div><div class="mbody"><div class="mrole">IXA</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
-  cont.appendChild(d); cont.scrollTop=cont.scrollHeight; return id;
-}
+
 function removeTyping(id){document.getElementById(id)?.remove();}
 
 /* ══════════════════════════════════════════════════════
