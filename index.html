@@ -1851,6 +1851,7 @@ function saveApiKey() {
   toast('✅ Clé API sauvegardée !','ok');
 }
 
+function openMemory() {
   showModal('🧠 Mémoire IXA','Informations mémorisées sur vous',
     `<div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto" id="mem-list">
       ${S.memory.map((m,i)=>`<div style="display:flex;align-items:center;gap:7px;background:var(--c2);border:1px solid var(--bd2);border-radius:8px;padding:8px 10px;font-size:.8rem">
@@ -2318,18 +2319,10 @@ function updateApiSt(ok=null) {
   t.textContent=hasSearch?'API + Recherche web':'API connectée';
 }
 function saveLocal() {
-  if (S.chats.length > 60) S.chats = S.chats.slice(0, 60);
-  try {
-    localStorage.setItem('ixa_chats', JSON.stringify(S.chats));
-  } catch (e) {
-    S.chats.forEach(c => {
-      if (c.messages.length > 8) c.messages = c.messages.slice(-8);
-    });
-    try {
-      localStorage.setItem('ixa_chats', JSON.stringify(S.chats));
-    } catch (e2) {
-      console.error(e2);
-    }
+  if(S.chats.length>60) S.chats=S.chats.slice(0,60);
+  try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e){
+    S.chats.forEach(c=>{if(c.messages.length>8)c.messages=c.messages.slice(-8);});
+    try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e2){}
   }
 }
 let _tt;
