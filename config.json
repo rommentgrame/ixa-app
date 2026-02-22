@@ -1,7 +1,7 @@
 {
-  "groq_api_key": "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",
-  "github_token": "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",
+  "groq_api_key": "",
+  "github_token": "",
   "github_repo": "rommentgrame/ixa-app",
   "github_branch": "main",
-  "serper_key": "fff042fb5ad6633faa7b215f92831ab48c26413e"
+  "serper_key": ""
 }
