@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>IXA — Système de Tom</title>
+<title>IXA v8 — Système de Tom</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -14,7 +15,60 @@
   --tx:#e6e6f0;--mu:#6a6a90;--bd:#16163a;--bd2:#22224a;--ub:#12122a;
   --err:#ff6b6b;--ok:#00d4aa;--warn:#fdc96e;--inf:#74b9ff;
   --t:all .26s cubic-bezier(.4,0,.2,1);--sw:270px;--hh:58px;--mnh:56px;
+  --shadow:0 4px 20px rgba(0,0,0,.4);
 }
+/* LIGHT MODE */
+body.light{
+  --bg:#f0f0f8;--sb:#ffffff;--c1:#f5f5fc;--c2:#ebebf8;
+  --tx:#1a1a2e;--mu:#7070a0;--bd:#ddddf0;--bd2:#ccccee;--ub:#e8e8f8;
+  --shadow:0 4px 20px rgba(108,92,231,.12);
+}
+body.light main::before{opacity:.04}
+body.light .cb{background:#f5f5fc}
+/* SHORTCUTS OVERLAY */
+#shortcuts-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
+  z-index:8000;display:none;align-items:center;justify-content:center;padding:20px}
+#shortcuts-overlay.open{display:flex}
+.sco-box{background:var(--sb);border:1px solid var(--bd2);border-radius:18px;padding:28px;
+  max-width:500px;width:100%;max-height:80vh;overflow-y:auto;
+  box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.sco-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;
+  background:linear-gradient(120deg,var(--a),var(--a2));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}
+.sco-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sco-item{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;background:var(--c1);border:1px solid var(--bd2);border-radius:9px;gap:8px}
+.sco-desc{font-size:.77rem;color:var(--mu);flex:1}
+.sco-key{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--a);
+  background:var(--soft);padding:3px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0}
+.sco-section{font-size:.64rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--mu);margin-top:14px;margin-bottom:2px;grid-column:1/-1;padding:0 2px}
+/* SETTINGS TABS */
+.settings-tabs{display:flex;gap:3px;margin-bottom:14px;background:var(--c1);
+  border-radius:10px;padding:4px}
+.stab{flex:1;padding:7px 10px;border-radius:7px;font-size:.76rem;font-weight:600;
+  cursor:pointer;border:none;background:none;color:var(--mu);font-family:'Space Grotesk',sans-serif;
+  transition:.2s;text-align:center}
+.stab.act{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff}
+.sfield{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.sfield label{font-size:.74rem;color:var(--mu);font-weight:600;display:flex;align-items:center;gap:5px}
+.sfield .shint{font-size:.69rem;color:var(--mu);margin-top:2px;line-height:1.4}
+/* SIDEBAR SEARCH */
+#hist-search{background:var(--c1);border:1px solid var(--bd2);color:var(--tx);
+  padding:7px 10px;border-radius:9px;font-size:.78rem;font-family:'Space Grotesk',sans-serif;
+  outline:none;width:100%;transition:.2s}
+#hist-search:focus{border-color:var(--a)}
+#hist-search::placeholder{color:var(--mu)}
+/* PROACTIVE CARD */
+.proactive-card{background:linear-gradient(135deg,rgba(108,92,231,.1),rgba(214,58,249,.05));
+  border:1px solid rgba(108,92,231,.22);border-radius:14px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:8px;transition:.2s;animation:fU .6s ease}
+.pcard-hdr{display:flex;align-items:center;gap:7px;font-size:.77rem;color:var(--a);font-weight:600}
+.pcard-msg{font-size:.83rem;color:var(--tx);line-height:1.6}
+.pcard-chips{display:flex;gap:5px;flex-wrap:wrap}
+.pchip{background:var(--soft);color:var(--a);border:1px solid rgba(108,92,231,.25);
+  padding:4px 11px;border-radius:20px;font-size:.72rem;cursor:pointer;transition:.2s;font-weight:500}
+.pchip:hover{background:var(--a);color:#fff;transform:scale(1.04)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tx);display:flex}
@@ -496,6 +550,15 @@ textarea::placeholder{color:var(--mu)}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Exporter la conversation
       </div>
+      <div class="pd-item" onclick="exportFullBackup();closeProfileDrop()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Sauvegarde complète (.json)
+      </div>
+      <div class="pd-item" onclick="triggerImportBackup();closeProfileDrop()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Restaurer une sauvegarde
+      </div>
+      <input type="file" id="backup-inp" accept=".json" style="display:none" onchange="importFullBackup(this)">
       <div class="pd-sep"></div>
       <div class="pd-item danger" onclick="logout();closeProfileDrop()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -509,6 +572,7 @@ textarea::placeholder{color:var(--mu)}
     Nouvelle conversation
   </button>
   <span class="sect">Conversations</span>
+  <input id="hist-search" placeholder="🔍 Rechercher une conversation…" oninput="filterHistory(this.value)" autocomplete="off">
   <div id="history-list"></div>
   <div id="ast">
     <svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
@@ -539,6 +603,9 @@ textarea::placeholder{color:var(--mu)}
       </div>
     </div>
     <div class="hright">
+      <button class="hb" id="theme-btn" onclick="toggleTheme()" title="Changer le thème">🌙</button>
+      <button class="hb p" onclick="openSettings()" title="Paramètres">⚙️</button>
+      <button class="hb" onclick="openShortcuts()" title="Raccourcis clavier (Ctrl+/)">⌨️</button>
       <button class="hb" onclick="clearChat()">🗑 Effacer</button>
       <button class="hb p" onclick="exportChat()">📤 Export</button>
     </div>
@@ -550,6 +617,7 @@ textarea::placeholder{color:var(--mu)}
       <div id="welcome">
         <div class="wlogo">IXA</div>
         <div class="wsub">Système IA de <b>Tom</b> · Posez une question, analysez un fichier ou utilisez un <b>/raccourci</b></div>
+        <div id="proactive-slot"></div>
         <div class="wg">
           <div class="wc" onclick="hint('Quelles sont les actualités d\'aujourd\'hui en France ?')"><span>🌐</span><span>Actualités web</span></div>
           <div class="wc" onclick="hint('Explique-moi le machine learning avec des exemples concrets')"><span>🧠</span><span>Expliquer un concept</span></div>
@@ -702,6 +770,141 @@ textarea::placeholder{color:var(--mu)}
 
 <div id="toast"></div>
 
+<!-- SHORTCUTS OVERLAY -->
+<div id="shortcuts-overlay" onclick="if(event.target===this)closeShortcuts()">
+  <div class="sco-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="sco-title">⌨️ Raccourcis Clavier IXA</div>
+      <button onclick="closeShortcuts()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div class="sco-grid">
+      <div class="sco-section">Navigation</div>
+      <div class="sco-item"><span class="sco-desc">Nouveau chat</span><span class="sco-key">Ctrl+N</span></div>
+      <div class="sco-item"><span class="sco-desc">Focus zone saisie</span><span class="sco-key">Ctrl+K</span></div>
+      <div class="sco-item"><span class="sco-desc">Onglet Vocal</span><span class="sco-key">Ctrl+Shift+V</span></div>
+      <div class="sco-item"><span class="sco-desc">Onglet Fichiers</span><span class="sco-key">Ctrl+Shift+F</span></div>
+      <div class="sco-item"><span class="sco-desc">Onglet Apprendre</span><span class="sco-key">Ctrl+Shift+L</span></div>
+      <div class="sco-item"><span class="sco-desc">Sidebar mobile</span><span class="sco-key">Ctrl+B</span></div>
+      <div class="sco-section">Actions</div>
+      <div class="sco-item"><span class="sco-desc">Envoyer message</span><span class="sco-key">Entrée</span></div>
+      <div class="sco-item"><span class="sco-desc">Saut de ligne</span><span class="sco-key">Shift+Entrée</span></div>
+      <div class="sco-item"><span class="sco-desc">Exporter chat</span><span class="sco-key">Ctrl+E</span></div>
+      <div class="sco-item"><span class="sco-desc">Effacer chat</span><span class="sco-key">Ctrl+D</span></div>
+      <div class="sco-item"><span class="sco-desc">Joindre fichier</span><span class="sco-key">Ctrl+O</span></div>
+      <div class="sco-item"><span class="sco-desc">Basculer thème</span><span class="sco-key">Ctrl+T</span></div>
+      <div class="sco-section">Utilitaires</div>
+      <div class="sco-item"><span class="sco-desc">Raccourcis clavier</span><span class="sco-key">Ctrl+/</span></div>
+      <div class="sco-item"><span class="sco-desc">Paramètres</span><span class="sco-key">Ctrl+,</span></div>
+      <div class="sco-item"><span class="sco-desc">Mémoire IXA</span><span class="sco-key">Ctrl+M</span></div>
+      <div class="sco-item"><span class="sco-desc">Fermer panneaux</span><span class="sco-key">Escape</span></div>
+    </div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--bd2);font-size:.72rem;color:var(--mu);text-align:center">
+      💡 Tapez <span style="color:var(--a);font-family:'JetBrains Mono',monospace">/commande</span> dans le chat pour utiliser vos fichiers sauvegardés
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(7px);z-index:600;align-items:center;justify-content:center;padding:16px"
+  onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="max-width:500px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="mo-t">⚙️ Paramètres IXA</div>
+      <button onclick="closeSettings()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div class="settings-tabs">
+      <button class="stab act" id="stab-api" onclick="showStab('api')">🔑 API</button>
+      <button class="stab" id="stab-gh" onclick="showStab('gh')">🐙 GitHub</button>
+      <button class="stab" id="stab-ui" onclick="showStab('ui')">🎨 Interface</button>
+      <button class="stab" id="stab-mem" onclick="showStab('mem')">🧠 Mémoire</button>
+    </div>
+    <!-- API TAB -->
+    <div id="stab-content-api">
+      <div class="sfield">
+        <label>🤖 Clé API Groq <a href="https://console.groq.com" target="_blank" style="color:var(--a);font-size:.65rem;text-decoration:none;margin-left:4px">Obtenir →</a></label>
+        <input class="mi" id="s-groq" type="password" placeholder="gsk_…" autocomplete="off">
+        <div class="shint">Requise pour toutes les fonctionnalités IA. Gratuite sur console.groq.com</div>
+      </div>
+      <div class="sfield">
+        <label>🔍 Clé API Serper (Web Search) <a href="https://serper.dev" target="_blank" style="color:var(--a);font-size:.65rem;text-decoration:none;margin-left:4px">Obtenir →</a></label>
+        <input class="mi" id="s-serper" type="password" placeholder="…" autocomplete="off">
+        <div class="shint">Optionnel. Active la recherche web en temps réel dans le chat.</div>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:4px">
+        <div style="flex:1;background:var(--c1);border:1px solid var(--bd2);border-radius:10px;padding:10px;font-size:.76rem">
+          <div style="color:var(--mu);margin-bottom:4px;font-weight:600">Groq</div>
+          <div id="s-groq-status" style="color:var(--mu)">—</div>
+        </div>
+        <div style="flex:1;background:var(--c1);border:1px solid var(--bd2);border-radius:10px;padding:10px;font-size:.76rem">
+          <div style="color:var(--mu);margin-bottom:4px;font-weight:600">Serper</div>
+          <div id="s-serper-status" style="color:var(--mu)">—</div>
+        </div>
+      </div>
+    </div>
+    <!-- GITHUB TAB -->
+    <div id="stab-content-gh" style="display:none">
+      <div class="sfield">
+        <label>🐙 Token GitHub (Personal Access Token)</label>
+        <input class="mi" id="s-ghtoken" type="password" placeholder="ghp_…" autocomplete="off">
+        <div class="shint">Nécessite le scope <code style="color:var(--a)">repo</code>. Utilisé pour synchroniser vos données entre appareils.</div>
+      </div>
+      <div class="sfield">
+        <label>📦 Dépôt GitHub (utilisateur/repo)</label>
+        <input class="mi" id="s-ghrepo" type="text" placeholder="votre-utilisateur/ixa-app" autocomplete="off">
+      </div>
+      <div class="sfield">
+        <label>🌿 Branche</label>
+        <input class="mi" id="s-ghbranch" type="text" placeholder="main" autocomplete="off">
+      </div>
+      <div style="background:var(--c1);border:1px solid var(--bd2);border-radius:10px;padding:10px;font-size:.76rem;color:var(--mu);line-height:1.6;margin-top:4px">
+        💡 Le fichier <code style="color:var(--a)">users.json</code> et <code style="color:var(--a)">config.json</code> doivent être dans la racine du dépôt. Synchronisation automatique toutes les 3 minutes.
+      </div>
+    </div>
+    <!-- UI TAB -->
+    <div id="stab-content-ui" style="display:none">
+      <div class="sfield">
+        <label>🎨 Thème</label>
+        <div style="display:flex;gap:7px;margin-top:4px">
+          <button onclick="setTheme('dark')" id="theme-dark" class="mdb can" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px">🌙 Sombre</button>
+          <button onclick="setTheme('light')" id="theme-light" class="mdb can" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px">☀️ Clair</button>
+          <button onclick="setTheme('system')" id="theme-sys" class="mdb can" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px">💻 Système</button>
+        </div>
+      </div>
+      <div class="sfield" style="margin-top:12px">
+        <label>🤖 Auto-extraction mémoire</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.8rem;color:var(--tx)">
+            <input type="checkbox" id="s-automem" onchange="S.autoMemory=this.checked;localStorage.setItem('ixa_automem',this.checked)" style="accent-color:var(--a)">
+            Extraire automatiquement les faits importants de chaque conversation
+          </label>
+        </div>
+        <div class="shint" style="margin-top:5px">IXA mémorisera vos préférences et informations clés sans que vous ayez besoin de les entrer manuellement.</div>
+      </div>
+      <div class="sfield" style="margin-top:4px">
+        <label>⚡ Max conversations sauvegardées</label>
+        <input class="mi" id="s-maxchats" type="number" min="10" max="200" value="60" placeholder="60">
+      </div>
+    </div>
+    <!-- MEM TAB -->
+    <div id="stab-content-mem" style="display:none">
+      <div style="font-size:.78rem;color:var(--mu);margin-bottom:10px">Voici ce qu'IXA sait sur vous. Ces informations sont injectées dans chaque conversation.</div>
+      <div id="s-mem-list" style="display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto"></div>
+      <div style="display:flex;gap:7px;margin-top:10px">
+        <input class="mi" id="s-mem-inp" placeholder="Ajouter une information…" onkeydown="if(event.key==='Enter')settingsAddMem()" style="flex:1">
+        <button class="mdb cfm" onclick="settingsAddMem()" style="white-space:nowrap">＋ Ajouter</button>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd2);display:flex;gap:7px">
+        <button class="mdb can" onclick="exportFullBackup()" style="flex:1">📥 Exporter tout</button>
+        <button class="mdb can" onclick="document.getElementById('backup-inp').click()" style="flex:1">📤 Importer</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:8px;justify-content:flex-end">
+      <button class="mdb can" onclick="closeSettings()">Annuler</button>
+      <button class="mdb cfm" onclick="saveSettings()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ══════════════════════════════════════════════════════
    IXA v7 — MEGA EDITION — by Tom
@@ -781,6 +984,7 @@ const S = {
   voiceQueue:[], voiceActive:false, voicePaused:false,
   voiceRate:1.0, voicePitch:1.0, voiceIdx:-1, voiceCont:false,
   learnDoc:null, learnChatHistory:[], webEnabled:false,
+  theme:'dark', autoMemory:false,
 };
 window.__docs = {};
 
@@ -935,10 +1139,16 @@ function initApp() {
   updateUserUI();
   updateApiSt();
   renderHist(); renderCmds();
+  applyTheme();
   S.chats.length ? loadChat(S.chats[0].id) : createChat();
   initSpeech();
   updateWebBtn();
   setInterval(()=>{if(S.user)pushUsers();},180000);
+  // Show proactive welcome
+  setTimeout(()=>{
+    const slot = document.getElementById('proactive-slot');
+    if(slot && S.user) slot.innerHTML = buildProactiveCard();
+  }, 300);
 }
 
 function updateUserUI() {
@@ -2797,7 +3007,8 @@ function updateApiSt(ok=null) {
   }
 }
 function saveLocal() {
-  if(S.chats.length>60) S.chats=S.chats.slice(0,60);
+  const maxChats = parseInt(localStorage.getItem('ixa_maxchats') || '60');
+  if(S.chats.length>maxChats) S.chats=S.chats.slice(0,maxChats);
   try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e){
     S.chats.forEach(c=>{if(c.messages.length>8)c.messages=c.messages.slice(-8);});
     try{localStorage.setItem('ixa_chats',JSON.stringify(S.chats));}catch(e2){}
@@ -2812,6 +3023,387 @@ function toast(msg,type='') {
 
 // ── INIT ──
 boot();
+
+/* ══════════════════════════════════════════════════════
+   IXA v8 — NEW FEATURES
+══════════════════════════════════════════════════════ */
+
+/* ── THEME SYSTEM ── */
+function setTheme(mode) {
+  S.theme = mode;
+  localStorage.setItem('ixa_theme', mode);
+  applyTheme();
+  // Update settings buttons
+  ['dark','light','sys'].forEach(t => {
+    const b = document.getElementById('theme-'+t);
+    if(b) b.className = mode === (t==='sys'?'system':t) ? 'mdb cfm' : 'mdb can';
+  });
+}
+function applyTheme() {
+  const mode = S.theme || localStorage.getItem('ixa_theme') || 'dark';
+  const pref = window.matchMedia('(prefers-color-scheme: light)').matches;
+  const useLight = mode === 'light' || (mode === 'system' && pref);
+  document.body.classList.toggle('light', useLight);
+  const btn = document.getElementById('theme-btn');
+  if(btn) btn.textContent = useLight ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  const cur = S.theme || 'dark';
+  setTheme(cur === 'dark' ? 'light' : 'dark');
+  toast(document.body.classList.contains('light') ? '☀️ Mode clair activé' : '🌙 Mode sombre activé');
+}
+
+/* ── KEYBOARD SHORTCUTS ── */
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  const isInput = ['INPUT','TEXTAREA'].includes(tag);
+  
+  if(e.key === 'Escape') {
+    closeShortcuts(); closeSettings();
+    document.getElementById('mo')?.classList.remove('open');
+    return;
+  }
+  if(!e.ctrlKey && !e.metaKey) return;
+
+  switch(e.key) {
+    case '/': e.preventDefault(); openShortcuts(); break;
+    case ',': e.preventDefault(); openSettings(); break;
+    case 'n': case 'N':
+      if(!isInput || e.shiftKey) { e.preventDefault(); createChat(); toast('✨ Nouvelle conversation'); }
+      break;
+    case 'k': case 'K':
+      e.preventDefault();
+      document.getElementById('mi')?.focus();
+      showTab('chat'); setMT('chat');
+      break;
+    case 'm': case 'M': e.preventDefault(); openMemory(); break;
+    case 'e': case 'E': e.preventDefault(); exportChat(); break;
+    case 'd': case 'D': if(!isInput) { e.preventDefault(); clearChat(); } break;
+    case 'o': case 'O': e.preventDefault(); document.getElementById('fi')?.click(); break;
+    case 't': case 'T': if(!isInput) { e.preventDefault(); toggleTheme(); } break;
+    case 'b': case 'B': if(!isInput) { e.preventDefault(); openSB(); } break;
+    case 'V': if(e.shiftKey) { e.preventDefault(); showTab('voice'); setMT('voice'); } break;
+    case 'F': if(e.shiftKey) { e.preventDefault(); showTab('data'); setMT('data'); } break;
+    case 'L': if(e.shiftKey && !isInput) { e.preventDefault(); showTab('learn'); setMT('learn'); } break;
+  }
+});
+
+function openShortcuts() { document.getElementById('shortcuts-overlay').classList.add('open'); }
+function closeShortcuts() { document.getElementById('shortcuts-overlay').classList.remove('open'); }
+
+/* ── SETTINGS MODAL ── */
+function openSettings() {
+  const m = document.getElementById('settings-modal');
+  m.style.display = 'flex';
+  // Populate fields
+  document.getElementById('s-groq').value = S.groqKey || '';
+  document.getElementById('s-serper').value = S.serperKey || '';
+  document.getElementById('s-ghtoken').value = S.ghToken || '';
+  document.getElementById('s-ghrepo').value = (S.ghUser && S.ghRepo) ? `${S.ghUser}/${S.ghRepo}` : '';
+  document.getElementById('s-ghbranch').value = S.ghBranch || 'main';
+  document.getElementById('s-maxchats').value = parseInt(localStorage.getItem('ixa_maxchats') || '60');
+  document.getElementById('s-automem').checked = S.autoMemory || false;
+  // Status indicators
+  document.getElementById('s-groq-status').innerHTML = S.groqKey ? `<span style="color:var(--ok)">✅ Configurée</span>` : `<span style="color:var(--err)">❌ Manquante</span>`;
+  document.getElementById('s-serper-status').innerHTML = S.serperKey ? `<span style="color:var(--ok)">✅ Configurée</span>` : `<span style="color:var(--mu)">— Non configurée</span>`;
+  // Memory tab
+  renderSettingsMem();
+  showStab('api');
+  // Theme buttons state
+  ['dark','light','sys'].forEach(t => {
+    const b = document.getElementById('theme-'+t);
+    const cur = S.theme || 'dark';
+    if(b) b.className = cur === (t==='sys'?'system':t) ? 'mdb cfm' : 'mdb can';
+  });
+}
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+function showStab(tab) {
+  ['api','gh','ui','mem'].forEach(t => {
+    document.getElementById('stab-'+t)?.classList.toggle('act', t===tab);
+    const c = document.getElementById('stab-content-'+t);
+    if(c) c.style.display = t===tab ? '' : 'none';
+  });
+}
+function saveSettings() {
+  const groq = (document.getElementById('s-groq')?.value||'').trim();
+  const serper = (document.getElementById('s-serper')?.value||'').trim();
+  const ghtoken = (document.getElementById('s-ghtoken')?.value||'').trim();
+  const ghrepo = (document.getElementById('s-ghrepo')?.value||'').trim();
+  const ghbranch = (document.getElementById('s-ghbranch')?.value||'main').trim();
+  const maxchats = parseInt(document.getElementById('s-maxchats')?.value||'60');
+
+  if(groq) { S.groqKey = groq; localStorage.setItem('ixa_groq_key', groq); }
+  if(serper) { S.serperKey = serper; localStorage.setItem('ixa_serper_key', serper); }
+  if(ghtoken) { S.ghToken = ghtoken; localStorage.setItem('ixa_gh_token', ghtoken); }
+  if(ghrepo && ghrepo.includes('/')) {
+    const p = ghrepo.split('/');
+    S.ghUser = p[0]; S.ghRepo = p[1];
+    localStorage.setItem('ixa_gh_repo', ghrepo);
+  }
+  S.ghBranch = ghbranch;
+  localStorage.setItem('ixa_gh_branch', ghbranch);
+  localStorage.setItem('ixa_maxchats', maxchats);
+  
+  updateApiSt();
+  updateWebBtn();
+  closeSettings();
+  toast('✅ Paramètres sauvegardés !', 'ok');
+}
+function renderSettingsMem() {
+  const list = document.getElementById('s-mem-list'); if(!list) return;
+  if(!S.memory.length) {
+    list.innerHTML = '<div style="font-size:.76rem;color:var(--mu);text-align:center;padding:10px">Aucune mémoire</div>';
+    return;
+  }
+  list.innerHTML = S.memory.map((m,i) => `
+    <div style="display:flex;align-items:center;gap:7px;background:var(--c2);border:1px solid var(--bd2);border-radius:8px;padding:8px 10px;font-size:.79rem">
+      <span style="flex:1;color:var(--tx)">${esc(m)}</span>
+      <button onclick="delMemSettings(${i})" style="background:none;border:none;color:var(--mu);cursor:pointer;padding:2px 4px;border-radius:4px;transition:.15s" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--mu)'">✕</button>
+    </div>`).join('');
+}
+function settingsAddMem() {
+  const v = (document.getElementById('s-mem-inp')?.value||'').trim();
+  if(!v) return;
+  S.memory.push(v);
+  saveLocal();
+  document.getElementById('s-mem-inp').value = '';
+  renderSettingsMem();
+  updateUserUI();
+  toast('✅ Mémorisé !', 'ok');
+}
+function delMemSettings(i) {
+  S.memory.splice(i,1);
+  saveLocal();
+  renderSettingsMem();
+  updateUserUI();
+  toast('Souvenir supprimé');
+}
+
+/* ── HISTORY FILTER ── */
+function filterHistory(q) {
+  const items = document.querySelectorAll('#history-list .ci');
+  const lower = q.toLowerCase().trim();
+  items.forEach(el => {
+    const title = el.querySelector('.ci-t')?.textContent.toLowerCase() || '';
+    el.style.display = (!lower || title.includes(lower)) ? '' : 'none';
+  });
+}
+
+/* ── FULL BACKUP EXPORT/IMPORT ── */
+function exportFullBackup() {
+  const backup = {
+    version: '8.0',
+    exported: new Date().toISOString(),
+    user: S.user?.username,
+    chats: S.chats,
+    memory: S.memory,
+    commands: S.commands,
+    theme: S.theme,
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], {type: 'application/json;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ixa_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('✅ Sauvegarde complète exportée !', 'ok');
+}
+function triggerImportBackup() { document.getElementById('backup-inp').click(); }
+function importFullBackup(input) {
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.readAsText(f, 'UTF-8');
+  r.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.version || !data.chats) { toast('❌ Fichier de sauvegarde invalide', 'err'); return; }
+      showModal('📥 Restaurer la sauvegarde',
+        `Sauvegarde du ${new Date(data.exported).toLocaleDateString('fr-FR')} — ${data.chats.length} conversations, ${data.memory?.length||0} mémoires`,
+        `<div style="background:rgba(255,107,107,.07);border:1px solid var(--err);border-radius:9px;padding:10px;font-size:.78rem;color:var(--err)">
+          ⚠️ Cette action remplacera vos conversations et mémoires actuelles. Assurez-vous d'avoir exporté votre sauvegarde actuelle.
+        </div>`,
+        [
+          {l:'Annuler', c:'can', f:'closeModal()'},
+          {l:'✅ Restaurer', c:'cfm', f:`doImportBackup(${JSON.stringify(JSON.stringify(data))})`}
+        ]
+      );
+    } catch(e) { toast('❌ Erreur lecture fichier: ' + e.message, 'err'); }
+  };
+  input.value = '';
+}
+function doImportBackup(dataStr) {
+  try {
+    const data = JSON.parse(dataStr);
+    if(data.chats) S.chats = data.chats;
+    if(data.memory) S.memory = data.memory;
+    if(data.commands) S.commands = data.commands;
+    if(data.theme) { S.theme = data.theme; applyTheme(); }
+    saveLocal();
+    renderHist();
+    renderCmds();
+    updateUserUI();
+    closeModal();
+    if(S.chats.length) loadChat(S.chats[0].id); else createChat();
+    toast('✅ Sauvegarde restaurée avec succès !', 'ok');
+  } catch(e) { toast('❌ Erreur restauration: ' + e.message, 'err'); }
+}
+
+/* ── AUTO-MEMORY EXTRACTION ── */
+async function extractMemoryFromReply(userMsg, reply) {
+  if(!S.autoMemory || !S.groqKey || !reply) return;
+  if(S.memory.length >= 30) return; // cap
+  const prompt = `Analyse cette échange et extrait les FAITS IMPORTANTS sur l'utilisateur (préférences, données personnelles, projets, objectifs). 
+Réponds UNIQUEMENT avec un JSON: {"facts":["fait 1","fait 2"]} ou {"facts":[]} si rien d'important.
+Ne répète pas les faits déjà connus: ${S.memory.slice(0,8).join(' | ')}
+Échange: USER: ${userMsg.slice(0,200)} | IXA: ${reply.slice(0,400)}`;
+  
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'llama-3.1-8b-instant',
+        messages:[{role:'user',content:prompt}],
+        max_tokens:150,temperature:0.3
+      })
+    });
+    if(!r.ok) return;
+    const d = await r.json();
+    const txt = d.choices?.[0]?.message?.content || '';
+    const m = txt.match(/\{[\s\S]*\}/);
+    if(!m) return;
+    const parsed = JSON.parse(m[0]);
+    const newFacts = (parsed.facts||[]).filter(f=>f&&f.length>5&&f.length<150);
+    if(newFacts.length > 0) {
+      S.memory.push(...newFacts.slice(0,3));
+      saveLocal();
+      updateUserUI();
+      toast(`🧠 ${newFacts.length} fait(s) mémorisé(s) automatiquement`);
+    }
+  } catch(e) {}
+}
+
+/* ── PROACTIVE WELCOME SUGGESTIONS ── */
+function buildProactiveCard() {
+  const hour = new Date().getHours();
+  const greeting = hour < 6 ? 'Bonne nuit' : hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonjour' : 'Bonsoir';
+  const name = S.user?.display_name || 'Tom';
+  
+  const suggestions = [
+    { icon:'🌐', text:'Actualités du jour' },
+    { icon:'💻', text:'Aide sur un projet' },
+    { icon:'📊', text:'Analyser un fichier' },
+    { icon:'📝', text:'Rédiger un document' },
+  ];
+
+  // Add memory-based suggestions
+  if(S.memory.some(m => /code|dev|projet|python|react/i.test(m))) {
+    suggestions.unshift({ icon:'💡', text:'Continuer mon projet dev' });
+  }
+  if(S.memory.some(m => /réunion|meeting|rendez-vous/i.test(m))) {
+    suggestions.unshift({ icon:'📅', text:'Préparer ma réunion' });
+  }
+
+  return `<div class="proactive-card">
+    <div class="pcard-hdr">
+      <span>✨</span>
+      <span>${greeting}, <strong>${esc(name)}</strong> — IXA est prêt</span>
+    </div>
+    <div class="pcard-msg">Comment puis-je vous aider aujourd'hui ?</div>
+    <div class="pcard-chips">
+      ${suggestions.slice(0,5).map(s => `<span class="pchip" onclick="hint('${s.text}')">${s.icon} ${s.text}</span>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ── ENHANCED DOCX PARSING ── */
+// Override readFile to use mammoth for DOCX
+const _origReadFile = readFile;
+window.readFile = function(file, cb) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(['docx','doc'].includes(ext) && typeof mammoth !== 'undefined') {
+    const r = new FileReader();
+    r.readAsArrayBuffer(file);
+    r.onload = async e => {
+      try {
+        const result = await mammoth.extractRawText({arrayBuffer: e.target.result});
+        cb({content: result.value, name: file.name, isImg: false, isPDF: false});
+      } catch(err) {
+        // fallback
+        _origReadFile(file, cb);
+      }
+    };
+    r.onerror = () => _origReadFile(file, cb);
+    return;
+  }
+  _origReadFile(file, cb);
+};
+
+/* ── ENHANCED STATE SAVE/LOAD ── */
+// Extend boot to load extra localStorage keys
+const _origBoot = window.boot;
+window.boot = async function() {
+  // Load extra settings from localStorage
+  const serperLS = localStorage.getItem('ixa_serper_key');
+  const ghTokenLS = localStorage.getItem('ixa_gh_token');
+  const ghRepoLS = localStorage.getItem('ixa_gh_repo');
+  const ghBranchLS = localStorage.getItem('ixa_gh_branch');
+  const themeLS = localStorage.getItem('ixa_theme') || 'dark';
+  
+  // Apply theme before anything else
+  S.theme = themeLS;
+  applyTheme();
+  S.autoMemory = localStorage.getItem('ixa_automem') === 'true';
+
+  await _origBoot();
+
+  // Apply extra settings after boot
+  if(!S.serperKey && serperLS) S.serperKey = serperLS;
+  if(!S.ghToken && ghTokenLS) S.ghToken = ghTokenLS;
+  if(!S.ghUser && ghRepoLS && ghRepoLS.includes('/')) {
+    const p = ghRepoLS.split('/'); S.ghUser = p[0]; S.ghRepo = p[1];
+  }
+  if(ghBranchLS) S.ghBranch = ghBranchLS;
+  updateApiSt();
+};
+
+/* ── PATCH handleSend FOR AUTO-MEMORY ── */
+const _origHandleSend = handleSend;
+window.handleSend = async function(voiceText = null) {
+  const inp = document.getElementById('mi');
+  const userMsg = voiceText !== null ? voiceText : (inp?.value || '');
+  const reply = await _origHandleSend(voiceText);
+  if(reply && userMsg && S.autoMemory) {
+    setTimeout(() => extractMemoryFromReply(userMsg, reply), 1500);
+  }
+  return reply;
+};
+
+/* ── PATCH loadChat FOR PROACTIVE CARD ── */
+const _origLoadChat = loadChat;
+window.loadChat = function(id) {
+  _origLoadChat(id);
+  // If welcome screen is showing and we have memory, add proactive card
+  const welcome = document.getElementById('welcome');
+  if(welcome && S.memory && S.memory.length > 0) {
+    const pc = document.createElement('div');
+    pc.innerHTML = buildProactiveCard();
+    const wg = welcome.querySelector('.wg');
+    if(wg) welcome.insertBefore(pc.firstChild, wg);
+  }
+};
+
+/* ── ENHANCED updateApiSt WITH ALL INDICATORS ── */
+const _origUpdateApiSt = updateApiSt;
+window.updateApiSt = function(ok = null) {
+  _origUpdateApiSt(ok);
+  // Also update settings modal if open
+  const groqStat = document.getElementById('s-groq-status');
+  const serperStat = document.getElementById('s-serper-status');
+  if(groqStat) groqStat.innerHTML = S.groqKey ? `<span style="color:var(--ok)">✅ Configurée</span>` : `<span style="color:var(--err)">❌ Manquante</span>`;
+  if(serperStat) serperStat.innerHTML = S.serperKey ? `<span style="color:var(--ok)">✅ Active</span>` : `<span style="color:var(--mu)">— Non configurée</span>`;
+};
 </script>
 </body>
 </html>
