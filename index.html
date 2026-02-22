@@ -708,54 +708,67 @@ textarea::placeholder{color:var(--mu)}
    80+ ans d'expérience cumulée, le meilleur du monde 🚀
 ══════════════════════════════════════════════════════ */
 
+// ── MODÈLES GROQ (du plus rapide/disponible au plus puissant) ──
+// llama-3.1-8b : 1M tokens/jour (limite très haute)
+// mixtral-8x7b : 32K contexte, bon pour documents
+// gemma2-9b   : 15K TPM, stable
+// llama3-70b  : 6K TPM, 100K TPD — seulement pour génération docs
 const MODELS = {
-  smart:  'llama-3.3-70b-versatile',
   fast:   'llama-3.1-8b-instant',
+  smart:  'llama-3.1-8b-instant',
+  doc:    'llama3-70b-8192',
   vision: 'llama-3.2-11b-vision-preview',
   backup: 'gemma2-9b-it',
 };
 const CHAINS = {
-  vision: ['llama-3.2-11b-vision-preview','llama-3.3-70b-versatile','gemma2-9b-it'],
-  smart:  ['llama-3.3-70b-versatile','gemma2-9b-it','llama-3.1-8b-instant'],
-  fast:   ['llama-3.1-8b-instant','gemma2-9b-it','llama-3.3-70b-versatile'],
+  // Vision: toujours commencer par le modèle vision
+  vision: ['llama-3.2-11b-vision-preview','llama-3.1-8b-instant','gemma2-9b-it'],
+  // Smart (avec documents): rapide d'abord, puis fallback
+  smart:  ['llama-3.1-8b-instant','gemma2-9b-it','mixtral-8x7b-32768','llama3-70b-8192'],
+  // Fast (chat simple): ultra-rapide
+  fast:   ['llama-3.1-8b-instant','gemma2-9b-it'],
+  // Doc (génération fichiers): modèle puissant
+  doc:    ['llama3-70b-8192','llama-3.3-70b-versatile','gemma2-9b-it','llama-3.1-8b-instant'],
 };
+// Limites TPM par modèle
 const TPM = {
-  'llama-3.3-70b-versatile':12000,
-  'llama-3.1-8b-instant':6000,
+  'llama-3.1-8b-instant':      6000,
+  'llama-3.3-70b-versatile':  12000,
+  'llama3-70b-8192':           6000,
   'llama-3.2-11b-vision-preview':7000,
-  'gemma2-9b-it':15000,
+  'gemma2-9b-it':             15000,
+  'mixtral-8x7b-32768':        5000,
 };
+// Rate limit tracker pour éviter les 429 répétés
+const _modelErrors = {};
+function markModelError(model) {
+  _modelErrors[model] = Date.now() + 60000; // backoff 1 min
+}
+function isModelAvailable(model) {
+  return !_modelErrors[model] || Date.now() > _modelErrors[model];
+}
 
 // ── SYSTEM PROMPT ──
 const SYS = (webContext='') => {
-  const userName = S.user?.display_name || S.user?.username || 'Tom';
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const timeStr = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const memStr = S.memory && S.memory.length ? S.memory.map(m=>'- '+m).join('\n') : 'Aucune mémoire enregistrée.';
-  const webStr = webContext ? '\nINFORMATIONS WEB EN TEMPS REEL :\n' + webContext + '\n' : '';
-  return 'Tu es IXA (Intelligence eXpansive Avancee), assistant IA personnel de ' + userName + '. Tu es JARVIS : elegant, direct, precis, chaleureux.\n'
-    + 'DATE : ' + dateStr + ' a ' + timeStr + '.\n'
-    + webStr
-    + 'LANGUE : Reponds TOUJOURS en francais (sauf demande explicite).\n\n'
-    + '=== REGLE CRITIQUE : GENERATION DE DOCUMENTS ===\n'
-    + 'Quand ' + userName + ' demande un fichier (PowerPoint, Excel, PDF, Word, rapport, CV, lettre, tableau, presentation), tu DOIS OBLIGATOIREMENT repondre EXACTEMENT comme ceci :\n\n'
-    + 'Pour PowerPoint/presentation :\n'
-    + '```document:powerpoint\n'
-    + '{"title":"TITRE","slides":[{"title":"Slide 1","content":"Texte","bullets":["Point A","Point B"]},{"title":"Slide 2","content":"Texte 2","bullets":["Bullet 1","Bullet 2"]}]}\n'
-    + '```\n\n'
-    + 'Pour Excel/tableau :\n'
-    + '```document:excel\n'
-    + '{"sheets":[{"name":"Feuille1","headers":["Col A","Col B","Col C"],"rows":[["v1","v2","v3"],["v4","v5","v6"]]}]}\n'
-    + '```\n\n'
-    + 'Pour PDF/Word/rapport/lettre/CV :\n'
-    + '```document:pdf\n'
-    + '# Titre\n## Section\nContenu complet en Markdown...\n'
-    + '```\n\n'
-    + 'INTERDIT : Ne JAMAIS mettre du JSON ou Markdown brut sans les balises ```document:TYPE```. Ne JAMAIS expliquer le format. Ne JAMAIS dire "voici un exemple". Generer DIRECTEMENT le contenu complet.\n'
-    + 'Le JSON PowerPoint/Excel doit etre VALIDE et COMPLET (5+ slides pour PPT, donnees reelles pour Excel).\n'
-    + '================================================\n\n'
-    + 'MEMOIRE UTILISATEUR :\n' + memStr + '\n';
+  const u = S.user?.display_name || S.user?.username || 'Tom';
+  const d = new Date();
+  const ds = d.toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+  const ts = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const mem = S.memory?.length ? '\nMÉMOIRE : ' + S.memory.join(' | ') : '';
+  const web = webContext ? '\nWEB (données actuelles) :\n' + webContext.slice(0,1500) + '\n' : '';
+  return 'Tu es IXA, assistant IA personnel de ' + u + '. Style JARVIS : direct, précis, chaleureux. ' +
+    'Réponds TOUJOURS en français. Date : ' + ds + ' ' + ts + '.' + mem + web + '\n\n' +
+    'GÉNÉRATION DOCUMENTS (uniquement si demandé) :\n' +
+    '```document:powerpoint\n' +
+    '{"title":"TITRE","slides":[{"title":"Slide 1","content":"Texte","bullets":["Point A","Point B","Point C"]},{"title":"Slide 2","content":"Autre texte","bullets":["Bullet 1","Bullet 2"]},...]}\n' +
+    '```\n' +
+    '```document:excel\n' +
+    '{"sheets":[{"name":"Données","headers":["Colonne A","Colonne B","Colonne C"],"rows":[["val1","val2","val3"],["val4","val5","val6"]]}]}\n' +
+    '```\n' +
+    '```document:pdf\n' +
+    '# Titre du document\n## Section 1\nContenu Markdown complet et détaillé...\n' +
+    '```\n' +
+    'RÈGLE : Génère le JSON/Markdown COMPLET dans les balises. Jamais de JSON brut sans balises. Jamais d\'explication du format.';
 };
 
 // ── STATE ──
@@ -1396,85 +1409,157 @@ function hint(t){document.getElementById('mi').value=t;handleSend();}
 
 function pickChain(text,atts) {
   if(atts.some(a=>a.isImg||a.isPDF)) return 'vision';
-  const hasDoc=atts.some(a=>a.content);
-  const isGen=/\bcrée\b|\bgénère\b|\brédige\b|\bécris\b|excel|word|powerpoint|pptx|pdf|rapport|lettre|cv|tableau|présentation|contrat/i.test(text);
-  if(isGen||hasDoc||text.length>400) return 'smart';
+  // Détection génération de document → modèle puissant
+  const isDocGen = /\bcrée\b|\bgénère\b|\brédige\b|\bfais.*?(powerpoint|excel|pdf|word|rapport|cv|lettre|contrat|tableau|présentation)|powerpoint|xlsx?|word|rapport|cv\b|lettre|contrat|présentation/i.test(text);
+  if(isDocGen) return 'doc';
+  // Avec pièces jointes texte → smart
+  const hasDoc = atts.some(a=>a.content);
+  if(hasDoc || text.length>500) return 'smart';
   return 'fast';
 }
 
-async function callWithFallback(text,atts,chat,models,idx,webContext='') {
-  if(idx>=models.length) {
-    renderMsg('assistant','Tous les systèmes sont momentanément saturés, Tom. Veuillez patienter quelques instants.');
+async function callWithFallback(text, atts, chat, models, idx, webContext='') {
+  // Skip unavailable models (rate-limited)
+  while(idx < models.length && !isModelAvailable(models[idx])) {
+    console.warn('Skipping rate-limited model:', models[idx]);
+    idx++;
+  }
+  if(idx >= models.length) {
+    // Tout est épuisé — afficher message clair
+    const waitMin = Object.values(_modelErrors).length ? 
+      Math.ceil((Math.max(...Object.values(_modelErrors)) - Date.now()) / 60000) : 1;
+    renderMsg('assistant', 
+      '⏳ **Quota momentanément atteint.** Tous les modèles disponibles sont temporairement limités.\n\n' +
+      `Réessayez dans environ **${waitMin} minute${waitMin>1?'s':''}**. ` +
+      'Cela est dû aux limites gratuites de Groq (quota par minute ou par jour).\n\n' +
+      '💡 *Conseil : Pour augmenter vos limites, activez le Dev Tier sur [console.groq.com](https://console.groq.com/settings/billing)*');
     return null;
   }
-  const model=models[idx];
+  const model = models[idx];
 
+  // ── Construire le contenu API ──
   let apiContent;
-  if(atts.some(a=>a.isImg||a.isPDF)) {
-    const parts=[];
-    atts.forEach(a=>{
-      if((a.isImg||a.isPDF)&&a.dataURL) {
-        const mtype=a.isPDF?'image/png':(a.dataURL.split(';')[0].split(':')[1]||'image/jpeg');
-        parts.push({type:'image_url',image_url:{url:a.dataURL}});
+  const hasVision = atts.some(a => a.isImg || a.isPDF);
+
+  if(hasVision) {
+    const parts = [];
+    atts.forEach(a => {
+      if((a.isImg || a.isPDF) && a.dataURL) {
+        parts.push({type:'image_url', image_url:{url: a.dataURL}});
       } else if(a.content) {
-        parts.push({type:'text',text:`=== Fichier: ${a.name} ===\n${a.content}\n===`});
+        parts.push({type:'text', text: '=== ' + a.name + ' ===\n' + a.content.slice(0,4000) + '\n==='});
       }
     });
-    parts.push({type:'text',text:text||'Analyse ce contenu en détail.'});
-    apiContent=parts;
-  } else if(atts.length>0) {
-    const docBlock=atts.map(a=>`=== Fichier: ${a.name} ===\n${a.content||''}\n=== Fin ${a.name} ===`).join('\n\n');
-    apiContent=`${docBlock}\n\n--- Instruction ---\n${text}`;
+    parts.push({type:'text', text: text || 'Analyse ce contenu en détail.'});
+    apiContent = parts;
+  } else if(atts.length > 0) {
+    // IMPORTANT: mettre le document DANS le message utilisateur pour que le modèle y ait accès
+    const docBlock = atts.map(a => 
+      '=== DOCUMENT: ' + a.name + ' ===\n' + 
+      (a.content || '[Contenu non disponible]').slice(0, 8000) + 
+      '\n=== FIN ' + a.name + ' ==='
+    ).join('\n\n');
+    apiContent = docBlock + '\n\n--- INSTRUCTION ---\n' + (text || 'Analyse ce document en détail.');
   } else {
-    apiContent=text;
+    apiContent = text;
   }
 
-  const estTok=Math.ceil(String(typeof apiContent==='string'?apiContent:JSON.stringify(apiContent)).length/3.5);
-  const modelLimit=TPM[model]||5000;
-  if(estTok>modelLimit*0.8&&idx+1<models.length) return callWithFallback(text,atts,chat,models,idx+1,webContext);
+  // Estimation tokens
+  const estTok = Math.ceil(
+    String(typeof apiContent === 'string' ? apiContent : JSON.stringify(apiContent)).length / 3.5
+  );
+  const modelLimit = TPM[model] || 5000;
+  if(estTok > modelLimit * 0.85 && idx + 1 < models.length) {
+    return callWithFallback(text, atts, chat, models, idx+1, webContext);
+  }
 
-  chat.messages.push({role:'user',content:typeof apiContent==='string'?apiContent.slice(0,500)+'…':text,displayContent:text,apiContent});
+  // Stocker dans l'historique (version courte pour le stockage, complète pour l'API)
+  const storedContent = typeof apiContent === 'string' 
+    ? (apiContent.length > 800 ? apiContent.slice(0,800) + '…[doc]' : apiContent)
+    : text;
+  chat.messages.push({role:'user', content: storedContent, displayContent: text, apiContent});
   saveLocal();
-  const tid=showTyping();
+  const tid = showTyping();
 
   try {
-    const sysPrompt=SYS(webContext);
-    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Authorization':`Bearer ${S.groqKey}`,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model, messages:[
-          {role:'system',content:sysPrompt},
-          ...chat.messages.map(m=>({role:m.role,content:m.apiContent||m.content}))
+    const sysPrompt = SYS(webContext);
+    // Calculer max_tokens selon le type de requête
+    const isDocGen = /crée|génère|powerpoint|excel|rapport|word|pdf|cv|lettre/i.test(text);
+    const maxToks = isDocGen ? 3500 : 1800;
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + S.groqKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {role:'system', content: sysPrompt},
+          // Envoyer l'historique SANS apiContent (pour économiser les tokens)
+          // sauf pour le dernier message qui doit avoir le document
+          ...chat.messages.slice(0,-1).map(m => ({role: m.role, content: m.displayContent || m.content})),
+          // Dernier message avec contenu complet (document inclus)
+          {role: 'user', content: apiContent}
         ],
-        max_tokens:4096, temperature:0.72,
+        max_tokens: maxToks,
+        temperature: 0.65,
       })
     });
     removeTyping(tid);
 
     if(!res.ok) {
-      const errData=await res.json().catch(()=>({}));
-      const errMsg=errData.error?.message||'';
-      chat.messages.pop(); saveLocal();
-      if(res.status===429||res.status===503||errMsg.includes('decommissioned')||errMsg.includes('deprecated')||errMsg.includes('not found')||errMsg.includes('does not exist'))
-        return callWithFallback(text,atts,chat,models,idx+1,webContext);
-      if(res.status===401){updateApiSt(false);renderMsg('assistant','Clé API invalide, Tom. Vérifiez votre config.json.');return null;}
-      renderMsg('assistant','Une erreur temporaire s\'est produite, Tom. Veuillez réessayer.');
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData.error?.message || '';
+      chat.messages.pop();
+      saveLocal();
+
+      // 429: rate limit — marquer le modèle et essayer le suivant
+      if(res.status === 429) {
+        markModelError(model);
+        console.warn('429 on model:', model, '— trying next');
+        return callWithFallback(text, atts, chat, models, idx+1, webContext);
+      }
+      if(res.status === 503 || errMsg.includes('decommissioned') || errMsg.includes('deprecated') || errMsg.includes('not found') || errMsg.includes('does not exist')) {
+        markModelError(model);
+        return callWithFallback(text, atts, chat, models, idx+1, webContext);
+      }
+      if(res.status === 401) {
+        updateApiSt(false);
+        renderMsg('assistant', '❌ **Clé API invalide.** Vérifiez votre fichier `config.json` ou entrez votre clé dans les paramètres.');
+        return null;
+      }
+      renderMsg('assistant', '❌ Erreur API ' + res.status + '. Veuillez réessayer.');
       return null;
     }
 
-    const data=await res.json();
-    const reply=data.choices?.[0]?.message?.content||'';
-    if(!reply){chat.messages.pop();saveLocal();renderMsg('assistant','Réponse vide. Veuillez réessayer.');return null;}
-    renderMsg('assistant',reply);
-    chat.messages.push({role:'assistant',content:reply});
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || '';
+    if(!reply) {
+      chat.messages.pop();
+      saveLocal();
+      renderMsg('assistant', '❌ Réponse vide. Réessayez.');
+      return null;
+    }
+
+    renderMsg('assistant', reply);
+    chat.messages.push({role:'assistant', content: reply, displayContent: reply});
     saveLocal();
+
+    // Reset error counter for this model on success
+    delete _modelErrors[model];
     return reply;
 
   } catch(e) {
     removeTyping(tid);
-    chat.messages.pop(); saveLocal();
-    renderMsg('assistant','Erreur réseau, Tom. Vérifiez votre connexion Internet.');
+    chat.messages.pop();
+    saveLocal();
+    if(e.name === 'TypeError' && e.message.includes('fetch')) {
+      renderMsg('assistant', '❌ **Pas de connexion Internet.** Vérifiez votre réseau.');
+    } else {
+      renderMsg('assistant', '❌ Erreur: ' + e.message);
+    }
     return null;
   }
 }
@@ -2173,59 +2258,132 @@ function getLearnContext() {
   return cleanLearnText(S.learnDoc.content||'').slice(0, 6000);
 }
 
-async function learnCallAPI(userPrompt, chatHistory=[]) {
+async function learnCallAPI(userPrompt, chatHistory=[], mode='') {
   const doc = S.learnDoc;
-  if(!doc) throw new Error('Aucun document chargé');
-  if(!S.groqKey) throw new Error('Clé API manquante');
+  if(!doc) throw new Error("Aucun document chargé. Veuillez d'abord charger un fichier.");
+  if(!S.groqKey) throw new Error('Clé API Groq manquante. Configurez votre config.json.');
 
   const isVision = (doc.isImg || doc.isPDF) && doc.dataURL;
-  const model = isVision ? MODELS.vision : MODELS.smart;
+  
+  // Choisir le bon modèle
+  let model;
+  if(isVision) {
+    model = isModelAvailable('llama-3.2-11b-vision-preview') 
+      ? 'llama-3.2-11b-vision-preview' 
+      : 'llama-3.1-8b-instant';
+  } else if(mode === 'flash' || mode === 'quiz') {
+    // JSON generation: use a reliable model
+    model = isModelAvailable('llama-3.1-8b-instant') ? 'llama-3.1-8b-instant' : 'gemma2-9b-it';
+  } else {
+    model = isModelAvailable('llama-3.1-8b-instant') ? 'llama-3.1-8b-instant' : 'gemma2-9b-it';
+  }
 
   let messages;
+
   if(isVision) {
-    // Vision: send image + prompt
-    const mediaType = doc.isPDF ? 'image/jpeg' : (doc.dataURL.split(';')[0].split(':')[1] || 'image/jpeg');
-    const sysMsg = {role:'system', content:'Tu es IXA, assistant IA expert. Réponds TOUJOURS en français avec du texte propre, sans caractères spéciaux parasites. Utilise du Markdown structuré.'};
-    const userMsg = {
-      role:'user',
-      content:[
-        {type:'image_url', image_url:{url: doc.dataURL}},
-        {type:'text', text: userPrompt}
-      ]
-    };
-    if(chatHistory.length > 0) {
-      messages = [sysMsg, ...chatHistory, userMsg];
-    } else {
-      messages = [sysMsg, userMsg];
-    }
+    // ── Mode Vision (images et PDFs) ──
+    const sysContent = 'Tu es IXA, assistant expert. Réponds TOUJOURS en français avec du Markdown propre. ' +
+      'Analyse attentivement le document visuel fourni et réponds avec précision.';
+    const userContent = [
+      {type: 'image_url', image_url: {url: doc.dataURL}},
+      {type: 'text', text: userPrompt}
+    ];
+    messages = [
+      {role:'system', content: sysContent},
+      ...chatHistory,
+      {role:'user', content: userContent}
+    ];
   } else {
-    // Text: inject document context
-    const ctx = getLearnContext() || '[Document vide]';
-    const sysMsg = {
-      role:'system',
-      content: 'Tu es IXA, assistant IA expert. Réponds TOUJOURS en français avec du texte propre, bien formaté en Markdown. Voici le document à analyser:\n\n===DOCUMENT===\n' + ctx + '\n===FIN DOCUMENT==='
-    };
+    // ── Mode Texte ──
+    const rawContent = cleanLearnText(doc.content || '');
+    // Limite intelligente selon le mode
+    const maxCtx = (mode === 'flash' || mode === 'quiz') ? 5000 : 7000;
+    const ctx = rawContent.slice(0, maxCtx);
+    
+    if(!ctx.trim()) {
+      throw new Error("Le document est vide ou son contenu n'a pas pu être extrait.");
+    }
+
+    const docInfo = '=== DOCUMENT: ' + doc.fileName + ' (' + Math.round((doc.fileSize||0)/1024) + ' KB) ===\n' + ctx;
+    const truncNote = rawContent.length > maxCtx 
+      ? '\n[... document tronqué à ' + maxCtx + ' caractères sur ' + rawContent.length + ']' 
+      : '';
+
+    const sysContent = 'Tu es IXA, expert en analyse de documents. Réponds TOUJOURS en français.\n' +
+      'Utilise du Markdown structuré pour tes réponses.\n' +
+      'DOCUMENT À ANALYSER :\n' + docInfo + truncNote;
+
     if(chatHistory.length > 0) {
-      messages = [sysMsg, ...chatHistory, {role:'user', content: userPrompt}];
+      messages = [
+        {role:'system', content: sysContent},
+        ...chatHistory,
+        {role:'user', content: userPrompt}
+      ];
     } else {
-      messages = [sysMsg, {role:'user', content: userPrompt}];
+      messages = [
+        {role:'system', content: sysContent},
+        {role:'user', content: userPrompt}
+      ];
     }
   }
 
+  const maxToks = (mode === 'flash' || mode === 'quiz') ? 2500 : 2000;
+
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST',
-    headers:{'Authorization':'Bearer '+S.groqKey, 'Content-Type':'application/json'},
-    body: JSON.stringify({model, messages, max_tokens:3000, temperature:0.5})
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + S.groqKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({model, messages, max_tokens: maxToks, temperature: 0.5})
   });
+
   if(!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    throw new Error('Erreur API ' + res.status + (err.error?.message?' : '+err.error.message:''));
+    const err = await res.json().catch(() => ({}));
+    const errMsg = err.error?.message || '';
+    if(res.status === 429) {
+      markModelError(model);
+      // Try fallback model
+      const fallbacks = isVision 
+        ? ['llama-3.1-8b-instant','gemma2-9b-it'] 
+        : ['gemma2-9b-it','mixtral-8x7b-32768','llama3-70b-8192'];
+      for(const fb of fallbacks) {
+        if(isModelAvailable(fb)) {
+          // Retry with fallback
+          const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method:'POST',
+            headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
+            body:JSON.stringify({model:fb, messages, max_tokens:maxToks, temperature:0.5})
+          });
+          if(res2.ok) {
+            const d2 = await res2.json();
+            return fixEncoding(d2.choices?.[0]?.message?.content || '');
+          } else { markModelError(fb); }
+        }
+      }
+      throw new Error('Quota dépassé sur tous les modèles. Réessayez dans quelques minutes.');
+    }
+    throw new Error('Erreur API ' + res.status + (errMsg ? ': ' + errMsg.slice(0,120) : ''));
   }
+
   const data = await res.json();
   const reply = data.choices?.[0]?.message?.content || '';
-  // Clean the reply from any encoding artifacts
-  return reply.replace(/â€™/g,"'").replace(/â€œ/g,'"').replace(/â€/g,'"').replace(/Ã©/g,'é').replace(/Ã¨/g,'è').replace(/Ã /g,'à').replace(/Ã§/g,'ç').replace(/Ã®/g,'î').replace(/Ã´/g,'ô').replace(/Ã»/g,'û').replace(/Ã¹/g,'ù').replace(/â‚¬/g,'€');
+  if(!reply.trim()) throw new Error('Réponse vide du modèle. Réessayez.');
+  delete _modelErrors[model];
+  return fixEncoding(reply);
 }
+
+// Corriger les séquences d'encodage corrompues dans les réponses
+function fixEncoding(text) {
+  if(!text) return '';
+  return text
+    .replace(/â€™/g, "'").replace(/â€œ/g, '"').replace(/â€/g, '"')
+    .replace(/Ã©/g, 'é').replace(/Ã¨/g, 'è').replace(/Ã /g, 'à')
+    .replace(/Ã§/g, 'ç').replace(/Ã®/g, 'î').replace(/Ã´/g, 'ô')
+    .replace(/Ã»/g, 'û').replace(/Ã¹/g, 'ù').replace(/â‚¬/g, '€')
+    .replace(//g, '€').replace(/�/g, '');
+}
+
 
 async function learnGen(mode) {
   if(!S.learnDoc) return;
@@ -2464,9 +2622,10 @@ async function learnChatSend() {
     // Keep only last 6 exchanges for context
     const trimmedHistory = S.learnChatHistory.slice(-12);
     const reply = await learnCallAPI(q, trimmedHistory.slice(0,-1));
-    S.learnChatHistory.push({role:'assistant', content:reply});
+    const cleanReply = fixEncoding(reply);
+    S.learnChatHistory.push({role:'assistant', content:cleanReply});
     document.getElementById(typingId)?.remove();
-    msgs.innerHTML += `<div class="lcm a"><div class="mc" style="font-size:.82rem">${md(reply)}</div></div>`;
+    msgs.innerHTML += `<div class="lcm a"><div class="mc" style="font-size:.82rem">${md(cleanReply)}</div></div>`;
   } catch(e) {
     document.getElementById(typingId)?.remove();
     msgs.innerHTML += `<div class="lcm a" style="color:var(--err)">❌ Erreur: ${esc(e.message)}</div>`;
@@ -2623,12 +2782,19 @@ document.getElementById('mo').addEventListener('click',e=>{if(e.target===documen
    UTILS
 ══════════════════════════════════════════════════════ */
 function updateApiSt(ok=null) {
-  const has=ok!==false&&!!S.groqKey;
-  const el=document.getElementById('ast'); const t=document.getElementById('ast-t');
-  const hasSearch=!!S.serperKey;
-  if(!has){el.className='err';t.textContent='Clé API manquante';return;}
-  el.className=hasSearch?'web':'ok';
-  t.textContent=hasSearch?'API + Recherche web':'API connectée';
+  const has = ok!==false && !!S.groqKey;
+  const el  = document.getElementById('ast');
+  const t   = document.getElementById('ast-t');
+  if(!el||!t) return;
+  if(!has) { el.className='err'; t.textContent='⚠ Clé API manquante'; return; }
+  const errCount = Object.keys(_modelErrors||{}).length;
+  if(errCount > 0) {
+    el.className='warn'; t.textContent='⚠ Quota partiel (' + errCount + ' modèle(s))';
+  } else if(S.serperKey) {
+    el.className='web'; t.textContent='● API + Web';
+  } else {
+    el.className='ok'; t.textContent='● API prête';
+  }
 }
 function saveLocal() {
   if(S.chats.length>60) S.chats=S.chats.slice(0,60);
