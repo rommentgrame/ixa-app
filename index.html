@@ -665,7 +665,7 @@ body.focus-mode #msgs{padding:24px max(8%,40px)}
 <!-- SIDEBAR -->
 <div id="sidebar">
   <div class="sbhdr">
-    <div class="brand"><span class="bdt"></span>IXA <span style="font-size:.65rem;font-weight:400;color:var(--mu);font-family:Space Grotesk,sans-serif">v10</span></div>
+    <div class="brand"><span class="bdt"></span>IXA <span style="font-size:.65rem;font-weight:400;color:var(--mu);font-family:Space Grotesk,sans-serif">v11</span></div>
     <div style="display:flex;gap:2px">
       <button class="xb" title="Raccourcis (Ctrl+/)" onclick="toggleShortcuts()">⌨</button>
       <button class="xb" title="Paramètres" onclick="openSettings()">⚙</button>
@@ -1010,10 +1010,11 @@ body.focus-mode #msgs{padding:24px max(8%,40px)}
         <div class="sfield"><label>🤖 Modèle préféré</label>
           <select class="mi" id="s-model">
             <option value="auto">Auto (recommandé)</option>
-            <option value="llama-3.1-8b-instant">Llama 3.1 8B (rapide)</option>
-            <option value="llama-3.3-70b-versatile">Llama 3.3 70B (intelligent)</option>
-            <option value="gemma2-9b-it">Gemma 2 9B (stable)</option>
-            <option value="mixtral-8x7b-32768">Mixtral 8x7B (contexte long)</option>
+            <option value="llama-3.3-70b-versatile">Llama 3.3 70B ⭐ (recommandé)</option>
+            <option value="llama-3.1-8b-instant">Llama 3.1 8B ⚡ (rapide)</option>
+            <option value="llama3-70b-8192">Llama 3 70B (stable)</option>
+            <option value="llama3-8b-8192">Llama 3 8B (léger)</option>
+            <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (vision)</option>
           </select>
         </div>
         <div class="api-status-grid" id="api-status-grid">
@@ -1282,10 +1283,14 @@ function loadLocal(uname){
 /* ── Boot ── */
 async function boot(){
   initVoices();
-  checkConnection();setInterval(checkConnection,20000);
+  checkConnection();
+  setInterval(checkConnection,30000);
 
-  // Try config.json — timeout 3s pour éviter blocage réseau
-  let cfgLoaded=false;
+  const lstat=document.getElementById('lstat');
+  const setLstat=(html)=>{if(lstat)lstat.innerHTML=html;};
+
+  // ─── 1. Charger config.json (avec timeout strict) ───
+  setLstat('<div class="spin" style="display:inline-block;width:10px;height:10px;border:2px solid var(--bd2);border-top-color:var(--a);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle"></div> Initialisation…');
   try{
     const ctrl=new AbortController();
     const tid=setTimeout(()=>ctrl.abort(),3000);
@@ -1293,61 +1298,100 @@ async function boot(){
     clearTimeout(tid);
     if(r.ok){
       const cfg=await r.json();
-      if(cfg.groq_api_key)S.groqKey=cfg.groq_api_key;
-      if(cfg.serper_key)S.serperKey=cfg.serper_key;
-      if(cfg.github_token)S.ghToken=cfg.github_token;
-      if(cfg.github_repo)S.ghRepo=cfg.github_repo;
+      if(cfg.groq_api_key) S.groqKey=cfg.groq_api_key;
+      if(cfg.serper_key)   S.serperKey=cfg.serper_key;
+      if(cfg.github_token) S.ghToken=cfg.github_token;
+      if(cfg.github_repo)  S.ghRepo=cfg.github_repo;
       if(cfg.github_branch)S.ghBranch=cfg.github_branch||'main';
-      cfgLoaded=true;
     }
-  }catch(e){}
+  }catch(e){/* config.json absent ou réseau coupé — normal */}
 
-  // Load users from localStorage
+  // ─── 2. Charger les utilisateurs (localStorage prioritaire) ───
   try{
     const raw=localStorage.getItem('ixa_users');
-    if(raw)S.allUsers=JSON.parse(raw);
+    if(raw){const parsed=JSON.parse(raw);if(parsed?.users?.length)S.allUsers=parsed;}
   }catch(e){}
 
+  // ─── 3. Si pas d'utilisateurs ET GitHub configuré → essai réseau ───
   if(!S.allUsers&&S.ghToken&&S.ghRepo){
-    document.getElementById('lstat').innerHTML='<div class="spin"></div> Chargement depuis GitHub…';
+    setLstat('<div class="spin" style="display:inline-block;width:10px;height:10px;border:2px solid var(--bd2);border-top-color:var(--a);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle"></div> Chargement GitHub…');
     try{
-      const _p=fetchUsers();
-      const _t=new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000));
-      S.allUsers=await Promise.race([_p,_t]);
-    }catch(e){S.allUsers=null;}
+      const p=fetchUsers();
+      const t=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000));
+      const gd=await Promise.race([p,t]);
+      if(gd?.users?.length)S.allUsers=gd;
+    }catch(e){/* timeout ou réseau indisponible */}
   }
-  if(!S.allUsers){S.allUsers={version:'2.0',users:[{username:'tom',password:'admin',display_name:'Tom',role:'admin',avatar:'🤖',created:Date.now()}]};}
 
-  document.getElementById('lstat').innerHTML='✅ Prêt — Connectez-vous';
+  // ─── 4. Compte par défaut si aucun utilisateur ───
+  if(!S.allUsers||!S.allUsers.users?.length){
+    S.allUsers={version:'2.0',users:[{
+      username:'tom',password:'admin',
+      display_name:'Tom',role:'admin',
+      avatar:'🤖',created:Date.now()
+    }]};
+    // Save immediately
+    try{localStorage.setItem('ixa_users',JSON.stringify(S.allUsers));}catch(e){}
+  }
 
-  // Auto-login if session active
-  const sess=sessionStorage.getItem('ixa_user');
-  if(sess){
-    try{
+  setLstat('✅ Prêt');
+  setTimeout(()=>setLstat(''),2000);
+
+  // ─── 5. Auto-login si session active ───
+  try{
+    const sess=sessionStorage.getItem('ixa_user');
+    if(sess){
       const u=JSON.parse(sess);
       const found=S.allUsers.users.find(x=>x.username===u.username);
       if(found){S.user=found;await afterLogin();return;}
-    }catch(e){}
-  }
-  document.getElementById('lstat').innerHTML='';
+    }
+  }catch(e){}
+
+  // ─── 6. Préremplir identifiant si mémorisé ───
+  try{
+    const lastUser=localStorage.getItem('ixa_last_user');
+    if(lastUser){
+      const luEl=document.getElementById('lu');
+      if(luEl)luEl.value=lastUser;
+    }
+  }catch(e){}
 }
 
 async function doLogin(){
-  const u=document.getElementById('lu').value.trim();
-  const p=document.getElementById('lp').value;
+  const uEl=document.getElementById('lu');
+  const pEl=document.getElementById('lp');
+  const u=(uEl?.value||'').trim().toLowerCase();
+  const p=pEl?.value||'';
   const btn=document.getElementById('lbtn');
   const err=document.getElementById('lerr');
-  if(!u||!p){err.textContent='Remplissez tous les champs.';return;}
-  btn.disabled=true;btn.textContent='Connexion…';err.textContent='';
-  document.getElementById('lstat').innerHTML='<div class="spin"></div> Authentification…';
-  await new Promise(r=>setTimeout(r,600));
-  const user=S.allUsers.users.find(x=>x.username===u&&x.password===p);
-  if(!user){
-    err.textContent='Identifiant ou mot de passe incorrect.';
-    btn.disabled=false;btn.textContent='Connexion';
-    document.getElementById('lstat').textContent='';return;
+  const lstat=document.getElementById('lstat');
+
+  if(!u||!p){err.textContent='Entrez votre identifiant et mot de passe.';uEl?.focus();return;}
+
+  btn.disabled=true;btn.textContent='⏳ Connexion…';err.textContent='';
+  if(lstat)lstat.innerHTML='<div class="spin" style="display:inline-block;width:10px;height:10px;border:2px solid var(--bd2);border-top-color:var(--a);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle"></div> Authentification…';
+
+  await new Promise(r=>setTimeout(r,400));
+
+  // Ensure users exist
+  if(!S.allUsers?.users?.length){
+    S.allUsers={version:'2.0',users:[{username:'tom',password:'admin',display_name:'Tom',role:'admin',avatar:'🤖',created:Date.now()}]};
+    try{localStorage.setItem('ixa_users',JSON.stringify(S.allUsers));}catch(e){}
   }
+
+  // Case-insensitive username match
+  const user=S.allUsers.users.find(x=>(x.username||'').toLowerCase()===u&&x.password===p);
+  if(!user){
+    err.textContent='❌ Identifiant ou mot de passe incorrect.';
+    btn.disabled=false;btn.textContent='Connexion';
+    if(lstat)lstat.textContent='';
+    pEl?.select();
+    return;
+  }
+
   S.user=user;
+  // Mémoriser l'identifiant pour la prochaine fois
+  try{localStorage.setItem('ixa_last_user',user.username);}catch(e){}
   sessionStorage.setItem('ixa_user',JSON.stringify({username:user.username}));
   await afterLogin();
 }
@@ -1381,7 +1425,10 @@ async function afterLogin(){
       if(ud){S.user=ud;}
     }catch(e){}
   }
-  document.getElementById('lbtn')&&(document.getElementById('lbtn').disabled=false,document.getElementById('lbtn').textContent='Connexion');
+  const lbtn=document.getElementById('lbtn');
+  if(lbtn){lbtn.disabled=false;lbtn.textContent='Connexion';}
+  // Update accentcolor from saved preferences
+  try{loadAccentColor();}catch(e){}
 }
 
 function doLogout(){
@@ -1759,36 +1806,61 @@ async function sendToAI(userText,chat){
 }
 
 /* ── API Call ── */
+
+// ─── Groq models valides (mis à jour 2025) ───
+const GROQ_MODELS = {
+  fast:    'llama-3.1-8b-instant',
+  smart:   'llama-3.3-70b-versatile',
+  stable:  'llama3-70b-8192',
+  light:   'llama3-8b-8192',
+  vision:  'meta-llama/llama-4-scout-17b-16e-instruct',
+};
+
 async function callAPI(userText,chat){
-  if(!S.groqKey)throw new Error('Clé API Groq manquante');
+  if(!S.groqKey)throw new Error('Clé API Groq manquante — configurez-la dans Paramètres');
 
-  const hasImg=S.attachments.some(a=>a.isImg)||chat.messages.find(m=>m.id&&m.attachImg);
+  const hasImg=S.attachments?.some(a=>a.isImg)||chat.messages?.find(m=>m.attachImg);
+  const msgLen=(userText||'').length;
 
-  // Model selection
+  // ─── Sélection intelligente du modèle ───
   let model;
   if(S.preferredModel&&S.preferredModel!=='auto'&&isModelAvailable(S.preferredModel)){
     model=S.preferredModel;
+  }else if(hasImg){
+    model=GROQ_MODELS.vision;
+  }else if(msgLen<200){
+    // Messages courts → modèle rapide
+    model=isModelAvailable(GROQ_MODELS.fast)?GROQ_MODELS.fast:GROQ_MODELS.smart;
   }else{
-    const candidates=['llama-3.1-8b-instant','gemma2-9b-it','mixtral-8x7b-32768'];
-    model=candidates.find(m=>isModelAvailable(m))||'llama-3.1-8b-instant';
+    // Messages longs ou complexes → meilleur modèle
+    model=isModelAvailable(GROQ_MODELS.smart)?GROQ_MODELS.smart:GROQ_MODELS.stable;
   }
 
-  // System prompt
-  const memCtx=S.memory.length?`\nCe que je sais sur l\'utilisateur:\n${S.memory.slice(0,15).map(m=>`• ${m}`).join('\n')}`:'';
-  const personaCtx=S.persona?`\nTon mode de communication: ${S.persona}.`:'';
-  const docCapabilities=`\n\nCapacités documents: Tu peux créer des fichiers téléchargeables. Quand l'utilisateur demande de créer un document Word/DOCX, Excel/XLSX, PowerPoint/PPTX ou PDF:\n- Génère le contenu complet et structuré dans ta réponse\n- Indique clairement: "J'ai préparé votre [document/présentation/tableau] :" puis fournis le contenu\n- Pour PPTX: utilise des titres # pour les slides, des listes pour les points\n- Pour XLSX: utilise des tableaux markdown avec |colonnes|\n- Pour DOCX: utilise du markdown structuré avec titres et listes\n- Pour PDF: structure claire avec titres hiérarchiques\nL'interface ajoutera automatiquement un bouton de téléchargement.`;
-  const attachCtx=S.attachments?.length?`\n\nFichiers joints: ${S.attachments.filter(a=>a.content).map(a=>`${a.name}: ${a.content?.slice(0,3000)}`).join('\n')}`:'';  const sysPrompt=`Tu es IXA, l\'assistant IA personnel de ${S.user?.display_name||'Tom'}. Tu es en français par défaut, direct, intelligent et personnel.${memCtx}${personaCtx}${docCapabilities}${attachCtx}\nDate: ${new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
+  // ─── System Prompt amélioré ───
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const memCtx=S.memory?.length?`\n\n📌 Informations mémorisées sur l'utilisateur:\n${S.memory.slice(0,15).map(m=>`• ${m}`).join('\n')}`:'';
+  const personaCtx=S.persona?`\n\n🎭 Style de communication: ${S.persona}.`:'';
+  const docCtx=`\n\n📎 Capacités documents: Si l'utilisateur te demande de créer un document (Word, Excel, PowerPoint, PDF), génère le contenu complet structuré dans ta réponse avec du markdown. L'interface créera automatiquement le bouton de téléchargement.`;
+  const attachCtx=(S.attachments||[]).filter(a=>a.content).length?
+    `\n\n📂 Fichiers joints:\n${S.attachments.filter(a=>a.content).map(a=>`— ${a.name}:\n${(a.content||'').slice(0,3000)}`).join('\n\n')}`:'';
 
-  // Build messages
-  const hist=chat.messages.slice(-14).filter(m=>m.role&&m.content&&!m.content.startsWith('❌'));
+  const sysPrompt=`Tu es IXA, l'assistant IA intelligent et personnel de ${S.user?.display_name||'Tom'}.\n\nPrincipes fondamentaux:\n• Réponds toujours en français sauf si on te demande autre chose\n• Sois direct, précis et utile — évite les introductions inutiles\n• Mémorise le contexte de la conversation et utilise-le\n• Adapte ta longueur de réponse à la complexité de la question\n• Pour les questions factuelles, sois concis. Pour les explications, sois complet\n• Utilise le markdown pour structurer tes réponses (titres, listes, code)\n• Si tu ne sais pas quelque chose, dis-le clairement${memCtx}${personaCtx}${docCtx}${attachCtx}\n\nDate: ${dateStr} • Heure: ${timeStr}`;
+
+  // ─── Construction des messages ───
+  const hist=(chat.messages||[])
+    .slice(-16)
+    .filter(m=>m.role&&m.content&&!m.content.startsWith('❌'));
   const apiMsgs=[{role:'system',content:sysPrompt}];
 
   for(const m of hist){
+    // Skip la dernière message user (sera ajoutée après)
     if(m.id===chat.messages[chat.messages.length-1]?.id&&m.role==='user')continue;
     apiMsgs.push({role:m.role==='user'?'user':'assistant',content:m.displayContent||m.content});
   }
 
-  // Current message with possible image
+  // Message actuel avec image éventuelle
   const lastMsg=chat.messages[chat.messages.length-1];
   if(lastMsg?.attachImg&&hasImg){
     apiMsgs.push({role:'user',content:[{type:'image_url',image_url:{url:lastMsg.attachImg}},{type:'text',text:userText}]});
@@ -1796,58 +1868,81 @@ async function callAPI(userText,chat){
     apiMsgs.push({role:'user',content:userText});
   }
 
-  // Web search
-  let webCtx='';
+  // ─── Recherche web ───
   let webLinks=[];
   if(S.webEnabled&&S.serperKey){
     try{
-      const r=await fetch('https://google.serper.dev/search',{method:'POST',headers:{'X-API-KEY':S.serperKey,'Content-Type':'application/json'},body:JSON.stringify({q:userText,num:5,hl:'fr'})});
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),4000);
+      const r=await fetch('https://google.serper.dev/search',{
+        method:'POST',
+        headers:{'X-API-KEY':S.serperKey,'Content-Type':'application/json'},
+        body:JSON.stringify({q:userText,num:5,hl:'fr',gl:'fr'}),
+        signal:ctrl.signal
+      });
+      clearTimeout(tid);
       if(r.ok){
         const d=await r.json();
         const res=(d.organic||[]).slice(0,4);
         if(res.length){
-          webLinks=res.map(r=>({title:r.title,link:r.link,snippet:r.snippet}));
-          webCtx='\n\n[Résultats web — sources disponibles]\n'+res.map(r=>`• ${r.title}: ${r.snippet}\n  Source: ${r.link}`).join('\n');
+          webLinks=res.map(r=>({title:r.title,link:r.link,snippet:r.snippet||''}));
+          const webCtx='\n\n[Sources web consultées]\n'+res.map(r=>`• ${r.title}: ${r.snippet}\n  URL: ${r.link}`).join('\n');
+          const last=apiMsgs[apiMsgs.length-1];
+          if(typeof last.content==='string')last.content+=webCtx;
+          else if(Array.isArray(last.content)){const t=last.content.find(x=>x.type==='text');if(t)t.text+=webCtx;}
           setStatus('🌐 Web consulté','web');
         }
       }
     }catch(e){}
   }
-
-  if(webCtx){
-    const last=apiMsgs[apiMsgs.length-1];
-    if(typeof last.content==='string')last.content+=webCtx;
-  }
-  
-  // Store web links for rendering
   S._lastWebLinks=webLinks;
 
-  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
-    body:JSON.stringify({model,messages:apiMsgs,max_tokens:2500,temperature:0.75})
-  });
-
-  if(!resp.ok){
-    const err=await resp.json().catch(()=>({}));
-    const msg=err.error?.message||'';
-    if(resp.status===429||msg.includes('rate_limit')){
-      markModelError(model);
-      // Fallback
-      const fallbacks=['gemma2-9b-it','llama-3.3-70b-versatile','mixtral-8x7b-32768'];
-      for(const fb of fallbacks){
-        if(!isModelAvailable(fb))continue;
-        const r2=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},body:JSON.stringify({model:fb,messages:apiMsgs,max_tokens:2500,temperature:0.75})});
-        if(r2.ok){const d=await r2.json();return d.choices?.[0]?.message?.content||'';}
+  // ─── Appel API avec retry automatique ───
+  const doCall=async(m,msgs,maxTok=3000)=>{
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
+      body:JSON.stringify({model:m,messages:msgs,max_tokens:maxTok,temperature:0.72,top_p:0.9})
+    });
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      const errMsg=err.error?.message||`Erreur ${resp.status}`;
+      if(resp.status===401)throw new Error('Clé API invalide — vérifiez dans Paramètres');
+      if(resp.status===429||errMsg.includes('rate_limit')||errMsg.includes('quota')){
+        const e=new Error('RATE_LIMIT:'+m);e.rateLimited=true;e.model=m;throw e;
       }
-      throw new Error('Quota API atteint sur tous les modèles. Attendez 1 minute.');
+      if(resp.status===503||resp.status===500)throw new Error('Serveur Groq temporairement indisponible. Réessayez dans quelques secondes.');
+      if(errMsg.includes('decommissioned')||errMsg.includes('deprecated')||errMsg.includes('does not exist')){
+        const e=new Error('MODEL_DEAD:'+m);e.modelDead=true;e.model=m;throw e;
+      }
+      throw new Error(errMsg);
     }
-    if(msg.includes('decommissioned')||msg.includes('deprecated')||msg.includes('does not exist')){markModelError(model);throw new Error('Modèle IA temporairement indisponible. Réessayez.');}
-    throw new Error(`Erreur API ${resp.status}: ${msg||'Inconnue'}`);
+    const d=await resp.json();
+    return d.choices?.[0]?.message?.content||'';
+  };
+
+  // ─── Logique de fallback intelligente ───
+  const fallbackChain=[model,GROQ_MODELS.smart,GROQ_MODELS.stable,GROQ_MODELS.fast,GROQ_MODELS.light];
+  const tried=new Set();
+
+  for(const m of fallbackChain){
+    if(tried.has(m)||!isModelAvailable(m))continue;
+    tried.add(m);
+    try{
+      const result=await doCall(m,apiMsgs,3000);
+      if(model!==m)toast(`ℹ Réponse via ${m}`,'');
+      return result;
+    }catch(e){
+      if(e.rateLimited){markModelError(e.model||m);continue;}
+      if(e.modelDead){markModelError(e.model||m);continue;}
+      // Autre erreur → on la propage
+      throw e;
+    }
   }
-  const data=await resp.json();
-  return data.choices?.[0]?.message?.content||'Je n\'ai pas pu générer de réponse.';
+
+  throw new Error('Tous les modèles IA sont temporairement surchargés. Patientez 1 minute et réessayez.');
 }
+
 
 /* ── Document Generation (DOCX / XLSX / PPTX / PDF) ── */
 
@@ -2619,9 +2714,20 @@ function toggleFocusMode(){
 }
 
 function checkConnection(){
-  const badge=document.getElementById('conn-badge');if(!badge)return;
-  if(navigator.onLine){badge.textContent='● EN LIGNE';badge.classList.remove('off');}
-  else{badge.textContent='● HORS LIGNE';badge.classList.add('off');}
+  const badge=document.getElementById('conn-badge');
+  if(!badge)return;
+  if(!navigator.onLine){
+    badge.textContent='● HORS LIGNE';badge.classList.add('off');return;
+  }
+  // navigator.onLine = true mais peut quand même être sans internet
+  // Test réel avec une requête légère
+  fetch('https://api.groq.com',{method:'HEAD',mode:'no-cors'})
+    .then(()=>{badge.textContent='● EN LIGNE';badge.classList.remove('off');})
+    .catch(()=>{
+      // no-cors échoue toujours → utilise juste navigator.onLine
+      if(navigator.onLine){badge.textContent='● EN LIGNE';badge.classList.remove('off');}
+      else{badge.textContent='● HORS LIGNE';badge.classList.add('off');}
+    });
 }
 
 function setAccent(el){
@@ -2772,7 +2878,7 @@ async function learnGenerate(mode){
   </div>`;
 
   const isVision=S.learnDoc.isImg||S.learnDoc.isPDF;
-  let model=isVision?'meta-llama/llama-4-scout-17b-16e-instruct':'llama-3.3-70b-versatile';
+  let model=isVision?GROQ_MODELS.vision:GROQ_MODELS.smart;
 
   const prompts={
     summary:'Fais un résumé détaillé et structuré de ce document en français. Utilise des titres (##), sous-titres (###), listes à puces, et mets en gras les concepts clés. Structure: Introduction → Points principaux → Analyse → Conclusion.',
@@ -2810,7 +2916,7 @@ async function learnGenerate(mode){
       if(!resp.ok){
         const err=await resp.json().catch(()=>({}));
         if(resp.status===429||resp.status===503){
-          if(m!=='llama-3.1-8b-instant')return doFetch('llama-3.1-8b-instant');
+          if(m!==GROQ_MODELS.fast)return doFetch(GROQ_MODELS.fast);
           throw new Error('API surchargée — réessayez dans 1 minute');
         }
         throw new Error(`Erreur API ${resp.status}: ${err.error?.message||''}`);
@@ -2851,7 +2957,7 @@ async function learnAudioMode(){
     const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
-      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:msgs,max_tokens:2000,temperature:0.7})
+      body:JSON.stringify({model:GROQ_MODELS.smart,messages:msgs,max_tokens:2000,temperature:0.7})
     });
     if(!resp.ok)throw new Error('Erreur API '+resp.status);
     const d=await resp.json();
@@ -3379,7 +3485,7 @@ async function learnChatSend(){
     const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':'Bearer '+S.groqKey,'Content-Type':'application/json'},
-      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:msgs,max_tokens:2000,temperature:0.6})
+      body:JSON.stringify({model:GROQ_MODELS.smart,messages:msgs,max_tokens:2000,temperature:0.6})
     });
     if(!resp.ok)throw new Error('Erreur API '+resp.status);
     const data=await resp.json();
@@ -3455,6 +3561,7 @@ function learnGen(mode){
 }
 function learnReset(){learnClearDoc();}
 
+window.addEventListener('load',()=>boot());
 </script>
 </body>
 </html>
