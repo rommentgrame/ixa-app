@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "users": [
+    {
+      "username": "tom",
+      "password": "admin",
+      "display_name": "Tom",
+      "role": "admin",
+      "avatar": "🤖",
+      "avatar_img": "",
+      "created": 0
+    }
+  ]
+}
