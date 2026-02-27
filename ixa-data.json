@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "_info": "Fichier de données IXA — géré automatiquement. Contient mot de passe, API keys, token GitHub et données.",
+  "password": "admin",
+  "displayName": "Tom",
+  "avatar": "🤖",
+  "avatarImg": "",
+  "groqKey": "",
+  "serperKey": "",
+  "ghToken": "",
+  "ghRepo": "",
+  "ghBranch": "main",
+  "preferredModel": "auto",
+  "syncIntervalMin": 5,
+  "chats": [],
+  "memory": [],
+  "commands": [],
+  "usageStats": { "messages": 0, "chars": 0, "docs": 0 }
+}

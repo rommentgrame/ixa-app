@@ -1,0 +1,20 @@
+{
+  "name": "IXA — Assistant IA de Tom",
+  "short_name": "IXA",
+  "description": "Assistant IA personnel IXA v12",
+  "start_url": "./ixa.html",
+  "display": "standalone",
+  "background_color": "#07071a",
+  "theme_color": "#07071a",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%2307071a'/%3E%3Ctext x='50%25' y='60%25' font-size='280' text-anchor='middle' dominant-baseline='middle' font-family='system-ui'%3E🤖%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "prefer_related_applications": false
+}
